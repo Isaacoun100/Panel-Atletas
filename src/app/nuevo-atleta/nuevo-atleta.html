@@ -1,1 +1,768 @@
-<p>nuevo-atleta works!</p>
+<div class="db-layout">
+
+  <!-- Sidebar -->
+  <aside class="db-sidebar d-flex flex-column">
+    <div class="db-sidebar-header">
+      <span class="db-logo-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0zM4.5 7.5a.5.5 0 0 0 0 1h5.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H4.5z"/>
+        </svg>
+      </span>
+      <span class="db-logo-text">Panel Atletas</span>
+    </div>
+    <nav class="db-nav flex-grow-1">
+      <p class="db-nav-label">Principal</p>
+      <a routerLink="/dashboard" routerLinkActive="active" class="db-nav-item">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8.354 1.146a.5.5 0 0 0-.708 0l-6 6-.354.353V14.5A1.5 1.5 0 0 0 2.5 16h11a1.5 1.5 0 0 0 1.5-1.5V7.499l-.354-.353-6-6z"/></svg>
+        Dashboard
+      </a>
+      <a routerLink="/atletas" routerLinkActive="active" class="db-nav-item">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1H7zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path fill-rule="evenodd" d="M5.216 14A2.238 2.238 0 0 1 5 13c0-1.355.68-2.75 1.936-3.72A6.325 6.325 0 0 0 5 9c-4 0-5 3-5 4s1 1 1 1h4.216z"/><path d="M4.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"/></svg>
+        Atletas
+      </a>
+      <a routerLink="/registrar-atleta" routerLinkActive="active" class="db-nav-item">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M14 1a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H4.414A2 2 0 0 0 3 11.586l-2 2V2a1 1 0 0 1 1-1h12z"/></svg>
+        Registrar Atleta
+      </a>
+      <a routerLink="/nuevo-atleta" routerLinkActive="active" class="db-nav-item">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2zm4.5 5.5a.5.5 0 0 0 0 1h5a.5.5 0 0 0 0-1h-5zm0 2a.5.5 0 0 0 0 1h5a.5.5 0 0 0 0-1h-5zM4 5a1 1 0 1 1 2 0 1 1 0 0 1-2 0z"/></svg>
+        Nuevo Atleta
+      </a>
+      <p class="db-nav-label mt-3">Cuenta</p>
+      <a routerLink="/mi-perfil" routerLinkActive="active" class="db-nav-item">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4z"/></svg>
+        Mi Perfil
+      </a>
+    </nav>
+    <div class="db-sidebar-footer">
+      <div class="db-user-chip">
+        <img src="https://github.com/Isaacoun100.png?size=32" alt="User" class="db-user-avatar">
+        <div class="db-user-info">
+          <span class="db-user-name">Administrador</span>
+          <span class="db-user-role">Comité Montes de Oca</span>
+        </div>
+      </div>
+      <button class="db-logout-btn" (click)="logout()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0v2z"/><path fill-rule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3z"/></svg>
+        Cerrar Sesión
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <main class="db-main">
+
+    <!-- Topbar -->
+    <header class="db-topbar d-flex align-items-center justify-content-between">
+      <div>
+        <h1 class="db-page-title">Nuevo Atleta</h1>
+        <p class="db-page-sub">Comité Cantonal de Deportes y Recreación Montes de Oca</p>
+      </div>
+      <button class="db-theme-btn" (click)="toggleTheme()" [title]="isDark() ? 'Modo claro' : 'Modo oscuro'">
+        @if (isDark()) {
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm0 1a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0zm0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13zm8-5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 .5.5zM3 8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2A.5.5 0 0 1 3 8zm10.657-5.657a.5.5 0 0 1 0 .707l-1.414 1.415a.5.5 0 1 1-.707-.708l1.414-1.414a.5.5 0 0 1 .707 0zm-9.193 9.193a.5.5 0 0 1 0 .707L3.05 13.657a.5.5 0 0 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0zm9.193 2.121a.5.5 0 0 1-.707 0l-1.414-1.414a.5.5 0 0 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707zM4.464 4.465a.5.5 0 0 1-.707 0L2.343 3.05a.5.5 0 1 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .708z"/></svg>
+        } @else {
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M6 .278a.768.768 0 0 1 .08.858 7.208 7.208 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277.527 0 1.04-.055 1.533-.16a.787.787 0 0 1 .81.316.733.733 0 0 1-.031.893A8.349 8.349 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.752.752 0 0 1 6 .278z"/></svg>
+        }
+      </button>
+    </header>
+
+    <!-- Method selector -->
+    <section class="db-section">
+      <div class="na-method-grid">
+        <button type="button" class="na-method-card" [class.na-method-card--active]="activeTab() === 'email'" (click)="activeTab.set('email')">
+          <div class="na-method-icon na-method-icon--email">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16"><path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4Zm2-1a1 1 0 0 0-1 1v.217l7 4.2 7-4.2V4a1 1 0 0 0-1-1H2Zm13 2.383-4.708 2.825L15 11.105V5.383Zm-.034 6.876-5.64-3.471L8 9.583l-1.326-.795-5.64 3.47A1 1 0 0 0 2 13h12a1 1 0 0 0 .966-.741ZM1 11.105l4.708-2.897L1 5.383v5.722Z"/></svg>
+          </div>
+          <div class="na-method-body">
+            <span class="na-method-title">Invitación por correo</span>
+            <span class="na-method-desc">Envía un enlace de registro a uno o varios correos electrónicos</span>
+          </div>
+          @if (activeTab() === 'email') {
+            <svg class="na-method-check" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/></svg>
+          }
+        </button>
+        <button type="button" class="na-method-card" [class.na-method-card--active]="activeTab() === 'manual'" (click)="activeTab.set('manual')">
+          <div class="na-method-icon na-method-icon--manual">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16"><path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4z"/></svg>
+          </div>
+          <div class="na-method-body">
+            <span class="na-method-title">Registro manual</span>
+            <span class="na-method-desc">Ingresa directamente los datos del atleta en el sistema</span>
+          </div>
+          @if (activeTab() === 'manual') {
+            <svg class="na-method-check" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/></svg>
+          }
+        </button>
+      </div>
+    </section>
+
+    <!-- ══ EMAIL INVITATION ══ -->
+    @if (activeTab() === 'email') {
+      <section class="db-section">
+        <div class="db-card db-card--overflow">
+          <div class="db-card-header"><span class="db-card-title">Invitar por correo electrónico</span></div>
+          <div class="na-form-body">
+            <div class="na-field-group">
+              <label class="na-label">Correos electrónicos</label>
+              <div class="na-email-input-row">
+                <div class="na-input-wrap flex-grow-1">
+                  <svg class="na-input-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4Zm2-1a1 1 0 0 0-1 1v.217l7 4.2 7-4.2V4a1 1 0 0 0-1-1H2Zm13 2.383-4.708 2.825L15 11.105V5.383Zm-.034 6.876-5.64-3.471L8 9.583l-1.326-.795-5.64 3.47A1 1 0 0 0 2 13h12a1 1 0 0 0 .966-.741ZM1 11.105l4.708-2.897L1 5.383v5.722Z"/></svg>
+                  <input type="email" class="na-input" placeholder="correo@ejemplo.com" [(ngModel)]="emailInput" (keydown)="onEmailKeydown($event)">
+                </div>
+                <button type="button" class="na-add-btn" (click)="addEmail()">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2z"/></svg>
+                  Agregar
+                </button>
+              </div>
+              @if (emailError()) { <span class="na-field-error">{{ emailError() }}</span> }
+              <p class="na-field-hint">Presiona Enter o el botón para agregar cada correo.</p>
+            </div>
+            @if (emailList().length > 0) {
+              <div class="na-field-group">
+                <label class="na-label">Destinatarios ({{ emailList().length }})</label>
+                <div class="na-chip-list">
+                  @for (email of emailList(); track email) {
+                    <span class="na-chip">
+                      {{ email }}
+                      <button type="button" class="na-chip-remove" (click)="removeEmail(email)">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="currentColor" viewBox="0 0 16 16"><path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/></svg>
+                      </button>
+                    </span>
+                  }
+                </div>
+              </div>
+            }
+            <div class="na-field-group">
+              <label class="na-label" for="msg">Mensaje personalizado <span class="na-label-opt">(opcional)</span></label>
+              <textarea id="msg" class="na-textarea" rows="3" placeholder="Escribe un mensaje para incluir en la invitación..."></textarea>
+            </div>
+            <div class="na-form-footer">
+              <button type="button" class="btn btn-primary px-4" [disabled]="emailList().length === 0">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="me-2" viewBox="0 0 16 16"><path d="M15.964.686a.5.5 0 0 0-.65-.65L.767 5.855H.766l-.452.18a.5.5 0 0 0-.082.887l.41.26.001.002 4.995 3.178 3.178 4.995.002.002.26.41a.5.5 0 0 0 .886-.083l6-15Zm-1.833 1.89L6.637 10.07l-.215-.338a.5.5 0 0 0-.154-.154l-.338-.215 7.494-7.494 1.178-.471-.47 1.178Z"/></svg>
+                Enviar invitaciones
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+    }
+
+    <!-- ══ MANUAL REGISTRATION ══ -->
+    @if (activeTab() === 'manual') {
+
+      <!-- 1. Datos personales -->
+      <section class="db-section">
+        <div class="db-card">
+          <div class="db-card-header"><span class="db-card-title">1. Datos personales</span></div>
+          <div class="na-form-body">
+            <div class="na-field-row">
+              <div class="na-field-group">
+                <label class="na-label" for="nombre">Nombre</label>
+                <input id="nombre" type="text" class="na-input" placeholder="Ej. Carlos" [(ngModel)]="nombre">
+              </div>
+              <div class="na-field-group">
+                <label class="na-label" for="ap1">Primer apellido</label>
+                <input id="ap1" type="text" class="na-input" placeholder="Ej. Mora" [(ngModel)]="primerApellido">
+              </div>
+              <div class="na-field-group">
+                <label class="na-label" for="ap2">Segundo apellido</label>
+                <input id="ap2" type="text" class="na-input" placeholder="Ej. Jiménez" [(ngModel)]="segundoApellido">
+              </div>
+            </div>
+            <div class="na-field-row">
+              <div class="na-field-group">
+                <label class="na-label">Tipo de identificación</label>
+                <div class="na-id-row">
+                  <select class="na-select na-select--short" [(ngModel)]="tipoId">
+                    <option value="cedula">Cédula</option>
+                    <option value="dimex">DIMEX</option>
+                    <option value="pasaporte">Pasaporte</option>
+                  </select>
+                  <input type="text" class="na-input" placeholder="Número de identificación" [(ngModel)]="numeroId">
+                </div>
+              </div>
+            </div>
+            <div class="na-field-row">
+              <div class="na-field-group">
+                <label class="na-label" for="fecNac">Fecha de nacimiento</label>
+                <input id="fecNac" type="date" class="na-input" [(ngModel)]="fechaNacimiento">
+              </div>
+              <div class="na-field-group">
+                <label class="na-label">Edad</label>
+                <div class="na-read-only">{{ edad > 0 ? edad + ' años' : '—' }}</div>
+              </div>
+              <div class="na-field-group">
+                <label class="na-label">Sexo</label>
+                <div class="na-toggle-group">
+                  <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="sexo === 'M'" (click)="sexo = 'M'">Masculino</button>
+                  <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="sexo === 'F'" (click)="sexo = 'F'">Femenino</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. Información del encargado (conditional) -->
+      @if (esMinor) {
+        <section class="db-section">
+          <div class="db-card na-card--alert">
+            <div class="db-card-header">
+              <span class="db-card-title">2. Información del encargado</span>
+              <span class="na-minor-badge">Menor de edad</span>
+            </div>
+            <div class="na-form-body">
+              <div class="na-field-row">
+                <div class="na-field-group">
+                  <label class="na-label" for="nomEnc">Nombre del encargado</label>
+                  <input id="nomEnc" type="text" class="na-input" placeholder="Nombre completo" [(ngModel)]="nombreEncargado">
+                </div>
+                <div class="na-field-group">
+                  <label class="na-label" for="telEnc">Teléfono del encargado</label>
+                  <input id="telEnc" type="tel" class="na-input" placeholder="Ej. 8888-8888" [(ngModel)]="telefonoEncargado">
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      }
+
+      <!-- 3. Contacto y residencia -->
+      <section class="db-section">
+        <div class="db-card">
+          <div class="db-card-header"><span class="db-card-title">3. Contacto y residencia</span></div>
+          <div class="na-form-body">
+            <div class="na-field-row">
+              <div class="na-field-group">
+                <label class="na-label" for="tel">Número de teléfono</label>
+                <input id="tel" type="tel" class="na-input" placeholder="Ej. 8888-8888" [(ngModel)]="telefono">
+              </div>
+              <div class="na-field-group">
+                <label class="na-label" for="emailM">Correo electrónico</label>
+                <input id="emailM" type="email" class="na-input" placeholder="correo@ejemplo.com" [(ngModel)]="correoManual">
+              </div>
+            </div>
+            <div class="na-field-row">
+              <div class="na-field-group">
+                <label class="na-label" for="dist">Distrito de residencia</label>
+                <select id="dist" class="na-select" [(ngModel)]="distrito">
+                  <option value="">Seleccionar...</option>
+                  <option value="san-pedro">San Pedro</option>
+                  <option value="sabanilla">Sabanilla</option>
+                  <option value="mercedes">Mercedes</option>
+                  <option value="san-rafael">San Rafael</option>
+                </select>
+              </div>
+              <div class="na-field-group">
+                <label class="na-label" for="dir">Dirección exacta</label>
+                <input id="dir" type="text" class="na-input" placeholder="Ej. 100m norte de la iglesia..." [(ngModel)]="direccionExacta">
+              </div>
+            </div>
+            <div class="na-field-row">
+              <div class="na-field-group">
+                <label class="na-label">¿Reside permanentemente en Montes de Oca?</label>
+                <div class="na-toggle-group">
+                  <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="residePermanente === 'si'" (click)="residePermanente = 'si'">Sí</button>
+                  <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="residePermanente === 'no'" (click)="residePermanente = 'no'">No</button>
+                </div>
+              </div>
+              @if (mostrarCanton) {
+                <div class="na-field-group">
+                  <label class="na-label" for="canton">Cantón de residencia</label>
+                  <input id="canton" type="text" class="na-input" placeholder="Ej. Curridabat" [(ngModel)]="canton">
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. Educación y empleo -->
+      <section class="db-section">
+        <div class="db-card">
+          <div class="db-card-header"><span class="db-card-title">4. Educación y empleo</span></div>
+          <div class="na-form-body">
+            <div class="na-field-row">
+              <div class="na-field-group">
+                <label class="na-label">Nivel educativo</label>
+                <select class="na-select" [(ngModel)]="nivelEducativo">
+                  <option value="">Seleccionar...</option>
+                  <option value="escuela">Escuela</option>
+                  <option value="colegio">Colegio</option>
+                  <option value="universidad">Universidad</option>
+                  <option value="tecnico">Técnico</option>
+                  <option value="no-estudia">No estudia</option>
+                </select>
+              </div>
+              <div class="na-field-group">
+                <label class="na-label">¿Trabaja actualmente?</label>
+                <div class="na-toggle-group">
+                  <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="trabaja === 'si'" (click)="trabaja = 'si'">Sí</button>
+                  <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="trabaja === 'no'" (click)="trabaja = 'no'">No</button>
+                </div>
+              </div>
+              <div class="na-field-group">
+                <label class="na-label" for="ocup">Ocupación</label>
+                <input id="ocup" type="text" class="na-input" placeholder="Ej. Estudiante, Ingeniero..." [(ngModel)]="ocupacion">
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. Actividad deportiva -->
+      <section class="db-section">
+        <div class="db-card db-card--overflow">
+          <div class="db-card-header"><span class="db-card-title">5. Actividad deportiva</span></div>
+          <div class="na-form-body">
+            <div class="na-field-row na-field-row--wrap">
+              <div class="na-field-group">
+                <label class="na-label">Tipo de recreación</label>
+                <div class="na-check-group">
+                  <label class="na-check-option">
+                    <input type="checkbox" [(ngModel)]="recRecreativa">
+                    <span class="na-checkbox-box" [class.na-checkbox-box--checked]="recRecreativa">
+                      @if (recRecreativa) { <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="currentColor" viewBox="0 0 16 16"><path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/></svg> }
+                    </span>
+                    Recreativa
+                  </label>
+                  <label class="na-check-option">
+                    <input type="checkbox" [(ngModel)]="recDeportiva">
+                    <span class="na-checkbox-box" [class.na-checkbox-box--checked]="recDeportiva">
+                      @if (recDeportiva) { <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="currentColor" viewBox="0 0 16 16"><path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/></svg> }
+                    </span>
+                    Deportiva
+                  </label>
+                </div>
+              </div>
+              <div class="na-field-group">
+                <label class="na-label">¿Es de representación?</label>
+                <div class="na-toggle-group">
+                  <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="esRepresentacion === 'si'" (click)="esRepresentacion = 'si'">Sí</button>
+                  <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="esRepresentacion === 'no'" (click)="esRepresentacion = 'no'">No</button>
+                </div>
+              </div>
+              <div class="na-field-group">
+                <label class="na-label">Horario preferido</label>
+                <div class="na-toggle-group">
+                  <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="horario === 'manana'" (click)="horario = 'manana'">Mañana</button>
+                  <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="horario === 'tarde'" (click)="horario = 'tarde'">Tarde</button>
+                  <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="horario === 'noche'" (click)="horario = 'noche'">Noche</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Discipline multi-select -->
+            <div class="na-field-row na-field-row--wrap">
+              <div class="na-field-group">
+                <label class="na-label">Disciplinas de interés</label>
+                <div class="na-multiselect">
+                  <button type="button" class="na-multiselect-btn" (click)="toggleDisciplineMenu($event)"
+                    [class.na-multiselect-btn--active]="selectedDisciplines().length > 0">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1H7zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path fill-rule="evenodd" d="M5.216 14A2.238 2.238 0 0 1 5 13c0-1.355.68-2.75 1.936-3.72A6.325 6.325 0 0 0 5 9c-4 0-5 3-5 4s1 1 1 1h4.216z"/><path d="M4.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"/></svg>
+                    {{ disciplineLabel() }}
+                    <svg class="na-chevron" xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/></svg>
+                  </button>
+                  @if (disciplineMenuOpen()) {
+                    <div class="na-multiselect-dropdown" (click)="$event.stopPropagation()">
+                      @for (d of disciplines; track d) {
+                        <label class="na-multiselect-option">
+                          <span class="na-checkbox" [class.na-checkbox--checked]="selectedDisciplines().includes(d)">
+                            @if (selectedDisciplines().includes(d)) { <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="currentColor" viewBox="0 0 16 16"><path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/></svg> }
+                          </span>
+                          <input type="checkbox" hidden [checked]="selectedDisciplines().includes(d)" (change)="toggleDiscipline(d)">
+                          {{ d }}
+                        </label>
+                      }
+                    </div>
+                  }
+                </div>
+                @if (selectedDisciplines().length > 0) {
+                  <div class="na-chip-list mt-2">
+                    @for (d of selectedDisciplines(); track d) {
+                      <span class="na-chip na-chip--primary">{{ d }}
+                        <button type="button" class="na-chip-remove" (click)="toggleDiscipline(d)"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="currentColor" viewBox="0 0 16 16"><path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/></svg></button>
+                      </span>
+                    }
+                  </div>
+                }
+              </div>
+
+              @if (showCategoriaMenu()) {
+                <div class="na-field-group">
+                  <label class="na-label">Categoría funcional <span class="na-label-opt">(Para Tenis de Mesa)</span></label>
+                  <div class="na-multiselect">
+                    <button type="button" class="na-multiselect-btn" (click)="toggleCategoriaMenu($event)"
+                      [class.na-multiselect-btn--active]="selectedCategorias().length > 0">
+                      {{ categoriaLabel() }}
+                      <svg class="na-chevron" xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/></svg>
+                    </button>
+                    @if (categoriaMenuOpen()) {
+                      <div class="na-multiselect-dropdown" (click)="$event.stopPropagation()">
+                        @for (c of categorias; track c) {
+                          <label class="na-multiselect-option">
+                            <span class="na-checkbox" [class.na-checkbox--checked]="selectedCategorias().includes(c)">
+                              @if (selectedCategorias().includes(c)) { <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="currentColor" viewBox="0 0 16 16"><path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/></svg> }
+                            </span>
+                            <input type="checkbox" hidden [checked]="selectedCategorias().includes(c)" (change)="toggleCategoria(c)">
+                            {{ c }}
+                          </label>
+                        }
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6. Participación y logros -->
+      <section class="db-section">
+        <div class="db-card">
+          <div class="db-card-header"><span class="db-card-title">6. Participación y logros</span></div>
+          <div class="na-form-body">
+            <div class="na-yn-grid">
+              <div class="na-yn-item">
+                <span class="na-label">¿Ha participado en Juegos Deportivos Nacionales?</span>
+                <div class="na-toggle-group">
+                  <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="participoJDN === 'si'" (click)="participoJDN = 'si'">Sí</button>
+                  <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="participoJDN === 'no'" (click)="participoJDN = 'no'">No</button>
+                </div>
+              </div>
+              <div class="na-yn-item">
+                <span class="na-label">¿Ha participado en competencias regionales?</span>
+                <div class="na-toggle-group">
+                  <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="participoRegional === 'si'" (click)="participoRegional = 'si'">Sí</button>
+                  <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="participoRegional === 'no'" (click)="participoRegional = 'no'">No</button>
+                </div>
+              </div>
+              <div class="na-yn-item">
+                <span class="na-label">¿Ha participado en competencias internacionales?</span>
+                <div class="na-toggle-group">
+                  <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="participoInternacional === 'si'" (click)="participoInternacional = 'si'">Sí</button>
+                  <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="participoInternacional === 'no'" (click)="participoInternacional = 'no'">No</button>
+                </div>
+              </div>
+              <div class="na-yn-item">
+                <span class="na-label">¿Ha obtenido medallas?</span>
+                <div class="na-toggle-group">
+                  <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="obtuvoPremio === 'si'" (click)="obtuvoPremio = 'si'">Sí</button>
+                  <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="obtuvoPremio === 'no'" (click)="obtuvoPremio = 'no'">No</button>
+                </div>
+              </div>
+            </div>
+            @if (obtuvoPremio === 'si') {
+              <div class="na-conditional-block">
+                <div class="na-field-row">
+                  <div class="na-field-group">
+                    <label class="na-label">Tipo de medalla</label>
+                    <div class="na-toggle-group">
+                      <button type="button" class="na-toggle-btn na-toggle-btn--gold"   [class.na-toggle-btn--active]="tipoPremio === 'oro'"   (click)="tipoPremio = 'oro'">Oro</button>
+                      <button type="button" class="na-toggle-btn na-toggle-btn--silver" [class.na-toggle-btn--active]="tipoPremio === 'plata'" (click)="tipoPremio = 'plata'">Plata</button>
+                      <button type="button" class="na-toggle-btn na-toggle-btn--bronze" [class.na-toggle-btn--active]="tipoPremio === 'bronce'" (click)="tipoPremio = 'bronce'">Bronce</button>
+                    </div>
+                  </div>
+                  <div class="na-field-group">
+                    <label class="na-label" for="discPremiada">Disciplina</label>
+                    <input id="discPremiada" type="text" class="na-input" placeholder="Ej. Natación 100m libre" [(ngModel)]="disciplinaPremio">
+                  </div>
+                  <div class="na-field-group">
+                    <label class="na-label" for="anioMedalla">Año</label>
+                    <input id="anioMedalla" type="number" class="na-input" placeholder="Ej. 2023" min="1990" [max]="2026" [(ngModel)]="anioPremio">
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </section>
+
+      <!-- 7. Objetivos y motivación -->
+      <section class="db-section">
+        <div class="db-card">
+          <div class="db-card-header"><span class="db-card-title">7. Objetivos y motivación</span></div>
+          <div class="na-form-body">
+            <div class="na-field-row na-field-row--wrap">
+              <div class="na-field-group">
+                <label class="na-label">Objetivo principal</label>
+                <div class="na-toggle-group na-toggle-group--wrap">
+                  <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="objetivoPrincipal === 'recreacion'"     (click)="objetivoPrincipal = 'recreacion'">Recreación</button>
+                  <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="objetivoPrincipal === 'salud'"           (click)="objetivoPrincipal = 'salud'">Salud</button>
+                  <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="objetivoPrincipal === 'alto-rendimiento'" (click)="objetivoPrincipal = 'alto-rendimiento'">Alto rendimiento</button>
+                  <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="objetivoPrincipal === 'social'"          (click)="objetivoPrincipal = 'social'">Social</button>
+                </div>
+              </div>
+              <div class="na-field-group">
+                <label class="na-label">Frecuencia semanal</label>
+                <div class="na-toggle-group">
+                  <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="frecuenciaSemanal === '1'"    (click)="frecuenciaSemanal = '1'">1</button>
+                  <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="frecuenciaSemanal === '2-3'"  (click)="frecuenciaSemanal = '2-3'">2–3</button>
+                  <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="frecuenciaSemanal === '4-5'"  (click)="frecuenciaSemanal = '4-5'">4–5</button>
+                  <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="frecuenciaSemanal === 'mas5'" (click)="frecuenciaSemanal = 'mas5'">+5</button>
+                </div>
+              </div>
+            </div>
+            <div class="na-yn-grid">
+              <div class="na-yn-item">
+                <span class="na-label">¿Ha abandonado programas deportivos?</span>
+                <div class="na-toggle-group">
+                  <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="abandonoProgramas === 'si'" (click)="abandonoProgramas = 'si'">Sí</button>
+                  <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="abandonoProgramas === 'no'" (click)="abandonoProgramas = 'no'">No</button>
+                </div>
+              </div>
+              <div class="na-yn-item">
+                <span class="na-label">¿Cuenta con apoyo familiar?</span>
+                <div class="na-toggle-group">
+                  <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="apoyoFamiliar === 'si'" (click)="apoyoFamiliar = 'si'">Sí</button>
+                  <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="apoyoFamiliar === 'no'" (click)="apoyoFamiliar = 'no'">No</button>
+                </div>
+              </div>
+            </div>
+            <div class="na-field-group">
+              <label class="na-label">Nivel de satisfacción</label>
+              <div class="na-toggle-group">
+                <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="nivelSatisfaccion === 'muy-satisfecho'"  (click)="nivelSatisfaccion = 'muy-satisfecho'">Muy satisfecho</button>
+                <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="nivelSatisfaccion === 'satisfecho'"       (click)="nivelSatisfaccion = 'satisfecho'">Satisfecho</button>
+                <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="nivelSatisfaccion === 'neutral'"          (click)="nivelSatisfaccion = 'neutral'">Neutral</button>
+                <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="nivelSatisfaccion === 'insatisfecho'"     (click)="nivelSatisfaccion = 'insatisfecho'">Insatisfecho</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 8. Salud -->
+      <section class="db-section">
+        <div class="db-card">
+          <div class="db-card-header"><span class="db-card-title">8. Salud</span></div>
+          <div class="na-form-body">
+            <div class="na-yn-grid">
+              <div class="na-yn-item">
+                <span class="na-label">¿Condición médica?</span>
+                <div class="na-toggle-group">
+                  <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="condicionMedica === 'si'" (click)="condicionMedica = 'si'">Sí</button>
+                  <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="condicionMedica === 'no'" (click)="condicionMedica = 'no'">No</button>
+                </div>
+              </div>
+              <div class="na-yn-item">
+                <span class="na-label">¿Alergias?</span>
+                <div class="na-toggle-group">
+                  <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="alergias === 'si'" (click)="alergias = 'si'">Sí</button>
+                  <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="alergias === 'no'" (click)="alergias = 'no'">No</button>
+                </div>
+              </div>
+              <div class="na-yn-item">
+                <span class="na-label">¿Condición de salud mental?</span>
+                <div class="na-toggle-group">
+                  <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="condicionSaludMental === 'si'" (click)="condicionSaludMental = 'si'">Sí</button>
+                  <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="condicionSaludMental === 'no'" (click)="condicionSaludMental = 'no'">No</button>
+                </div>
+              </div>
+              <div class="na-yn-item">
+                <span class="na-label">¿Requiere adaptación?</span>
+                <div class="na-toggle-group">
+                  <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="requiereAdaptacion === 'si'" (click)="requiereAdaptacion = 'si'">Sí</button>
+                  <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="requiereAdaptacion === 'no'" (click)="requiereAdaptacion = 'no'">No</button>
+                </div>
+              </div>
+            </div>
+            <div class="na-field-group">
+              <label class="na-label">Seguro médico</label>
+              <div class="na-toggle-group">
+                <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="seguroMedico === 'ccss'"    (click)="seguroMedico = 'ccss'">CCSS</button>
+                <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="seguroMedico === 'privado'" (click)="seguroMedico = 'privado'">Privado</button>
+                <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="seguroMedico === 'ninguno'" (click)="seguroMedico = 'ninguno'">Ninguno</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 9. Vínculo con el Comité -->
+      <section class="db-section">
+        <div class="db-card">
+          <div class="db-card-header"><span class="db-card-title">9. Vínculo con el Comité</span></div>
+          <div class="na-form-body">
+            <div class="na-yn-item">
+              <span class="na-label">¿Tiene familiares en el Comité?</span>
+              <div class="na-toggle-group">
+                <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="familiarComite === 'si'" (click)="familiarComite = 'si'">Sí</button>
+                <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="familiarComite === 'no'" (click)="familiarComite = 'no'">No</button>
+              </div>
+            </div>
+            @if (familiarComite === 'si') {
+              <div class="na-conditional-block">
+                <div class="na-field-row">
+                  <div class="na-field-group">
+                    <label class="na-label" for="nomFam">Nombre completo del familiar</label>
+                    <input id="nomFam" type="text" class="na-input" placeholder="Nombre completo" [(ngModel)]="nombreFamiliar">
+                  </div>
+                  <div class="na-field-group">
+                    <label class="na-label" for="relFam">Relación</label>
+                    <input id="relFam" type="text" class="na-input" placeholder="Ej. Hermano, Padre..." [(ngModel)]="relacionFamiliar">
+                  </div>
+                  <div class="na-field-group">
+                    <label class="na-label" for="discFam">Disciplina</label>
+                    <input id="discFam" type="text" class="na-input" placeholder="Ej. Natación" [(ngModel)]="disciplinaFamiliar">
+                  </div>
+                </div>
+              </div>
+            }
+
+            <div class="na-yn-item">
+              <span class="na-label">¿Ha pertenecido a otro Comité?</span>
+              <div class="na-toggle-group">
+                <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="otraComite === 'si'" (click)="otraComite = 'si'">Sí</button>
+                <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="otraComite === 'no'" (click)="otraComite = 'no'">No</button>
+              </div>
+            </div>
+            @if (otraComite === 'si') {
+              <div class="na-conditional-block">
+                <div class="na-field-group na-field-group--half">
+                  <label class="na-label" for="nomComite">Nombre del Comité</label>
+                  <input id="nomComite" type="text" class="na-input" placeholder="Nombre del Comité anterior" [(ngModel)]="nombreOtraComite">
+                </div>
+              </div>
+            }
+
+            <div class="na-yn-item">
+              <span class="na-label">¿Pertenece a algún club?</span>
+              <div class="na-toggle-group">
+                <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="perteneceClub === 'si'" (click)="perteneceClub = 'si'">Sí</button>
+                <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="perteneceClub === 'no'" (click)="perteneceClub = 'no'">No</button>
+              </div>
+            </div>
+            @if (perteneceClub === 'si') {
+              <div class="na-conditional-block">
+                <div class="na-field-group na-field-group--half">
+                  <label class="na-label" for="nomClub">Nombre del club</label>
+                  <input id="nomClub" type="text" class="na-input" placeholder="Nombre del club" [(ngModel)]="nombreClub">
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </section>
+
+      <!-- 10. Instalaciones y accesibilidad -->
+      <section class="db-section">
+        <div class="db-card">
+          <div class="db-card-header"><span class="db-card-title">10. Instalaciones y accesibilidad</span></div>
+          <div class="na-form-body">
+            <div class="na-yn-grid">
+              <div class="na-yn-item">
+                <span class="na-label">¿Las instalaciones son adecuadas?</span>
+                <div class="na-toggle-group">
+                  <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="instalacionesAdecuadas === 'si'"           (click)="instalacionesAdecuadas = 'si'">Sí</button>
+                  <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="instalacionesAdecuadas === 'no'"           (click)="instalacionesAdecuadas = 'no'">No</button>
+                  <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="instalacionesAdecuadas === 'parcialmente'" (click)="instalacionesAdecuadas = 'parcialmente'">Parcialmente</button>
+                </div>
+              </div>
+              <div class="na-yn-item">
+                <span class="na-label">¿Limitación física?</span>
+                <div class="na-toggle-group">
+                  <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="limitacionFisica === 'si'" (click)="limitacionFisica = 'si'">Sí</button>
+                  <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="limitacionFisica === 'no'" (click)="limitacionFisica = 'no'">No</button>
+                </div>
+              </div>
+              <div class="na-yn-item">
+                <span class="na-label">¿Requiere transporte?</span>
+                <div class="na-toggle-group">
+                  <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="requiereTransporte === 'si'" (click)="requiereTransporte = 'si'">Sí</button>
+                  <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="requiereTransporte === 'no'" (click)="requiereTransporte = 'no'">No</button>
+                </div>
+              </div>
+              <div class="na-yn-item">
+                <span class="na-label">¿Tiene implementos deportivos?</span>
+                <div class="na-toggle-group">
+                  <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="tieneImplementos === 'si'" (click)="tieneImplementos = 'si'">Sí</button>
+                  <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="tieneImplementos === 'no'" (click)="tieneImplementos = 'no'">No</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 11. Comunicación -->
+      <section class="db-section">
+        <div class="db-card">
+          <div class="db-card-header"><span class="db-card-title">11. Comunicación</span></div>
+          <div class="na-form-body">
+            <div class="na-field-row na-field-row--wrap">
+              <div class="na-field-group">
+                <label class="na-label">¿Cómo se enteró del Comité?</label>
+                <select class="na-select" [(ngModel)]="comoSeEntero">
+                  <option value="">Seleccionar...</option>
+                  <option value="redes">Redes sociales</option>
+                  <option value="municipalidad">Municipalidad</option>
+                  <option value="educativo">Centro educativo</option>
+                  <option value="recomendacion">Recomendación</option>
+                  <option value="otro">Otro</option>
+                </select>
+              </div>
+              <div class="na-field-group">
+                <label class="na-label">¿Desea recibir información?</label>
+                <div class="na-toggle-group">
+                  <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="desearRecibir === 'si'" (click)="desearRecibir = 'si'">Sí</button>
+                  <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="desearRecibir === 'no'" (click)="desearRecibir = 'no'">No</button>
+                </div>
+              </div>
+              @if (desearRecibir === 'si') {
+                <div class="na-field-group">
+                  <label class="na-label">Medio preferido</label>
+                  <div class="na-toggle-group">
+                    <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="medioPreferido === 'whatsapp'" (click)="medioPreferido = 'whatsapp'">WhatsApp</button>
+                    <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="medioPreferido === 'correo'"   (click)="medioPreferido = 'correo'">Correo</button>
+                    <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="medioPreferido === 'llamada'" (click)="medioPreferido = 'llamada'">Llamada</button>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 12. Descargo de responsabilidad -->
+      <section class="db-section">
+        <div class="db-card na-card--disclaimer">
+          <div class="db-card-header"><span class="db-card-title">12. Descargo de responsabilidad</span></div>
+          <div class="na-form-body">
+            <div class="na-yn-grid">
+              <div class="na-yn-item">
+                <span class="na-label">Autorizo el uso de mis datos personales</span>
+                <div class="na-toggle-group">
+                  <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="autorizaDatos === 'si'" (click)="autorizaDatos = 'si'">Sí, autorizo</button>
+                  <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="autorizaDatos === 'no'" (click)="autorizaDatos = 'no'">No autorizo</button>
+                </div>
+              </div>
+              <div class="na-yn-item">
+                <span class="na-label">Autorizo el uso de mi imagen</span>
+                <div class="na-toggle-group">
+                  <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="autorizaImagen === 'si'" (click)="autorizaImagen = 'si'">Sí, autorizo</button>
+                  <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="autorizaImagen === 'no'" (click)="autorizaImagen = 'no'">No autorizo</button>
+                </div>
+              </div>
+            </div>
+            <div class="na-field-group">
+              <label class="na-label" for="firma">Firma (nombre completo del firmante)</label>
+              <input id="firma" type="text" class="na-input na-input--firma" placeholder="Escriba su nombre completo como firma" [(ngModel)]="firmaNombre">
+            </div>
+            <div class="na-form-footer">
+              <button type="button" class="btn btn-outline-secondary px-4 me-2" routerLink="/atletas">Cancelar</button>
+              <button type="button" class="btn btn-primary px-4">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="me-2" viewBox="0 0 16 16"><path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4z"/></svg>
+                Registrar atleta
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    }
+
+  </main>
+</div>

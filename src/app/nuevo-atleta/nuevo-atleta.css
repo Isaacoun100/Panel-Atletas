@@ -1,0 +1,537 @@
+/* ── Method selector ────────────────────────────────── */
+.na-method-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.na-method-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 1.25rem 1.25rem 1.1rem;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  position: relative;
+}
+
+.na-method-card:hover {
+  border-color: var(--primary);
+  box-shadow: var(--shadow-md);
+}
+
+.na-method-card--active {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+
+.na-method-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.na-method-icon--email  { background: var(--accent-soft); color: var(--accent); }
+.na-method-icon--manual { background: var(--primary-soft); color: var(--primary); }
+
+.na-method-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  flex: 1;
+}
+
+.na-method-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.na-method-desc {
+  font-size: 0.8rem;
+  color: var(--text-3);
+  line-height: 1.4;
+}
+
+.na-method-check {
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+/* ── Form layout ────────────────────────────────────── */
+.na-form-body {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.na-field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.na-field-row--wrap {
+  grid-template-columns: unset;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.na-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.na-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+.na-label-opt {
+  font-weight: 400;
+  color: var(--text-3);
+}
+
+/* ── Inputs ─────────────────────────────────────────── */
+.na-input-wrap {
+  position: relative;
+  display: flex;
+}
+
+.na-input-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-3);
+  pointer-events: none;
+}
+
+.na-input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 0.15s, background 0.15s;
+  font-family: var(--font-ui);
+}
+
+.na-input-wrap .na-input { padding-left: 2.25rem; }
+.na-input::placeholder { color: var(--text-3); }
+.na-input:focus {
+  border-color: var(--primary);
+  background: var(--surface);
+}
+
+.na-select {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 0.875rem;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s;
+  font-family: var(--font-ui);
+}
+
+.na-select:focus { border-color: var(--primary); }
+
+.na-textarea {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 0.875rem;
+  outline: none;
+  resize: vertical;
+  transition: border-color 0.15s, background 0.15s;
+  font-family: var(--font-ui);
+}
+
+.na-textarea::placeholder { color: var(--text-3); }
+.na-textarea:focus {
+  border-color: var(--primary);
+  background: var(--surface);
+}
+
+/* ── Email row ──────────────────────────────────────── */
+.na-email-input-row {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.na-add-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--primary);
+  border-radius: var(--radius);
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.12s, color 0.12s;
+}
+
+.na-add-btn:hover {
+  background: var(--primary);
+  color: #fff;
+}
+
+.na-field-hint {
+  font-size: 0.75rem;
+  color: var(--text-3);
+  margin: 0;
+}
+
+.na-field-error {
+  font-size: 0.75rem;
+  color: var(--danger);
+  font-weight: 500;
+}
+
+/* ── Chips ──────────────────────────────────────────── */
+.na-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.na-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.5rem 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  background: var(--surface-2);
+  color: var(--text-2);
+  border: 1px solid var(--border);
+}
+
+.na-chip--primary {
+  background: var(--primary-soft);
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.na-chip--accent {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.na-chip-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.6;
+  padding: 0;
+  line-height: 1;
+  transition: opacity 0.1s;
+}
+
+.na-chip-remove:hover { opacity: 1; }
+
+/* ── Multi-select ───────────────────────────────────── */
+.na-multiselect { position: relative; }
+
+.na-multiselect-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.12s, color 0.12s, background 0.12s;
+}
+
+.na-multiselect-btn:hover { border-color: var(--primary); color: var(--text); }
+
+.na-multiselect-btn--active {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.na-chevron { opacity: 0.5; margin-left: 2px; }
+
+.na-multiselect-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 200;
+  min-width: 210px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: 0.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.na-multiselect-option {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.45rem 0.6rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  color: var(--text-2);
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+  user-select: none;
+  margin: 0;
+}
+
+.na-multiselect-option:hover { background: var(--surface-2); color: var(--text); }
+
+.na-checkbox {
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid var(--border-strong);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.1s, border-color 0.1s;
+}
+
+.na-checkbox--checked {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+/* ── Radio buttons ──────────────────────────────────── */
+.na-sex-group {
+  display: flex;
+  gap: 1rem;
+}
+
+.na-radio-option {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: var(--text-2);
+}
+
+.na-radio-option input[type="radio"] {
+  accent-color: var(--primary);
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+}
+
+.na-radio-label { user-select: none; }
+
+/* ── Form footer ────────────────────────────────────── */
+.na-form-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+}
+
+/* ── ID row (type + number) ─────────────────────────── */
+.na-id-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.na-select--short { width: 140px; flex-shrink: 0; }
+
+/* ── Read-only field (edad) ─────────────────────────── */
+.na-read-only {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  color: var(--text-3);
+  font-size: 0.875rem;
+  font-style: italic;
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+}
+
+/* ── Toggle group (Yes/No and multi-option) ─────────── */
+.na-toggle-group {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  width: fit-content;
+}
+
+.na-toggle-group--wrap {
+  flex-wrap: wrap;
+  overflow: visible;
+  border: none;
+  border-radius: 0;
+  gap: 0.35rem;
+}
+
+.na-toggle-group--wrap .na-toggle-btn {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.na-toggle-btn {
+  padding: 0.42rem 0.85rem;
+  border: none;
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+  border-right: 1px solid var(--border);
+  white-space: nowrap;
+  font-family: var(--font-ui);
+}
+
+.na-toggle-btn:last-child { border-right: none; }
+.na-toggle-btn:hover { background: var(--surface); color: var(--text); }
+
+.na-toggle-btn--active {
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.na-toggle-btn--gold.na-toggle-btn--active   { background: oklch(0.95 0.07 85);  color: oklch(0.55 0.14 85); }
+.na-toggle-btn--silver.na-toggle-btn--active { background: oklch(0.94 0.01 250); color: oklch(0.45 0.02 250); }
+.na-toggle-btn--bronze.na-toggle-btn--active { background: oklch(0.95 0.07 50);  color: oklch(0.50 0.12 50); }
+
+/* ── Yes/No grid layout ─────────────────────────────── */
+.na-yn-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.na-yn-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+/* ── Checkbox group (tipo recreación) ───────────────── */
+.na-check-group {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.na-check-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: var(--text-2);
+  user-select: none;
+  margin: 0;
+}
+
+.na-check-option input[type="checkbox"] { display: none; }
+
+.na-checkbox-box {
+  width: 17px;
+  height: 17px;
+  border: 1.5px solid var(--border-strong);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.1s, border-color 0.1s;
+}
+
+.na-checkbox-box--checked {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+/* ── Conditional block ──────────────────────────────── */
+.na-conditional-block {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  margin-top: -0.25rem;
+}
+
+/* ── Half-width field ───────────────────────────────── */
+.na-field-group--half { max-width: 360px; }
+
+/* ── Firma input ────────────────────────────────────── */
+.na-input--firma {
+  font-style: italic;
+  letter-spacing: 0.02em;
+}
+
+/* ── Minor badge ────────────────────────────────────── */
+.na-minor-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: var(--warning-soft);
+  color: var(--warning-text);
+  border-radius: 999px;
+  padding: 0.15rem 0.6rem;
+}
+
+/* ── Card variants ──────────────────────────────────── */
+.na-card--alert  { border-color: var(--warning); }
+.na-card--disclaimer { border-color: var(--primary); }
+
+/* ── Responsive ─────────────────────────────────────── */
+@media (max-width: 768px) {
+  .na-method-grid { grid-template-columns: 1fr; }
+  .na-field-row   { grid-template-columns: 1fr; }
+  .na-email-input-row { flex-direction: column; }
+}
