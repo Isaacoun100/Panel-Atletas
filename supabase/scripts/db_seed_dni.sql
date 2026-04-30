@@ -17,9 +17,3 @@ INSERT INTO public.dni_types (name) VALUES
   ('Pasaporte'),
   ('DIMEX')
 ON CONFLICT (name) DO NOTHING;
-
-
-DO $$
-BEGIN
-  RAISE NOTICE 'Seed completed successfully.';
-END $$;

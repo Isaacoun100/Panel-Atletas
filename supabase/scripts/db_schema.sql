@@ -166,7 +166,7 @@ CREATE TABLE public.addresses (
   is_permanent_canton_resident BOOLEAN NOT NULL DEFAULT TRUE,
 
   CONSTRAINT residence_canton_consistency CHECK (
-    (is_permanent_canton_resident = TRUE AND fk_residence_canton = 1)
+    (is_permanent_canton_resident = TRUE AND fk_residence_canton = 15)
     OR
     (is_permanent_canton_resident = FALSE AND fk_residence_canton IS NOT NULL)
   )
