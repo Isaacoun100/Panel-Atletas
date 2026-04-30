@@ -1,1 +1,117 @@
-<p>incio-sesion works!</p>
+<div class="login-bg d-flex align-items-center justify-content-center min-vh-100 p-3">
+  <div class="card login-card shadow-lg border-0">
+    <div class="row g-0 h-100">
+
+      <!-- Left: Carousel -->
+      <div class="col-lg-6 d-none d-lg-flex flex-column carousel-col">
+        <div id="loginCarousel" class="carousel slide h-100" data-bs-ride="carousel">
+          <div class="carousel-inner h-100">
+            <div class="carousel-item active h-100">
+              <img src="https://picsum.photos/600/800?random=10" class="d-block w-100 h-100" alt="">
+            </div>
+            <div class="carousel-item h-100">
+              <img src="https://picsum.photos/600/800?random=20" class="d-block w-100 h-100" alt="">
+            </div>
+            <div class="carousel-item h-100">
+              <img src="https://picsum.photos/600/800?random=30" class="d-block w-100 h-100" alt="">
+            </div>
+          </div>
+
+          <!-- Gradient overlay + text -->
+          <div class="carousel-caption-overlay">
+            <p class="carousel-brand-text">
+              Panel de Gestión Atletas<br>
+              Comité Cantonal de Deportes y Recreación<br>
+              Montes de Oca
+            </p>
+          </div>
+
+          <button class="carousel-control-prev" type="button" data-bs-target="#loginCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon"></span>
+          </button>
+          <button class="carousel-control-next" type="button" data-bs-target="#loginCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon"></span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Right: Login form -->
+      <div class="col-12 col-lg-6 d-flex align-items-center justify-content-center p-4 p-sm-5">
+        <div class="login-form-wrapper w-100">
+
+          <!-- Mobile-only title -->
+          <div class="d-lg-none text-center mb-4">
+            <p class="mobile-brand-text">
+              Panel de Gestión Atletas<br>
+              Comité Cantonal de Deportes y Recreación<br>
+              Montes de Oca
+            </p>
+          </div>
+
+          <h2 class="fw-bold mb-1">Bienvenido de vuelta</h2>
+          <p class="text-muted mb-4">Ingresa con tu cuenta</p>
+
+          <form (ngSubmit)="onLogin()">
+            <div class="mb-3">
+              <label for="usuario" class="form-label fw-medium">Usuario</label>
+              <input
+                type="text"
+                id="usuario"
+                class="form-control form-control-lg"
+                placeholder="Ingresa tu usuario"
+                autocomplete="username"
+              />
+            </div>
+
+            <div class="mb-4">
+              <label for="contrasena" class="form-label fw-medium">Contraseña</label>
+              <input
+                type="password"
+                id="contrasena"
+                class="form-control form-control-lg"
+                placeholder="Ingresa tu contraseña"
+                autocomplete="current-password"
+              />
+            </div>
+
+            <div class="d-grid">
+              <button type="submit" class="btn btn-primary btn-lg">
+                Iniciar sesión
+              </button>
+            </div>
+          </form>
+
+          <!-- Dev team -->
+          <div class="team-section mt-4 pt-3">
+            <p class="team-label">Desarrollado por</p>
+            <div class="d-flex justify-content-center gap-3 flex-wrap">
+
+              <a href="https://github.com/Isaacoun100" target="_blank" class="team-member" title="Isaac Herrera Monge">
+                <img src="https://github.com/Isaacoun100.png?size=48" alt="Isaacoun100">
+                <span>Isaac Herrera</span>
+              </a>
+
+              <a href="https://github.com/BraCR10" target="_blank" class="team-member" title="Brian Ramirez">
+                <img src="https://github.com/BraCR10.png?size=48" alt="BraCR10">
+                <span>Brian Ramirez</span>
+              </a>
+
+              <a href="https://github.com/Oseec" target="_blank" class="team-member" title="Isaac Gamboa">
+                <img src="https://github.com/Oseec.png?size=48" alt="Oseec">
+                <span>Isaac Gamboa</span>
+              </a>
+
+              <a href="https://github.com/LuisArrietaV" target="_blank" class="team-member" title="LuisArrietaV">
+                <img src="https://github.com/LuisArrietaV.png?size=48" alt="LuisArrietaV">
+                <span>Luis Arrieta</span>
+              </a>
+
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

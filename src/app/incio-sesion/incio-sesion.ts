@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-incio-sesion',
@@ -6,4 +7,10 @@ import { Component } from '@angular/core';
   templateUrl: './incio-sesion.html',
   styleUrl: './incio-sesion.css',
 })
-export class IncioSesion {}
+export class IncioSesion {
+  constructor(private router: Router) {}
+
+  onLogin() {
+    this.router.navigate(['/dashboard']);
+  }
+}
