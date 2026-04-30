@@ -725,12 +725,11 @@ BEGIN
   RAISE NOTICE 'Creating RLS policies for users_invitations...';
 END $$;
 
-CREATE POLICY "Admins can manage invitations"
+CREATE POLICY "Admins can read invitations"
 ON public.users_invitations
-FOR ALL
+FOR SELECT
 TO authenticated
-USING (public.is_admin())
-WITH CHECK (public.is_admin());
+USING (public.is_admin());
 
 -- =========================
 -- INDEXES

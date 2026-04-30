@@ -128,9 +128,9 @@ Restricted to admins only. No user-facing access.
 
 | Operation | Who | Condition |
 |-----------|-----|-----------|
-| ALL | Admin | `is_admin()` |
+| SELECT | Admin | `is_admin()` |
 
-Invitation management is an administrative operation. Regular users have no access to this table.
+Admins can read invitation records via the Data API. All mutations (INSERT, UPDATE, DELETE) are handled exclusively by Edge Functions using the service role key, which bypasses RLS.
 
 ---
 
