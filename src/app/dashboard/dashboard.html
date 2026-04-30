@@ -1,0 +1,281 @@
+<div class="db-layout">
+
+  <!-- Sidebar -->
+  <aside class="db-sidebar d-flex flex-column">
+    <div class="db-sidebar-header">
+      <span class="db-logo-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0zM4.5 7.5a.5.5 0 0 0 0 1h5.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H4.5z"/>
+        </svg>
+      </span>
+      <span class="db-logo-text">Panel Atletas</span>
+    </div>
+
+    <nav class="db-nav flex-grow-1">
+      <p class="db-nav-label">Principal</p>
+      <a routerLink="/dashboard" routerLinkActive="active" class="db-nav-item">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M8.354 1.146a.5.5 0 0 0-.708 0l-6 6-.354.353V14.5A1.5 1.5 0 0 0 2.5 16h11a1.5 1.5 0 0 0 1.5-1.5V7.499l-.354-.353-6-6z"/>
+        </svg>
+        Dashboard
+      </a>
+      <a routerLink="/atletas" routerLinkActive="active" class="db-nav-item">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1H7zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>
+          <path fill-rule="evenodd" d="M5.216 14A2.238 2.238 0 0 1 5 13c0-1.355.68-2.75 1.936-3.72A6.325 6.325 0 0 0 5 9c-4 0-5 3-5 4s1 1 1 1h4.216z"/>
+          <path d="M4.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"/>
+        </svg>
+        Atletas
+      </a>
+      <a routerLink="/registrar-atleta" routerLinkActive="active" class="db-nav-item">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M14 1a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H4.414A2 2 0 0 0 3 11.586l-2 2V2a1 1 0 0 1 1-1h12z"/>
+        </svg>
+        Registrar Atleta
+      </a>
+      <a routerLink="/nuevo-atleta" routerLinkActive="active" class="db-nav-item">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2zm4.5 5.5a.5.5 0 0 0 0 1h5a.5.5 0 0 0 0-1h-5zm0 2a.5.5 0 0 0 0 1h5a.5.5 0 0 0 0-1h-5zM4 5a1 1 0 1 1 2 0 1 1 0 0 1-2 0z"/>
+        </svg>
+        Nuevo Atleta
+      </a>
+
+      <p class="db-nav-label mt-3">Cuenta</p>
+      <a routerLink="/mi-perfil" routerLinkActive="active" class="db-nav-item">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4z"/>
+        </svg>
+        Mi Perfil
+      </a>
+    </nav>
+
+    <div class="db-sidebar-footer">
+      <div class="db-user-chip">
+        <img src="https://github.com/Isaacoun100.png?size=32" alt="User" class="db-user-avatar">
+        <div class="db-user-info">
+          <span class="db-user-name">Administrador</span>
+          <span class="db-user-role">Comité Montes de Oca</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <main class="db-main">
+
+    <!-- Topbar -->
+    <header class="db-topbar d-flex align-items-center justify-content-between">
+      <div>
+        <h1 class="db-page-title">Dashboard</h1>
+        <p class="db-page-sub">Comité Cantonal de Deportes y Recreación Montes de Oca</p>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <button routerLink="/nuevo-atleta" class="btn btn-primary btn-sm px-3">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="me-1" viewBox="0 0 16 16">
+            <path d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2z"/>
+          </svg>
+          Nuevo Atleta
+        </button>
+      </div>
+    </header>
+
+    <!-- Stat cards -->
+    <section class="db-section">
+      <div class="row g-3">
+        <div class="col-6 col-xl-3">
+          <div class="db-stat-card">
+            <div class="db-stat-icon db-stat-icon--primary">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1H7zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>
+                <path fill-rule="evenodd" d="M5.216 14A2.238 2.238 0 0 1 5 13c0-1.355.68-2.75 1.936-3.72A6.325 6.325 0 0 0 5 9c-4 0-5 3-5 4s1 1 1 1h4.216z"/>
+                <path d="M4.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"/>
+              </svg>
+            </div>
+            <div class="db-stat-body">
+              <span class="db-stat-value">148</span>
+              <span class="db-stat-label">Total Atletas</span>
+            </div>
+            <span class="db-stat-badge db-stat-badge--success">+12 este mes</span>
+          </div>
+        </div>
+        <div class="col-6 col-xl-3">
+          <div class="db-stat-card">
+            <div class="db-stat-icon db-stat-icon--success">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v13.5a.5.5 0 0 1-.777.416L8 13.101l-5.223 2.815A.5.5 0 0 1 2 15.5V2zm2-1a1 1 0 0 0-1 1v12.566l4.723-2.482a.5.5 0 0 1 .554 0L13 14.566V2a1 1 0 0 0-1-1H4z"/>
+              </svg>
+            </div>
+            <div class="db-stat-body">
+              <span class="db-stat-value">34</span>
+              <span class="db-stat-label">Disciplinas</span>
+            </div>
+            <span class="db-stat-badge db-stat-badge--accent">Activas</span>
+          </div>
+        </div>
+        <div class="col-6 col-xl-3">
+          <div class="db-stat-card">
+            <div class="db-stat-icon db-stat-icon--warning">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/>
+                <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/>
+              </svg>
+            </div>
+            <div class="db-stat-body">
+              <span class="db-stat-value">7</span>
+              <span class="db-stat-label">Pendientes</span>
+            </div>
+            <span class="db-stat-badge db-stat-badge--warning">Por revisar</span>
+          </div>
+        </div>
+        <div class="col-6 col-xl-3">
+          <div class="db-stat-card">
+            <div class="db-stat-icon db-stat-icon--danger">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995z"/>
+              </svg>
+            </div>
+            <div class="db-stat-body">
+              <span class="db-stat-value">3</span>
+              <span class="db-stat-label">Inactivos</span>
+            </div>
+            <span class="db-stat-badge db-stat-badge--danger">Requieren acción</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Recent athletes table + activity -->
+    <section class="db-section">
+      <div class="row g-3">
+
+        <!-- Table -->
+        <div class="col-12 col-xl-8">
+          <div class="db-card">
+            <div class="db-card-header d-flex align-items-center justify-content-between">
+              <span class="db-card-title">Atletas Recientes</span>
+              <a routerLink="/atletas" class="db-card-link">Ver todos</a>
+            </div>
+            <div class="table-responsive">
+              <table class="table db-table mb-0">
+                <thead>
+                  <tr>
+                    <th>Atleta</th>
+                    <th>Disciplina</th>
+                    <th>Estado</th>
+                    <th>Registro</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>
+                      <div class="db-table-user">
+                        <div class="db-table-avatar">CM</div>
+                        <span>Carlos Mora</span>
+                      </div>
+                    </td>
+                    <td>Natación</td>
+                    <td><span class="db-badge db-badge--success">Activo</span></td>
+                    <td>24 Abr 2025</td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <div class="db-table-user">
+                        <div class="db-table-avatar">LR</div>
+                        <span>Laura Rodríguez</span>
+                      </div>
+                    </td>
+                    <td>Atletismo</td>
+                    <td><span class="db-badge db-badge--success">Activo</span></td>
+                    <td>22 Abr 2025</td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <div class="db-table-user">
+                        <div class="db-table-avatar">PG</div>
+                        <span>Pedro González</span>
+                      </div>
+                    </td>
+                    <td>Fútbol</td>
+                    <td><span class="db-badge db-badge--warning">Pendiente</span></td>
+                    <td>20 Abr 2025</td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <div class="db-table-user">
+                        <div class="db-table-avatar">AF</div>
+                        <span>Andrea Flores</span>
+                      </div>
+                    </td>
+                    <td>Gimnasia</td>
+                    <td><span class="db-badge db-badge--success">Activo</span></td>
+                    <td>18 Abr 2025</td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <div class="db-table-user">
+                        <div class="db-table-avatar">MV</div>
+                        <span>Marco Vargas</span>
+                      </div>
+                    </td>
+                    <td>Baloncesto</td>
+                    <td><span class="db-badge db-badge--danger">Inactivo</span></td>
+                    <td>15 Abr 2025</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Activity feed -->
+        <div class="col-12 col-xl-4">
+          <div class="db-card h-100">
+            <div class="db-card-header">
+              <span class="db-card-title">Actividad Reciente</span>
+            </div>
+            <div class="db-activity">
+              <div class="db-activity-item">
+                <div class="db-activity-dot db-activity-dot--success"></div>
+                <div>
+                  <p class="db-activity-text">Nuevo atleta registrado: <strong>Carlos Mora</strong></p>
+                  <span class="db-activity-time">Hace 2 horas</span>
+                </div>
+              </div>
+              <div class="db-activity-item">
+                <div class="db-activity-dot db-activity-dot--primary"></div>
+                <div>
+                  <p class="db-activity-text">Perfil actualizado: <strong>Laura Rodríguez</strong></p>
+                  <span class="db-activity-time">Hace 5 horas</span>
+                </div>
+              </div>
+              <div class="db-activity-item">
+                <div class="db-activity-dot db-activity-dot--warning"></div>
+                <div>
+                  <p class="db-activity-text">Solicitud pendiente de <strong>Pedro González</strong></p>
+                  <span class="db-activity-time">Ayer</span>
+                </div>
+              </div>
+              <div class="db-activity-item">
+                <div class="db-activity-dot db-activity-dot--success"></div>
+                <div>
+                  <p class="db-activity-text">Nueva disciplina añadida: <strong>Gimnasia</strong></p>
+                  <span class="db-activity-time">Hace 2 días</span>
+                </div>
+              </div>
+              <div class="db-activity-item">
+                <div class="db-activity-dot db-activity-dot--danger"></div>
+                <div>
+                  <p class="db-activity-text">Atleta inactivo: <strong>Marco Vargas</strong></p>
+                  <span class="db-activity-time">Hace 3 días</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+</div>
