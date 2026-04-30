@@ -134,6 +134,7 @@ CREATE TABLE public.users_profiles (
   fk_dni_type INTEGER NOT NULL REFERENCES public.dni_types(id_dni_type),
   birth_date DATE NOT NULL,
   gender public.gender NOT NULL,
+  phone VARCHAR(32) NOT NULL,
   profile_image_url TEXT,
   role public.user_role NOT NULL DEFAULT 'athlete',
   is_active BOOLEAN NOT NULL DEFAULT TRUE,
@@ -397,6 +398,66 @@ CREATE TABLE public.users_invitations (
 );
 
 -- =========================
+-- TRIGGERS
+-- =========================
+
+DO $$
+BEGIN
+  RAISE NOTICE 'Creating trigger handle_invitation_accepted...';
+END $$;
+
+CREATE OR REPLACE FUNCTION public.handle_invitation_accepted()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  IF OLD.email_confirmed_at IS NULL AND NEW.email_confirmed_at IS NOT NULL THEN
+    UPDATE public.users_invitations
+    SET status = 'accepted', updated_at = now()
+    WHERE email = NEW.email
+      AND status IN ('sent', 'expired');
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+CREATE OR REPLACE TRIGGER on_user_email_confirmed
+AFTER UPDATE ON auth.users
+FOR EACH ROW
+EXECUTE FUNCTION public.handle_invitation_accepted();
+
+CREATE OR REPLACE FUNCTION public.handle_profile_role_from_invitation()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_email TEXT;
+  v_role public.user_role;
+BEGIN
+  SELECT email INTO v_email FROM auth.users WHERE id = NEW.id_user;
+
+  SELECT initial_role INTO v_role
+  FROM public.users_invitations
+  WHERE email = v_email
+    AND status = 'accepted'
+  ORDER BY created_at DESC
+  LIMIT 1;
+
+  NEW.role := COALESCE(v_role, 'athlete');
+  RETURN NEW;
+END;
+$$;
+
+CREATE OR REPLACE TRIGGER set_profile_role_from_invitation
+BEFORE INSERT ON public.users_profiles
+FOR EACH ROW
+EXECUTE FUNCTION public.handle_profile_role_from_invitation();
+
+-- =========================
 -- HELPER FUNCTION FOR RLS
 -- =========================
 
@@ -477,7 +538,10 @@ ON public.users_profiles
 FOR UPDATE
 TO authenticated
 USING (id_user = auth.uid())
-WITH CHECK (id_user = auth.uid());
+WITH CHECK (
+  id_user = auth.uid()
+  AND role = (SELECT role FROM public.users_profiles WHERE id_user = auth.uid())
+);
 
 CREATE POLICY "Admins can read all profiles"
 ON public.users_profiles

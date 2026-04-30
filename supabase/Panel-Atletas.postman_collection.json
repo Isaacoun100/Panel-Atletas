@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Panel Atletas",
-    "description": "API collection for the Panel Atletas platform. Organized by domain. All authenticated requests require a valid JWT in the Authorization header.",
+    "description": "API collection for the Panel Atletas platform.\n\nOrganized by access level:\n- **Auth** — public endpoints, no role required\n- **Admin** — requires ADMIN_JWT (role = admin)\n- **User** — requires USER_JWT (any authenticated user)\n\nAll authenticated requests require a valid JWT in the Authorization header.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "version": "1.0.0"
   },
@@ -26,30 +26,22 @@
     {
       "key": "USER_JWT",
       "value": "",
-      "description": "JWT of an authenticated regular user.",
+      "description": "JWT of an authenticated regular user. Obtain via Auth → Sign In.",
       "type": "string"
     }
   ],
   "item": [
     {
       "name": "Auth",
-      "description": "Supabase Auth endpoints for sign-in and session management.",
+      "description": "Public Supabase Auth endpoints. No role required. Used by any user to authenticate or manage their own session.",
       "item": [
         {
           "name": "Sign Up",
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "apikey",
-                "value": "{{SUPABASE_KEY}}",
-                "type": "text"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json",
-                "type": "text"
-              }
+              { "key": "apikey", "value": "{{SUPABASE_KEY}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
             ],
             "url": {
               "raw": "{{SUPABASE_URL}}/auth/v1/signup",
@@ -69,16 +61,8 @@
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "apikey",
-                "value": "{{SUPABASE_KEY}}",
-                "type": "text"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json",
-                "type": "text"
-              }
+              { "key": "apikey", "value": "{{SUPABASE_KEY}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
             ],
             "url": {
               "raw": "{{SUPABASE_URL}}/auth/v1/token?grant_type=password",
@@ -95,59 +79,83 @@
           }
         },
         {
-          "name": "Send Magic Link",
+          "name": "Password Recovery",
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "apikey",
-                "value": "{{SUPABASE_KEY}}",
-                "type": "text"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json",
-                "type": "text"
-              }
+              { "key": "apikey", "value": "{{SUPABASE_KEY}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
             ],
             "url": {
-              "raw": "{{SUPABASE_URL}}/auth/v1/magiclink",
+              "raw": "{{SUPABASE_URL}}/auth/v1/recover",
               "host": ["{{SUPABASE_URL}}"],
-              "path": ["auth", "v1", "magiclink"]
+              "path": ["auth", "v1", "recover"]
             },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"someone@email.com\"\n}",
               "options": { "raw": { "language": "json" } }
             },
-            "description": "Sends a magic link to the given email. User clicks the link to authenticate without a password."
+            "description": "Sends a password reset email to the given address. User clicks the link and is redirected to the app to set a new password."
+          }
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "apikey", "value": "{{SUPABASE_KEY}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{USER_JWT}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{SUPABASE_URL}}/auth/v1/user",
+              "host": ["{{SUPABASE_URL}}"],
+              "path": ["auth", "v1", "user"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"someone@email.com\",\n  \"password\": \"new-password\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Updates the authenticated user's credentials. Use only to change email, phone, or password. Do not use for profile data — that belongs in users_profiles via the Data API."
+          }
+        },
+        {
+          "name": "Sign Out",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "apikey", "value": "{{SUPABASE_KEY}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{USER_JWT}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{SUPABASE_URL}}/auth/v1/logout",
+              "host": ["{{SUPABASE_URL}}"],
+              "path": ["auth", "v1", "logout"]
+            },
+            "body": { "mode": "none" },
+            "description": "Invalidates the current session token. Client must discard the stored JWT after this call."
           }
         }
       ]
     },
     {
-      "name": "Edge Functions",
-      "description": "Server-side functions that require admin privileges. All requests must include a valid admin JWT.",
+      "name": "Admin",
+      "description": "All endpoints that require an admin JWT (role = admin). Includes Edge Functions and admin-only Data API access.\n\nAll requests use {{ADMIN_JWT}}.",
       "item": [
         {
           "name": "Invitations",
-          "description": "Endpoints for managing user invitations.",
+          "description": "Manage user invitations. Admin only.",
           "item": [
             {
               "name": "Invite User",
               "request": {
                 "method": "POST",
                 "header": [
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{ADMIN_JWT}}",
-                    "type": "text"
-                  },
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json",
-                    "type": "text"
-                  }
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_JWT}}", "type": "text" },
+                  { "key": "Content-Type", "value": "application/json", "type": "text" }
                 ],
                 "url": {
                   "raw": "{{SUPABASE_URL}}/functions/v1/invite-user",
@@ -157,62 +165,19 @@
                 "body": {
                   "mode": "raw",
                   "raw": "{\n  \"email\": \"athlete@example.com\",\n  \"initial_role\": \"athlete\"\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
+                  "options": { "raw": { "language": "json" } }
                 },
-                "description": "Creates and sends a magic link invitation to a new user. Fails with 409 if an active invitation already exists for the email.\n\n**initial_role** — one of: `athlete`, `coach`, `admin`"
+                "description": "Invites a new user by email. Internally, the Edge Function uses the Supabase Admin API to create the user in auth.users and immediately sends an invitation email with a magic link.\n\nWhen the user opens the email and clicks the link, Supabase verifies the token automatically and redirects them to the configured redirect URL (the app). No separate verification step is needed on the client.\n\nFails with 409 if an active invitation already exists for the email.\n\n**initial_role** — one of: `athlete`, `coach`, `admin`"
               },
-              "response": [
-                {
-                  "name": "200 Success",
-                  "status": "OK",
-                  "code": 200,
-                  "body": "{\n  \"success\": true,\n  \"email\": \"athlete@example.com\"\n}"
-                },
-                {
-                  "name": "400 Bad Request",
-                  "status": "Bad Request",
-                  "code": 400,
-                  "body": "{\n  \"error\": \"Missing email or initial_role\"\n}"
-                },
-                {
-                  "name": "401 Unauthorized",
-                  "status": "Unauthorized",
-                  "code": 401,
-                  "body": "{\n  \"error\": \"Unauthorized\"\n}"
-                },
-                {
-                  "name": "403 Forbidden",
-                  "status": "Forbidden",
-                  "code": 403,
-                  "body": "{\n  \"error\": \"Forbidden\"\n}"
-                },
-                {
-                  "name": "409 Conflict",
-                  "status": "Conflict",
-                  "code": 409,
-                  "body": "{\n  \"error\": \"Invitation already exists for this email\"\n}"
-                }
-              ]
+              "response": []
             },
             {
               "name": "Resend Invitation",
               "request": {
                 "method": "POST",
                 "header": [
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{ADMIN_JWT}}",
-                    "type": "text"
-                  },
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json",
-                    "type": "text"
-                  }
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_JWT}}", "type": "text" },
+                  { "key": "Content-Type", "value": "application/json", "type": "text" }
                 ],
                 "url": {
                   "raw": "{{SUPABASE_URL}}/functions/v1/resend-invitation",
@@ -222,74 +187,520 @@
                 "body": {
                   "mode": "raw",
                   "raw": "{\n  \"email\": \"athlete@example.com\"\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
+                  "options": { "raw": { "language": "json" } }
                 },
                 "description": "Resends the magic link to a user with an existing non-accepted invitation. Resets expiry to 7 days from now and increments the attempt counter."
               },
-              "response": [
-                {
-                  "name": "200 Success",
-                  "status": "OK",
-                  "code": 200,
-                  "body": "{\n  \"success\": true,\n  \"email\": \"athlete@example.com\",\n  \"attempts\": 2\n}"
+              "response": []
+            },
+            {
+              "name": "List Invitations",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "apikey", "value": "{{SUPABASE_KEY}}", "type": "text" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_JWT}}", "type": "text" }
+                ],
+                "url": {
+                  "raw": "{{SUPABASE_URL}}/rest/v1/users_invitations?select=*&order=created_at.desc",
+                  "host": ["{{SUPABASE_URL}}"],
+                  "path": ["rest", "v1", "users_invitations"],
+                  "query": [
+                    { "key": "select", "value": "*" },
+                    { "key": "order", "value": "created_at.desc" }
+                  ]
                 },
-                {
-                  "name": "400 Bad Request",
-                  "status": "Bad Request",
-                  "code": 400,
-                  "body": "{\n  \"error\": \"Missing email\"\n}"
+                "body": { "mode": "none" },
+                "description": "Returns all invitation records. RLS restricts this endpoint to admins only."
+              }
+            }
+          ]
+        },
+        {
+          "name": "Addresses",
+          "description": "Admin access to all address records.",
+          "item": [
+            {
+              "name": "Get All Addresses",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "apikey", "value": "{{SUPABASE_KEY}}", "type": "text" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_JWT}}", "type": "text" }
+                ],
+                "url": {
+                  "raw": "{{SUPABASE_URL}}/rest/v1/addresses?select=*",
+                  "host": ["{{SUPABASE_URL}}"],
+                  "path": ["rest", "v1", "addresses"],
+                  "query": [{ "key": "select", "value": "*" }]
                 },
-                {
-                  "name": "401 Unauthorized",
-                  "status": "Unauthorized",
-                  "code": 401,
-                  "body": "{\n  \"error\": \"Unauthorized\"\n}"
+                "description": "Returns all address records. RLS restricts this to admins only."
+              }
+            }
+          ]
+        },
+        {
+          "name": "Profiles",
+          "description": "Admin access to all user profiles. RLS allows admins to read and update any profile.",
+          "item": [
+            {
+              "name": "Get All Profiles",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "apikey", "value": "{{SUPABASE_KEY}}", "type": "text" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_JWT}}", "type": "text" }
+                ],
+                "url": {
+                  "raw": "{{SUPABASE_URL}}/rest/v1/users_profiles?select=*&order=created_at.desc",
+                  "host": ["{{SUPABASE_URL}}"],
+                  "path": ["rest", "v1", "users_profiles"],
+                  "query": [
+                    { "key": "select", "value": "*" },
+                    { "key": "order", "value": "created_at.desc" }
+                  ]
                 },
-                {
-                  "name": "403 Forbidden",
-                  "status": "Forbidden",
-                  "code": 403,
-                  "body": "{\n  \"error\": \"Forbidden\"\n}"
+                "description": "Returns all user profiles. RLS restricts this to admins only."
+              }
+            },
+            {
+              "name": "Update Any Profile",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  { "key": "apikey", "value": "{{SUPABASE_KEY}}", "type": "text" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_JWT}}", "type": "text" },
+                  { "key": "Content-Type", "value": "application/json", "type": "text" },
+                  { "key": "Prefer", "value": "return=representation", "type": "text" }
+                ],
+                "url": {
+                  "raw": "{{SUPABASE_URL}}/rest/v1/users_profiles?id_user=eq.{{USER_ID}}",
+                  "host": ["{{SUPABASE_URL}}"],
+                  "path": ["rest", "v1", "users_profiles"],
+                  "query": [{ "key": "id_user", "value": "eq.{{USER_ID}}" }]
                 },
-                {
-                  "name": "404 Not Found",
-                  "status": "Not Found",
-                  "code": 404,
-                  "body": "{\n  \"error\": \"No resendable invitation found for this email\"\n}"
-                }
-              ]
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"is_active\": false,\n  \"role\": \"coach\"\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "description": "Updates any user's profile. Intended for admin operations like changing roles or deactivating accounts."
+              }
+            }
+          ]
+        },
+        {
+          "name": "Athletes",
+          "description": "Admin access to all athlete records.",
+          "item": [
+            {
+              "name": "Get All Athletes",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "apikey", "value": "{{SUPABASE_KEY}}", "type": "text" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_JWT}}", "type": "text" }
+                ],
+                "url": {
+                  "raw": "{{SUPABASE_URL}}/rest/v1/athletes?select=*",
+                  "host": ["{{SUPABASE_URL}}"],
+                  "path": ["rest", "v1", "athletes"],
+                  "query": [{ "key": "select", "value": "*" }]
+                },
+                "description": "Returns all athlete records. RLS restricts this to admins only."
+              }
             }
           ]
         }
       ]
     },
     {
-      "name": "Data API",
-      "description": "PostgREST endpoints. All requests require Authorization header. RLS enforced on all tables.",
+      "name": "User",
+      "description": "Endpoints accessible by any authenticated user. RLS enforces that each user can only read and modify their own data.\n\nAll requests use {{USER_JWT}}.",
       "item": [
         {
           "name": "Catalog",
-          "description": "Read-only catalog tables accessible by any authenticated user.",
-          "item": []
+          "description": "Read-only catalog tables. Any authenticated user can read these. Data is seeded and managed via migrations, not through the API.",
+          "item": [
+            {
+              "name": "Get DNI Types",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "apikey", "value": "{{SUPABASE_KEY}}", "type": "text" },
+                  { "key": "Authorization", "value": "Bearer {{USER_JWT}}", "type": "text" }
+                ],
+                "url": {
+                  "raw": "{{SUPABASE_URL}}/rest/v1/dni_types?select=*&order=name.asc",
+                  "host": ["{{SUPABASE_URL}}"],
+                  "path": ["rest", "v1", "dni_types"],
+                  "query": [
+                    { "key": "select", "value": "*" },
+                    { "key": "order", "value": "name.asc" }
+                  ]
+                },
+                "description": "Returns all DNI types (e.g. cedula, passport). Used to populate the document type selector."
+              }
+            },
+            {
+              "name": "Get Districts by Canton",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "apikey", "value": "{{SUPABASE_KEY}}", "type": "text" },
+                  { "key": "Authorization", "value": "Bearer {{USER_JWT}}", "type": "text" }
+                ],
+                "url": {
+                  "raw": "{{SUPABASE_URL}}/rest/v1/districts?select=*&fk_canton=eq.1&order=name.asc",
+                  "host": ["{{SUPABASE_URL}}"],
+                  "path": ["rest", "v1", "districts"],
+                  "query": [
+                    { "key": "select", "value": "*" },
+                    { "key": "fk_canton", "value": "eq.1" },
+                    { "key": "order", "value": "name.asc" }
+                  ]
+                },
+                "description": "Returns districts filtered by canton. Replace fk_canton value with the selected canton's id_canton."
+              }
+            },
+            {
+              "name": "Get Disciplines",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "apikey", "value": "{{SUPABASE_KEY}}", "type": "text" },
+                  { "key": "Authorization", "value": "Bearer {{USER_JWT}}", "type": "text" }
+                ],
+                "url": {
+                  "raw": "{{SUPABASE_URL}}/rest/v1/disciplines?select=*&order=name.asc",
+                  "host": ["{{SUPABASE_URL}}"],
+                  "path": ["rest", "v1", "disciplines"],
+                  "query": [
+                    { "key": "select", "value": "*" },
+                    { "key": "order", "value": "name.asc" }
+                  ]
+                },
+                "description": "Returns all disciplines ordered alphabetically."
+              }
+            },
+            {
+              "name": "Get Cantons",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "apikey", "value": "{{SUPABASE_KEY}}", "type": "text" },
+                  { "key": "Authorization", "value": "Bearer {{USER_JWT}}", "type": "text" }
+                ],
+                "url": {
+                  "raw": "{{SUPABASE_URL}}/rest/v1/cantons?select=*&order=name.asc",
+                  "host": ["{{SUPABASE_URL}}"],
+                  "path": ["rest", "v1", "cantons"],
+                  "query": [
+                    { "key": "select", "value": "*" },
+                    { "key": "order", "value": "name.asc" }
+                  ]
+                },
+                "description": "Returns all cantons ordered alphabetically."
+              }
+            }
+          ]
+        },
+        {
+          "name": "Addresses",
+          "description": "Create and manage the authenticated user's own address. RLS filters reads and updates to the address linked to the user's athlete record.",
+          "item": [
+            {
+              "name": "Create Address",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "apikey", "value": "{{SUPABASE_KEY}}", "type": "text" },
+                  { "key": "Authorization", "value": "Bearer {{USER_JWT}}", "type": "text" },
+                  { "key": "Content-Type", "value": "application/json", "type": "text" },
+                  { "key": "Prefer", "value": "return=representation", "type": "text" }
+                ],
+                "url": {
+                  "raw": "{{SUPABASE_URL}}/rest/v1/addresses",
+                  "host": ["{{SUPABASE_URL}}"],
+                  "path": ["rest", "v1", "addresses"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"address\": \"100m norte del parque\",\n  \"fk_district\": 1,\n  \"fk_residence_canton\": null,\n  \"is_permanent_canton_resident\": true\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "description": "Creates a new address record. The returned id_address must be saved and linked to the athlete record via fk_address."
+              }
+            },
+            {
+              "name": "Get Own Address",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "apikey", "value": "{{SUPABASE_KEY}}", "type": "text" },
+                  { "key": "Authorization", "value": "Bearer {{USER_JWT}}", "type": "text" }
+                ],
+                "url": {
+                  "raw": "{{SUPABASE_URL}}/rest/v1/addresses?select=*",
+                  "host": ["{{SUPABASE_URL}}"],
+                  "path": ["rest", "v1", "addresses"],
+                  "query": [{ "key": "select", "value": "*" }]
+                },
+                "description": "Returns the address linked to the authenticated user's athlete record. RLS filters automatically — no id filter needed."
+              }
+            },
+            {
+              "name": "Update Own Address",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  { "key": "apikey", "value": "{{SUPABASE_KEY}}", "type": "text" },
+                  { "key": "Authorization", "value": "Bearer {{USER_JWT}}", "type": "text" },
+                  { "key": "Content-Type", "value": "application/json", "type": "text" },
+                  { "key": "Prefer", "value": "return=representation", "type": "text" }
+                ],
+                "url": {
+                  "raw": "{{SUPABASE_URL}}/rest/v1/addresses?id_address=eq.1",
+                  "host": ["{{SUPABASE_URL}}"],
+                  "path": ["rest", "v1", "addresses"],
+                  "query": [{ "key": "id_address", "value": "eq.1" }]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"address\": \"200m sur del parque\"\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "description": "Updates the user's own address. RLS blocks updates to addresses not linked to the authenticated user's athlete record."
+              }
+            }
+          ]
         },
         {
           "name": "Profiles",
-          "description": "User profile management.",
-          "item": []
+          "description": "Read and manage the authenticated user's own profile.",
+          "item": [
+            {
+              "name": "Create Own Profile",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "apikey", "value": "{{SUPABASE_KEY}}", "type": "text" },
+                  { "key": "Authorization", "value": "Bearer {{USER_JWT}}", "type": "text" },
+                  { "key": "Content-Type", "value": "application/json", "type": "text" },
+                  { "key": "Prefer", "value": "return=representation", "type": "text" }
+                ],
+                "url": {
+                  "raw": "{{SUPABASE_URL}}/rest/v1/users_profiles",
+                  "host": ["{{SUPABASE_URL}}"],
+                  "path": ["rest", "v1", "users_profiles"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"id_user\": \"{{USER_ID}}\",\n  \"name\": \"Brian\",\n  \"first_last_name\": \"Ramirez\",\n  \"second_last_name\": \"Arias\",\n  \"dni\": \"123456789\",\n  \"fk_dni_type\": 1,\n  \"birth_date\": \"2000-01-01\",\n  \"gender\": \"male\",\n  \"phone\": \"+50688887777\"\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "description": "Creates the profile for the authenticated user. id_user must match the authenticated user's UUID — RLS blocks any other value. Called once after the user first signs in via invitation."
+              }
+            },
+            {
+              "name": "Get Own Profile",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "apikey", "value": "{{SUPABASE_KEY}}", "type": "text" },
+                  { "key": "Authorization", "value": "Bearer {{USER_JWT}}", "type": "text" }
+                ],
+                "url": {
+                  "raw": "{{SUPABASE_URL}}/rest/v1/users_profiles?select=*",
+                  "host": ["{{SUPABASE_URL}}"],
+                  "path": ["rest", "v1", "users_profiles"],
+                  "query": [{ "key": "select", "value": "*" }]
+                },
+                "description": "Returns the authenticated user's own profile. RLS filters automatically."
+              }
+            },
+            {
+              "name": "Update Own Profile",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  { "key": "apikey", "value": "{{SUPABASE_KEY}}", "type": "text" },
+                  { "key": "Authorization", "value": "Bearer {{USER_JWT}}", "type": "text" },
+                  { "key": "Content-Type", "value": "application/json", "type": "text" },
+                  { "key": "Prefer", "value": "return=representation", "type": "text" }
+                ],
+                "url": {
+                  "raw": "{{SUPABASE_URL}}/rest/v1/users_profiles?id_user=eq.{{USER_ID}}",
+                  "host": ["{{SUPABASE_URL}}"],
+                  "path": ["rest", "v1", "users_profiles"],
+                  "query": [{ "key": "id_user", "value": "eq.{{USER_ID}}" }]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phone\": \"+50688887777\",\n  \"profile_image_url\": \"https://example.com/avatar.jpg\"\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "description": "Updates the authenticated user's own profile. RLS blocks updates to other users' profiles."
+              }
+            }
+          ]
         },
         {
           "name": "Athletes",
-          "description": "Athlete-specific data.",
-          "item": []
+          "description": "Read and manage the authenticated user's own athlete record.",
+          "item": [
+            {
+              "name": "Create Athlete Record",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "apikey", "value": "{{SUPABASE_KEY}}", "type": "text" },
+                  { "key": "Authorization", "value": "Bearer {{USER_JWT}}", "type": "text" },
+                  { "key": "Content-Type", "value": "application/json", "type": "text" },
+                  { "key": "Prefer", "value": "return=representation", "type": "text" }
+                ],
+                "url": {
+                  "raw": "{{SUPABASE_URL}}/rest/v1/athletes",
+                  "host": ["{{SUPABASE_URL}}"],
+                  "path": ["rest", "v1", "athletes"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"id_user\": \"{{USER_ID}}\",\n  \"fk_address\": null,\n  \"education_level\": null,\n  \"is_employed\": false,\n  \"data_usage_consent\": false,\n  \"image_usage_consent\": false\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "description": "Creates the athlete record for the authenticated user. id_user must match the authenticated user's UUID — RLS blocks any other value."
+              }
+            },
+            {
+              "name": "Get Own Athlete Record",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "apikey", "value": "{{SUPABASE_KEY}}", "type": "text" },
+                  { "key": "Authorization", "value": "Bearer {{USER_JWT}}", "type": "text" }
+                ],
+                "url": {
+                  "raw": "{{SUPABASE_URL}}/rest/v1/athletes?select=*",
+                  "host": ["{{SUPABASE_URL}}"],
+                  "path": ["rest", "v1", "athletes"],
+                  "query": [{ "key": "select", "value": "*" }]
+                },
+                "description": "Returns the athlete record for the authenticated user. RLS filters automatically."
+              }
+            },
+            {
+              "name": "Update Own Athlete Record",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  { "key": "apikey", "value": "{{SUPABASE_KEY}}", "type": "text" },
+                  { "key": "Authorization", "value": "Bearer {{USER_JWT}}", "type": "text" },
+                  { "key": "Content-Type", "value": "application/json", "type": "text" },
+                  { "key": "Prefer", "value": "return=representation", "type": "text" }
+                ],
+                "url": {
+                  "raw": "{{SUPABASE_URL}}/rest/v1/athletes?id_user=eq.{{USER_ID}}",
+                  "host": ["{{SUPABASE_URL}}"],
+                  "path": ["rest", "v1", "athletes"],
+                  "query": [{ "key": "id_user", "value": "eq.{{USER_ID}}" }]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"main_goal\": \"health\",\n  \"activity_frequency_per_week\": 3\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "description": "Updates the authenticated user's own athlete record. RLS blocks updates to other users' records."
+              }
+            }
+          ]
         },
         {
-          "name": "Invitations",
-          "description": "Admin read access to invitation records.",
-          "item": []
+          "name": "Disciplines",
+          "description": "Manage the authenticated user's discipline enrollments (users_disciplines table).",
+          "item": [
+            {
+              "name": "Get Own Disciplines",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "apikey", "value": "{{SUPABASE_KEY}}", "type": "text" },
+                  { "key": "Authorization", "value": "Bearer {{USER_JWT}}", "type": "text" }
+                ],
+                "url": {
+                  "raw": "{{SUPABASE_URL}}/rest/v1/users_disciplines?select=*,disciplines(name)",
+                  "host": ["{{SUPABASE_URL}}"],
+                  "path": ["rest", "v1", "users_disciplines"],
+                  "query": [{ "key": "select", "value": "*,disciplines(name)" }]
+                },
+                "description": "Returns all discipline enrollments for the authenticated user. RLS filters automatically."
+              }
+            },
+            {
+              "name": "Enroll in Discipline",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "apikey", "value": "{{SUPABASE_KEY}}", "type": "text" },
+                  { "key": "Authorization", "value": "Bearer {{USER_JWT}}", "type": "text" },
+                  { "key": "Content-Type", "value": "application/json", "type": "text" },
+                  { "key": "Prefer", "value": "return=representation", "type": "text" }
+                ],
+                "url": {
+                  "raw": "{{SUPABASE_URL}}/rest/v1/users_disciplines",
+                  "host": ["{{SUPABASE_URL}}"],
+                  "path": ["rest", "v1", "users_disciplines"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"fk_user\": \"{{USER_ID}}\",\n  \"fk_discipline\": 1,\n  \"participation_type\": \"sport\",\n  \"is_representative\": false\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "description": "Enrolls the authenticated user in a discipline. fk_user must match the authenticated user's UUID — RLS blocks any other value. Fails if the user is already enrolled in the same discipline."
+              }
+            },
+            {
+              "name": "Update Discipline Enrollment",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  { "key": "apikey", "value": "{{SUPABASE_KEY}}", "type": "text" },
+                  { "key": "Authorization", "value": "Bearer {{USER_JWT}}", "type": "text" },
+                  { "key": "Content-Type", "value": "application/json", "type": "text" },
+                  { "key": "Prefer", "value": "return=representation", "type": "text" }
+                ],
+                "url": {
+                  "raw": "{{SUPABASE_URL}}/rest/v1/users_disciplines?id_user_discipline=eq.1",
+                  "host": ["{{SUPABASE_URL}}"],
+                  "path": ["rest", "v1", "users_disciplines"],
+                  "query": [{ "key": "id_user_discipline", "value": "eq.1" }]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"participation_type\": \"recreational\",\n  \"is_representative\": true\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "description": "Updates a discipline enrollment. RLS blocks updates to enrollments belonging to other users."
+              }
+            },
+            {
+              "name": "Remove Discipline Enrollment",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  { "key": "apikey", "value": "{{SUPABASE_KEY}}", "type": "text" },
+                  { "key": "Authorization", "value": "Bearer {{USER_JWT}}", "type": "text" }
+                ],
+                "url": {
+                  "raw": "{{SUPABASE_URL}}/rest/v1/users_disciplines?id_user_discipline=eq.1",
+                  "host": ["{{SUPABASE_URL}}"],
+                  "path": ["rest", "v1", "users_disciplines"],
+                  "query": [{ "key": "id_user_discipline", "value": "eq.1" }]
+                },
+                "description": "Removes a discipline enrollment. RLS blocks deletion of enrollments belonging to other users."
+              }
+            }
+          ]
         }
       ]
     }
