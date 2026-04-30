@@ -97,10 +97,10 @@ BEGIN
   );
 
   CREATE TYPE public.invitation_status AS ENUM (
-    'pending',
     'sent',
-    'accepted',
-    'cancelled'
+    'expired',
+    'cancelled',
+    'accepted'
   );
 
   RAISE NOTICE 'Enum types created successfully.';
@@ -412,7 +412,7 @@ END $$;
 CREATE TABLE public.users_invitations (
   id_invitation UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   email VARCHAR(128) NOT NULL,
-  status public.invitation_status NOT NULL DEFAULT 'pending',
+  status public.invitation_status NOT NULL DEFAULT 'sent',
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   last_sent_at TIMESTAMPTZ,
