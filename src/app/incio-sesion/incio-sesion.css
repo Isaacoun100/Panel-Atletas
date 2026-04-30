@@ -51,6 +51,12 @@
   margin: 0;
 }
 
+/* Mobile logo */
+.login-mobile-logo {
+  max-width: 160px;
+  width: 100%;
+}
+
 /* Mobile brand text */
 .mobile-brand-text {
   font-size: 0.95rem;
