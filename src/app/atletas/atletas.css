@@ -256,6 +256,201 @@
   border-color: var(--danger);
 }
 
+/* ── Download button ────────────────────────────────── */
+.at-download-wrap {
+  position: relative;
+}
+
+.at-download-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.42rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.12s, color 0.12s, background 0.12s;
+}
+
+.at-download-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--primary-soft);
+}
+
+.at-download-chevron { opacity: 0.5; margin-left: 2px; }
+
+.at-download-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 100;
+  min-width: 185px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: 0.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.at-download-option {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.5rem 0.7rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-2);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.1s, color 0.1s;
+}
+
+.at-download-option:hover { background: var(--surface-2); color: var(--text); }
+
+.at-download-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+}
+
+.at-download-icon--pdf   { background: oklch(0.95 0.04 25);  color: oklch(0.52 0.18 25); }
+.at-download-icon--excel { background: oklch(0.93 0.06 155); color: oklch(0.45 0.14 155); }
+.at-download-icon--word  { background: oklch(0.93 0.04 235); color: var(--accent); }
+
+/* ── Row checkbox ───────────────────────────────────── */
+.at-th-check,
+.at-td-check {
+  width: 40px;
+  padding-left: 1rem !important;
+  padding-right: 0 !important;
+}
+
+.at-row-check {
+  width: 17px;
+  height: 17px;
+  border: 1.5px solid var(--border-strong);
+  border-radius: 4px;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.1s, border-color 0.1s;
+  color: transparent;
+  padding: 0;
+}
+
+.at-row-check:hover { border-color: var(--primary); }
+
+.at-row-check--checked {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+.at-row-check--partial {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+.at-row--selected td { background: var(--primary-soft) !important; }
+
+/* ── Selection bar ──────────────────────────────────── */
+.at-selection-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.6rem 1rem;
+  background: var(--primary-soft);
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-lg);
+}
+
+.at-selection-count {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.at-selection-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.at-sel-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--primary);
+  background: var(--surface);
+  color: var(--primary);
+  transition: background 0.12s, color 0.12s;
+}
+
+.at-sel-btn:hover { background: var(--primary); color: #fff; }
+
+.at-sel-btn--danger {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.at-sel-btn--danger:hover { background: var(--danger); color: #fff; }
+
+.at-sel-btn--ghost {
+  border-color: var(--border);
+  color: var(--text-3);
+}
+
+.at-sel-btn--ghost:hover { background: var(--surface-2); color: var(--text); }
+
+/* ── Empty state ────────────────────────────────────── */
+.at-empty-row {
+  text-align: center;
+  padding: 2.5rem 1rem !important;
+  color: var(--text-3);
+  font-size: 0.875rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.at-no-results {
+  font-size: 0.78rem;
+  color: var(--text-3);
+  font-style: italic;
+}
+
 /* ── Responsive ─────────────────────────────────────── */
 @media (max-width: 768px) {
   .at-search-bar {
