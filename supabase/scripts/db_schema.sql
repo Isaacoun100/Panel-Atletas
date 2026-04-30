@@ -377,30 +377,6 @@ CREATE TABLE public.users_disciplines (
   UNIQUE (fk_user, fk_discipline)
 );
 
-DO $$
-BEGIN
-  RAISE NOTICE 'Creating notification tables...';
-END $$;
-
-CREATE TABLE public.notification_templates (
-  id_template SERIAL PRIMARY KEY,
-  type VARCHAR(64) NOT NULL,
-  name VARCHAR(64) NOT NULL,
-  subject TEXT NOT NULL,
-  body TEXT NOT NULL,
-  variables TEXT,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
-CREATE TABLE public.notifications_logs (
-  id_notification SERIAL PRIMARY KEY,
-  type VARCHAR(64) NOT NULL,
-  sent BOOLEAN NOT NULL DEFAULT FALSE,
-  error TEXT,
-  fk_template INTEGER REFERENCES public.notification_templates(id_template),
-  fk_user UUID REFERENCES public.users_profiles(id_user) ON DELETE SET NULL,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
 
 DO $$
 BEGIN
@@ -461,8 +437,6 @@ ALTER TABLE public.addresses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.disciplines ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.athletes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.users_disciplines ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.notification_templates ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.notifications_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.users_invitations ENABLE ROW LEVEL SECURITY;
 
 -- =========================
@@ -694,29 +668,6 @@ TO authenticated
 USING (public.is_admin())
 WITH CHECK (public.is_admin());
 
-DO $$
-BEGIN
-  RAISE NOTICE 'Creating RLS policies for notification templates...';
-END $$;
-
-CREATE POLICY "Admins can manage notification templates"
-ON public.notification_templates
-FOR ALL
-TO authenticated
-USING (public.is_admin())
-WITH CHECK (public.is_admin());
-
-DO $$
-BEGIN
-  RAISE NOTICE 'Creating RLS policies for notification logs...';
-END $$;
-
-CREATE POLICY "Admins can manage notification logs"
-ON public.notifications_logs
-FOR ALL
-TO authenticated
-USING (public.is_admin())
-WITH CHECK (public.is_admin());
 
 DO $$
 BEGIN
@@ -742,7 +693,6 @@ CREATE INDEX idx_users_profiles_role ON public.users_profiles(role);
 CREATE INDEX idx_athletes_address ON public.athletes(fk_address);
 CREATE INDEX idx_users_disciplines_user ON public.users_disciplines(fk_user);
 CREATE INDEX idx_users_disciplines_discipline ON public.users_disciplines(fk_discipline);
-CREATE INDEX idx_notifications_logs_user ON public.notifications_logs(fk_user);
 CREATE INDEX idx_users_invitations_email ON public.users_invitations(email);
 CREATE INDEX idx_users_invitations_status ON public.users_invitations(status);
 

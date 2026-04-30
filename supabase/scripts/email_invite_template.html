@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Invitación - Panel de Atletas del Comité de Montes de Oca</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f4f6f9;font-family:'Segoe UI',Arial,sans-serif;">
+
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f6f9;padding:40px 0;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+
+          <!-- HEADER -->
+          <tr>
+            <td style="background-color:#1a1a2e;padding:32px;text-align:center;">
+              <!-- LOGO: reemplaza el src con la URL real cuando esté disponible -->
+              <img
+                src="LOGO_URL_AQUI"
+                alt="Panel Atletas"
+                width="160"
+                style="display:block;margin:0 auto;"
+              />
+            </td>
+          </tr>
+
+          <!-- BODY -->
+          <tr>
+            <td style="padding:48px 40px 32px;">
+              <h1 style="margin:0 0 16px;font-size:24px;color:#1a1a2e;font-weight:700;">
+                Has sido invitado
+              </h1>
+              <p style="margin:0 0 24px;font-size:16px;color:#4a4a6a;line-height:1.6;">
+                Fuiste invitado a registrarte en el <strong>Panel de Atletas del Comité de Montes de Oca</strong>. Haz clic en el botón para completar tu registro y acceder a la plataforma.
+              </p>
+
+              <!-- CTA BUTTON -->
+              <table cellpadding="0" cellspacing="0" style="margin:0 0 32px;">
+                <tr>
+                  <td style="background-color:#e63946;border-radius:8px;">
+                    <a
+                      href="{{ .ConfirmationURL }}"
+                      style="display:inline-block;padding:14px 32px;font-size:16px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:8px;"
+                    >
+                      Aceptar invitación
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin:0 0 8px;font-size:14px;color:#8888aa;">
+                O copia este enlace en tu navegador:
+              </p>
+              <p style="margin:0;font-size:13px;color:#4a4a6a;word-break:break-all;">
+                {{ .ConfirmationURL }}
+              </p>
+            </td>
+          </tr>
+
+          <!-- DIVIDER -->
+          <tr>
+            <td style="padding:0 40px;">
+              <hr style="border:none;border-top:1px solid #ebebf5;margin:0;" />
+            </td>
+          </tr>
+
+          <!-- FOOTER -->
+          <tr>
+            <td style="padding:24px 40px;text-align:center;">
+              <p style="margin:0;font-size:12px;color:#aaaacc;line-height:1.6;">
+                Este enlace expira en 7 días. Si no esperabas este correo, puedes ignorarlo.<br/>
+                &copy; 2025 Panel de Atletas del Comité de Montes de Oca. Todos los derechos reservados.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>

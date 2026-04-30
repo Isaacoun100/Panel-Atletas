@@ -104,26 +104,6 @@ Users have full self-service control over their own discipline registrations. Ad
 
 ---
 
-### `notification_templates`
-
-| Operation | Who | Condition |
-|-----------|-----|-----------|
-| ALL | Admin | `is_admin()` |
-
-Restricted to admins only. No user-facing access.
-
----
-
-### `notifications_logs`
-
-| Operation | Who | Condition |
-|-----------|-----|-----------|
-| ALL | Admin | `is_admin()` |
-
-Restricted to admins only. No user-facing access.
-
----
-
 ### `users_invitations`
 
 | Operation | Who | Condition |
