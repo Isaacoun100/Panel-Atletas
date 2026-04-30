@@ -112,19 +112,31 @@ END $$;
 
 DO $$
 BEGIN
-  RAISE NOTICE 'Creating user_profiles table...';
+  RAISE NOTICE 'Creating dni_types table...';
 END $$;
 
-CREATE TABLE public.user_profiles (
+CREATE TABLE public.dni_types (
+  id_dni_type SERIAL PRIMARY KEY,
+  name VARCHAR(64) NOT NULL UNIQUE
+);
+
+DO $$
+BEGIN
+  RAISE NOTICE 'Creating users_profiles table...';
+END $$;
+
+CREATE TABLE public.users_profiles (
   id_user UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   name VARCHAR(64) NOT NULL,
   first_last_name VARCHAR(64) NOT NULL,
   second_last_name VARCHAR(64),
   dni VARCHAR(32) UNIQUE,
+  fk_dni_type INTEGER REFERENCES public.dni_types(id_dni_type),
   birth_date DATE,
   gender public.gender,
   phone TEXT,
   email VARCHAR(128) UNIQUE,
+  profile_image_url TEXT,
   role public.user_role NOT NULL DEFAULT 'athlete',
   is_active BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -133,30 +145,30 @@ CREATE TABLE public.user_profiles (
 
 DO $$
 BEGIN
-  RAISE NOTICE 'Creating canton, district, and address tables...';
+  RAISE NOTICE 'Creating cantons, districts, and addresses tables...';
 END $$;
 
-CREATE TABLE public.canton (
+CREATE TABLE public.cantons (
   id_canton SERIAL PRIMARY KEY,
   name VARCHAR(64) NOT NULL UNIQUE
 );
 
-CREATE TABLE public.district (
+CREATE TABLE public.districts (
   id_district SERIAL PRIMARY KEY,
   name VARCHAR(64) NOT NULL,
-  fk_canton INTEGER NOT NULL REFERENCES public.canton(id_canton),
+  fk_canton INTEGER NOT NULL REFERENCES public.cantons(id_canton),
   UNIQUE (name, fk_canton)
 );
 
-CREATE TABLE public.address (
+CREATE TABLE public.addresses (
   id_address SERIAL PRIMARY KEY,
-  exact_address TEXT NOT NULL,
-  fk_district INTEGER NOT NULL REFERENCES public.district(id_district),
-  fk_residence_canton INTEGER REFERENCES public.canton(id_canton),
+  address TEXT NOT NULL,
+  fk_district INTEGER NOT NULL REFERENCES public.districts(id_district),
+  fk_residence_canton INTEGER REFERENCES public.cantons(id_canton),
   is_permanent_canton_resident BOOLEAN NOT NULL DEFAULT TRUE,
 
   CONSTRAINT residence_canton_consistency CHECK (
-    (is_permanent_canton_resident = TRUE AND fk_residence_canton IS NULL)
+    (is_permanent_canton_resident = TRUE AND fk_residence_canton = 1)
     OR
     (is_permanent_canton_resident = FALSE AND fk_residence_canton IS NOT NULL)
   )
@@ -178,8 +190,8 @@ BEGIN
 END $$;
 
 CREATE TABLE public.athletes (
-  id_user UUID PRIMARY KEY REFERENCES public.user_profiles(id_user) ON DELETE CASCADE,
-  fk_address INTEGER REFERENCES public.address(id_address),
+  id_user UUID PRIMARY KEY REFERENCES public.users_profiles(id_user) ON DELETE CASCADE,
+  fk_address INTEGER REFERENCES public.addresses(id_address),
 
   education_level public.education_level,
   educational_institution_name VARCHAR(64),
@@ -187,15 +199,15 @@ CREATE TABLE public.athletes (
   is_employed BOOLEAN NOT NULL DEFAULT FALSE,
   occupation VARCHAR(64),
 
-  has_participated_national_games BOOLEAN NOT NULL DEFAULT FALSE,
-  has_participated_regional BOOLEAN NOT NULL DEFAULT FALSE,
-  has_participated_international BOOLEAN NOT NULL DEFAULT FALSE,
+  nacional_games_participation BOOLEAN NOT NULL DEFAULT FALSE,
+  regional_games_participation BOOLEAN NOT NULL DEFAULT FALSE,
+  internation_games_participation BOOLEAN NOT NULL DEFAULT FALSE,
 
   has_won_medal BOOLEAN NOT NULL DEFAULT FALSE,
   medal_type public.medal_type,
   medal_discipline_name VARCHAR(64),
   medal_year INTEGER,
-  medal_competition_name VARCHAR(128),
+  medal_competence_name VARCHAR(128),
 
   main_goal public.main_goal,
   activity_frequency_per_week INTEGER CHECK (activity_frequency_per_week >= 0),
@@ -235,7 +247,7 @@ CREATE TABLE public.athletes (
   belongs_to_club BOOLEAN NOT NULL DEFAULT FALSE,
   club_name VARCHAR(128),
 
-  desired_discipline_name VARCHAR(64),
+  fk_desired_discipline INTEGER REFERENCES public.disciplines(id_discipline),
   preferred_schedule public.preferred_schedule,
   facilities_used TEXT,
   facilities_condition public.facility_condition,
@@ -271,7 +283,7 @@ CREATE TABLE public.athletes (
       AND medal_type IS NULL
       AND medal_discipline_name IS NULL
       AND medal_year IS NULL
-      AND medal_competition_name IS NULL
+      AND medal_competence_name IS NULL
     )
     OR
     (
@@ -279,7 +291,7 @@ CREATE TABLE public.athletes (
       AND medal_type IS NOT NULL
       AND medal_discipline_name IS NOT NULL
       AND medal_year IS NOT NULL
-      AND medal_competition_name IS NOT NULL
+      AND medal_competence_name IS NOT NULL
     )
   ),
 
@@ -325,6 +337,7 @@ CREATE TABLE public.athletes (
       has_committee_relatives = TRUE
       AND relative_full_name IS NOT NULL
       AND relative_relationship IS NOT NULL
+      AND relative_discipline_name IS NOT NULL
     )
   ),
 
@@ -338,6 +351,7 @@ CREATE TABLE public.athletes (
     (
       has_previous_committee = TRUE
       AND previous_committee_name IS NOT NULL
+      AND previous_committee_period IS NOT NULL
     )
   ),
 
@@ -345,21 +359,6 @@ CREATE TABLE public.athletes (
     (belongs_to_club = FALSE AND club_name IS NULL)
     OR
     (belongs_to_club = TRUE AND club_name IS NOT NULL)
-  ),
-
-  CONSTRAINT consent_signature_consistency CHECK (
-    (
-      data_usage_consent = FALSE
-      AND image_usage_consent = FALSE
-      AND signed_full_name IS NULL
-      AND signed_at IS NULL
-    )
-    OR
-    (
-      data_usage_consent = TRUE
-      AND signed_full_name IS NOT NULL
-      AND signed_at IS NOT NULL
-    )
   )
 );
 
@@ -370,8 +369,9 @@ END $$;
 
 CREATE TABLE public.users_disciplines (
   id_user_discipline SERIAL PRIMARY KEY,
-  fk_user UUID NOT NULL REFERENCES public.user_profiles(id_user) ON DELETE CASCADE,
+  fk_user UUID NOT NULL REFERENCES public.users_profiles(id_user) ON DELETE CASCADE,
   fk_discipline INTEGER NOT NULL REFERENCES public.disciplines(id_discipline),
+  functional_category VARCHAR(64),
   participation_type public.participation_type NOT NULL,
   is_representative BOOLEAN NOT NULL DEFAULT FALSE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -400,16 +400,16 @@ CREATE TABLE public.notifications_logs (
   sent BOOLEAN NOT NULL DEFAULT FALSE,
   error TEXT,
   fk_template INTEGER REFERENCES public.notification_templates(id_template),
-  fk_user UUID REFERENCES public.user_profiles(id_user) ON DELETE SET NULL,
+  fk_user UUID REFERENCES public.users_profiles(id_user) ON DELETE SET NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 DO $$
 BEGIN
-  RAISE NOTICE 'Creating user_invitations table...';
+  RAISE NOTICE 'Creating users_invitations table...';
 END $$;
 
-CREATE TABLE public.user_invitations (
+CREATE TABLE public.users_invitations (
   id_invitation UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   email VARCHAR(128) NOT NULL,
   status public.invitation_status NOT NULL DEFAULT 'pending',
@@ -419,7 +419,7 @@ CREATE TABLE public.user_invitations (
   expires_at TIMESTAMPTZ,
   attempts INTEGER NOT NULL DEFAULT 0 CHECK (attempts >= 0),
   initial_role public.user_role NOT NULL DEFAULT 'athlete',
-  fk_invited_by UUID REFERENCES public.user_profiles(id_user) ON DELETE SET NULL
+  fk_invited_by UUID REFERENCES public.users_profiles(id_user) ON DELETE SET NULL
 );
 
 -- =========================
@@ -439,7 +439,7 @@ SET search_path = public
 AS $$
   SELECT EXISTS (
     SELECT 1
-    FROM public.user_profiles
+    FROM public.users_profiles
     WHERE id_user = auth.uid()
       AND role = 'admin'
       AND is_active = TRUE
@@ -455,16 +455,17 @@ BEGIN
   RAISE NOTICE 'Enabling RLS on application tables...';
 END $$;
 
-ALTER TABLE public.user_profiles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.canton ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.district ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.address ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.dni_types ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.users_profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.cantons ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.districts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.addresses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.disciplines ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.athletes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.users_disciplines ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notification_templates ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notifications_logs ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.user_invitations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.users_invitations ENABLE ROW LEVEL SECURITY;
 
 -- =========================
 -- RLS POLICIES
@@ -472,37 +473,55 @@ ALTER TABLE public.user_invitations ENABLE ROW LEVEL SECURITY;
 
 DO $$
 BEGIN
-  RAISE NOTICE 'Creating RLS policies for user_profiles...';
+  RAISE NOTICE 'Creating RLS policies for dni_types...';
+END $$;
+
+CREATE POLICY "Authenticated users can read dni types"
+ON public.dni_types
+FOR SELECT
+TO authenticated
+USING (TRUE);
+
+CREATE POLICY "Admins can manage dni types"
+ON public.dni_types
+FOR ALL
+TO authenticated
+USING (public.is_admin())
+WITH CHECK (public.is_admin());
+
+DO $$
+BEGIN
+  RAISE NOTICE 'Creating RLS policies for users_profiles...';
 END $$;
 
 CREATE POLICY "Users can read their own profile"
-ON public.user_profiles
+ON public.users_profiles
 FOR SELECT
 TO authenticated
 USING (id_user = auth.uid());
 
 CREATE POLICY "Users can update their own profile"
-ON public.user_profiles
+ON public.users_profiles
 FOR UPDATE
 TO authenticated
 USING (id_user = auth.uid())
 WITH CHECK (id_user = auth.uid());
 
 CREATE POLICY "Admins can read all profiles"
-ON public.user_profiles
+ON public.users_profiles
 FOR SELECT
 TO authenticated
 USING (public.is_admin());
 
 CREATE POLICY "Admins can update all profiles"
-ON public.user_profiles
+ON public.users_profiles
 FOR UPDATE
 TO authenticated
 USING (public.is_admin())
 WITH CHECK (public.is_admin());
 
 CREATE POLICY "Users can insert their own profile"
-ON public.user_profiles
+ON public.users_profiles
 FOR INSERT
 TO authenticated
 WITH CHECK (id_user = auth.uid());
@@ -513,26 +532,26 @@ BEGIN
 END $$;
 
 CREATE POLICY "Authenticated users can read cantons"
-ON public.canton
+ON public.cantons
 FOR SELECT
 TO authenticated
 USING (TRUE);
 
 CREATE POLICY "Admins can manage cantons"
-ON public.canton
+ON public.cantons
 FOR ALL
 TO authenticated
 USING (public.is_admin())
 WITH CHECK (public.is_admin());
 
 CREATE POLICY "Authenticated users can read districts"
-ON public.district
+ON public.districts
 FOR SELECT
 TO authenticated
 USING (TRUE);
 
 CREATE POLICY "Admins can manage districts"
-ON public.district
+ON public.districts
 FOR ALL
 TO authenticated
 USING (public.is_admin())
@@ -553,43 +572,43 @@ WITH CHECK (public.is_admin());
 
 DO $$
 BEGIN
-  RAISE NOTICE 'Creating RLS policies for address...';
+  RAISE NOTICE 'Creating RLS policies for addresses...';
 END $$;
 
 CREATE POLICY "Users can read their own address"
-ON public.address
+ON public.addresses
 FOR SELECT
 TO authenticated
 USING (
   EXISTS (
     SELECT 1
     FROM public.athletes a
-    WHERE a.fk_address = address.id_address
+    WHERE a.fk_address = addresses.id_address
       AND a.id_user = auth.uid()
   )
 );
 
 CREATE POLICY "Admins can read all addresses"
-ON public.address
+ON public.addresses
 FOR SELECT
 TO authenticated
 USING (public.is_admin());
 
 CREATE POLICY "Authenticated users can create addresses"
-ON public.address
+ON public.addresses
 FOR INSERT
 TO authenticated
 WITH CHECK (TRUE);
 
 CREATE POLICY "Users can update their own address"
-ON public.address
+ON public.addresses
 FOR UPDATE
 TO authenticated
 USING (
   EXISTS (
     SELECT 1
     FROM public.athletes a
-    WHERE a.fk_address = address.id_address
+    WHERE a.fk_address = addresses.id_address
       AND a.id_user = auth.uid()
   )
 )
@@ -597,13 +616,13 @@ WITH CHECK (
   EXISTS (
     SELECT 1
     FROM public.athletes a
-    WHERE a.fk_address = address.id_address
+    WHERE a.fk_address = addresses.id_address
       AND a.id_user = auth.uid()
   )
 );
 
 CREATE POLICY "Admins can manage all addresses"
-ON public.address
+ON public.addresses
 FOR ALL
 TO authenticated
 USING (public.is_admin())
@@ -694,7 +713,6 @@ BEGIN
   RAISE NOTICE 'Creating RLS policies for notification logs...';
 END $$;
 
-
 CREATE POLICY "Admins can manage notification logs"
 ON public.notifications_logs
 FOR ALL
@@ -704,11 +722,11 @@ WITH CHECK (public.is_admin());
 
 DO $$
 BEGIN
-  RAISE NOTICE 'Creating RLS policies for user invitations...';
+  RAISE NOTICE 'Creating RLS policies for users_invitations...';
 END $$;
 
 CREATE POLICY "Admins can manage invitations"
-ON public.user_invitations
+ON public.users_invitations
 FOR ALL
 TO authenticated
 USING (public.is_admin())
@@ -723,13 +741,13 @@ BEGIN
   RAISE NOTICE 'Creating indexes...';
 END $$;
 
-CREATE INDEX idx_user_profiles_role ON public.user_profiles(role);
+CREATE INDEX idx_users_profiles_role ON public.users_profiles(role);
 CREATE INDEX idx_athletes_address ON public.athletes(fk_address);
 CREATE INDEX idx_users_disciplines_user ON public.users_disciplines(fk_user);
 CREATE INDEX idx_users_disciplines_discipline ON public.users_disciplines(fk_discipline);
 CREATE INDEX idx_notifications_logs_user ON public.notifications_logs(fk_user);
-CREATE INDEX idx_user_invitations_email ON public.user_invitations(email);
-CREATE INDEX idx_user_invitations_status ON public.user_invitations(status);
+CREATE INDEX idx_users_invitations_email ON public.users_invitations(email);
+CREATE INDEX idx_users_invitations_status ON public.users_invitations(status);
 
 DO $$
 BEGIN
