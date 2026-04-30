@@ -1,0 +1,297 @@
+{
+  "info": {
+    "name": "Panel Atletas",
+    "description": "API collection for the Panel Atletas platform. Organized by domain. All authenticated requests require a valid JWT in the Authorization header.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "variable": [
+    {
+      "key": "SUPABASE_URL",
+      "value": "https://oduejasasklthjttssze.supabase.co",
+      "type": "string"
+    },
+    {
+      "key": "SUPABASE_KEY",
+      "value": "",
+      "description": "Publishable API key. Found in Supabase → Project Settings → API.",
+      "type": "string"
+    },
+    {
+      "key": "ADMIN_JWT",
+      "value": "",
+      "description": "JWT of an authenticated admin user. Obtain via Auth → Sign In.",
+      "type": "string"
+    },
+    {
+      "key": "USER_JWT",
+      "value": "",
+      "description": "JWT of an authenticated regular user.",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "description": "Supabase Auth endpoints for sign-in and session management.",
+      "item": [
+        {
+          "name": "Sign Up",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{SUPABASE_KEY}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{SUPABASE_URL}}/auth/v1/signup",
+              "host": ["{{SUPABASE_URL}}"],
+              "path": ["auth", "v1", "signup"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"someone@email.com\",\n  \"password\": \"xpQSRuBYgvUsMzUkdHSx\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Creates a new user account. Returns a session if email confirmation is disabled."
+          }
+        },
+        {
+          "name": "Sign In (Password)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{SUPABASE_KEY}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{SUPABASE_URL}}/auth/v1/token?grant_type=password",
+              "host": ["{{SUPABASE_URL}}"],
+              "path": ["auth", "v1", "token"],
+              "query": [{ "key": "grant_type", "value": "password" }]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"someone@email.com\",\n  \"password\": \"xpQSRuBYgvUsMzUkdHSx\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Authenticates a user with email and password. Returns access_token (JWT) and refresh_token."
+          }
+        },
+        {
+          "name": "Send Magic Link",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{SUPABASE_KEY}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{SUPABASE_URL}}/auth/v1/magiclink",
+              "host": ["{{SUPABASE_URL}}"],
+              "path": ["auth", "v1", "magiclink"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"someone@email.com\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Sends a magic link to the given email. User clicks the link to authenticate without a password."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Edge Functions",
+      "description": "Server-side functions that require admin privileges. All requests must include a valid admin JWT.",
+      "item": [
+        {
+          "name": "Invitations",
+          "description": "Endpoints for managing user invitations.",
+          "item": [
+            {
+              "name": "Invite User",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{ADMIN_JWT}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{SUPABASE_URL}}/functions/v1/invite-user",
+                  "host": ["{{SUPABASE_URL}}"],
+                  "path": ["functions", "v1", "invite-user"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"athlete@example.com\",\n  \"initial_role\": \"athlete\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "Creates and sends a magic link invitation to a new user. Fails with 409 if an active invitation already exists for the email.\n\n**initial_role** — one of: `athlete`, `coach`, `admin`"
+              },
+              "response": [
+                {
+                  "name": "200 Success",
+                  "status": "OK",
+                  "code": 200,
+                  "body": "{\n  \"success\": true,\n  \"email\": \"athlete@example.com\"\n}"
+                },
+                {
+                  "name": "400 Bad Request",
+                  "status": "Bad Request",
+                  "code": 400,
+                  "body": "{\n  \"error\": \"Missing email or initial_role\"\n}"
+                },
+                {
+                  "name": "401 Unauthorized",
+                  "status": "Unauthorized",
+                  "code": 401,
+                  "body": "{\n  \"error\": \"Unauthorized\"\n}"
+                },
+                {
+                  "name": "403 Forbidden",
+                  "status": "Forbidden",
+                  "code": 403,
+                  "body": "{\n  \"error\": \"Forbidden\"\n}"
+                },
+                {
+                  "name": "409 Conflict",
+                  "status": "Conflict",
+                  "code": 409,
+                  "body": "{\n  \"error\": \"Invitation already exists for this email\"\n}"
+                }
+              ]
+            },
+            {
+              "name": "Resend Invitation",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{ADMIN_JWT}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{SUPABASE_URL}}/functions/v1/resend-invitation",
+                  "host": ["{{SUPABASE_URL}}"],
+                  "path": ["functions", "v1", "resend-invitation"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"athlete@example.com\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "Resends the magic link to a user with an existing non-accepted invitation. Resets expiry to 7 days from now and increments the attempt counter."
+              },
+              "response": [
+                {
+                  "name": "200 Success",
+                  "status": "OK",
+                  "code": 200,
+                  "body": "{\n  \"success\": true,\n  \"email\": \"athlete@example.com\",\n  \"attempts\": 2\n}"
+                },
+                {
+                  "name": "400 Bad Request",
+                  "status": "Bad Request",
+                  "code": 400,
+                  "body": "{\n  \"error\": \"Missing email\"\n}"
+                },
+                {
+                  "name": "401 Unauthorized",
+                  "status": "Unauthorized",
+                  "code": 401,
+                  "body": "{\n  \"error\": \"Unauthorized\"\n}"
+                },
+                {
+                  "name": "403 Forbidden",
+                  "status": "Forbidden",
+                  "code": 403,
+                  "body": "{\n  \"error\": \"Forbidden\"\n}"
+                },
+                {
+                  "name": "404 Not Found",
+                  "status": "Not Found",
+                  "code": 404,
+                  "body": "{\n  \"error\": \"No resendable invitation found for this email\"\n}"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Data API",
+      "description": "PostgREST endpoints. All requests require Authorization header. RLS enforced on all tables.",
+      "item": [
+        {
+          "name": "Catalog",
+          "description": "Read-only catalog tables accessible by any authenticated user.",
+          "item": []
+        },
+        {
+          "name": "Profiles",
+          "description": "User profile management.",
+          "item": []
+        },
+        {
+          "name": "Athletes",
+          "description": "Athlete-specific data.",
+          "item": []
+        },
+        {
+          "name": "Invitations",
+          "description": "Admin read access to invitation records.",
+          "item": []
+        }
+      ]
+    }
+  ]
+}
