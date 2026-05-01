@@ -101,6 +101,16 @@
   color: var(--text-2);
 }
 
+.na-label::after {
+  content: ' *';
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.na-label--opt::after {
+  content: none;
+}
+
 .na-label-opt {
   font-weight: 400;
   color: var(--text-3);
@@ -508,6 +518,46 @@
 
 /* ── Half-width field ───────────────────────────────── */
 .na-field-group--half { max-width: 360px; }
+
+/* ── Disclaimer checklist ───────────────────────────── */
+.na-disclaimer-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.na-check-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+  color: var(--text-3);
+}
+
+.na-check-status--done {
+  color: var(--success);
+}
+
+.na-check-status-icon {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1.5px solid currentColor;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.na-check-status--done .na-check-status-icon {
+  background: var(--success);
+  border-color: var(--success);
+  color: #fff;
+}
 
 /* ── Firma input ────────────────────────────────────── */
 .na-input--firma {

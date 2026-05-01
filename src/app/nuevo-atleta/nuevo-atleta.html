@@ -130,7 +130,7 @@
               </div>
             }
             <div class="na-field-group">
-              <label class="na-label" for="msg">Mensaje personalizado <span class="na-label-opt">(opcional)</span></label>
+              <label class="na-label na-label--opt" for="msg">Mensaje personalizado <span class="na-label-opt">(opcional)</span></label>
               <textarea id="msg" class="na-textarea" rows="3" placeholder="Escribe un mensaje para incluir en la invitación..."></textarea>
             </div>
             <div class="na-form-footer">
@@ -185,7 +185,7 @@
                 <input id="fecNac" type="date" class="na-input" [(ngModel)]="fechaNacimiento">
               </div>
               <div class="na-field-group">
-                <label class="na-label">Edad</label>
+                <label class="na-label na-label--opt">Edad</label>
                 <div class="na-read-only">{{ edad > 0 ? edad + ' años' : '—' }}</div>
               </div>
               <div class="na-field-group">
@@ -299,7 +299,7 @@
                 </div>
               </div>
               <div class="na-field-group">
-                <label class="na-label" for="ocup">Ocupación</label>
+                <label class="na-label na-label--opt" for="ocup">Ocupación <span class="na-label-opt">(opcional)</span></label>
                 <input id="ocup" type="text" class="na-input" placeholder="Ej. Estudiante, Ingeniero..." [(ngModel)]="ocupacion">
               </div>
             </div>
@@ -745,11 +745,41 @@
             </div>
             <div class="na-field-group">
               <label class="na-label" for="firma">Firma (nombre completo del firmante)</label>
-              <input id="firma" type="text" class="na-input na-input--firma" placeholder="Escriba su nombre completo como firma" [(ngModel)]="firmaNombre">
+              <input id="firma" type="text" class="na-input na-input--firma"
+                placeholder="Escriba su nombre completo como firma" [(ngModel)]="firmaNombre">
             </div>
+
+            <!-- Checklist de requisitos para habilitar el botón -->
+            <div class="na-disclaimer-checklist">
+              <div class="na-check-status" [class.na-check-status--done]="autorizaDatos === 'si'">
+                <span class="na-check-status-icon">
+                  @if (autorizaDatos === 'si') {
+                    <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" fill="currentColor" viewBox="0 0 16 16"><path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/></svg>
+                  }
+                </span>
+                Autorización de datos personales
+              </div>
+              <div class="na-check-status" [class.na-check-status--done]="autorizaImagen === 'si'">
+                <span class="na-check-status-icon">
+                  @if (autorizaImagen === 'si') {
+                    <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" fill="currentColor" viewBox="0 0 16 16"><path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/></svg>
+                  }
+                </span>
+                Autorización de uso de imagen
+              </div>
+              <div class="na-check-status" [class.na-check-status--done]="firmaNombre.trim().length > 0">
+                <span class="na-check-status-icon">
+                  @if (firmaNombre.trim().length > 0) {
+                    <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" fill="currentColor" viewBox="0 0 16 16"><path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/></svg>
+                  }
+                </span>
+                Firma completada
+              </div>
+            </div>
+
             <div class="na-form-footer">
               <button type="button" class="btn btn-outline-secondary px-4 me-2" routerLink="/atletas">Cancelar</button>
-              <button type="button" class="btn btn-primary px-4">
+              <button type="button" class="btn btn-primary px-4" [disabled]="!canSubmit">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="me-2" viewBox="0 0 16 16"><path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4z"/></svg>
                 Registrar atleta
               </button>

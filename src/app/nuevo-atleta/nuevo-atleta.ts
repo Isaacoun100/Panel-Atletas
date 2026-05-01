@@ -128,6 +128,14 @@ export class NuevoAtleta implements OnInit {
   autorizaImagen = '';
   firmaNombre = '';
 
+  get canSubmit(): boolean {
+    return (
+      this.autorizaDatos === 'si' &&
+      this.autorizaImagen === 'si' &&
+      this.firmaNombre.trim().length > 0
+    );
+  }
+
   // ── Dropdown handlers ─────────────────────────────
   @HostListener('document:click', ['$event'])
   onDocumentClick(e: MouseEvent) {
