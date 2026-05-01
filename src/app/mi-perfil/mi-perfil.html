@@ -1,1 +1,300 @@
-<p>mi-perfil works!</p>
+<div class="db-layout">
+
+  <!-- Sidebar -->
+  <aside class="db-sidebar d-flex flex-column">
+    <div class="db-sidebar-header">
+      <span class="db-logo-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0zM4.5 7.5a.5.5 0 0 0 0 1h5.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H4.5z"/>
+        </svg>
+      </span>
+      <span class="db-logo-text">Panel Atletas</span>
+    </div>
+
+    <nav class="db-nav flex-grow-1">
+      <p class="db-nav-label">Principal</p>
+      <a routerLink="/dashboard" routerLinkActive="active" class="db-nav-item">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M8.354 1.146a.5.5 0 0 0-.708 0l-6 6-.354.353V14.5A1.5 1.5 0 0 0 2.5 16h11a1.5 1.5 0 0 0 1.5-1.5V7.499l-.354-.353-6-6z"/>
+        </svg>
+        Dashboard
+      </a>
+      <a routerLink="/atletas" routerLinkActive="active" class="db-nav-item">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1H7zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>
+          <path fill-rule="evenodd" d="M5.216 14A2.238 2.238 0 0 1 5 13c0-1.355.68-2.75 1.936-3.72A6.325 6.325 0 0 0 5 9c-4 0-5 3-5 4s1 1 1 1h4.216z"/>
+          <path d="M4.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"/>
+        </svg>
+        Atletas
+      </a>
+      <a routerLink="/nuevo-atleta" routerLinkActive="active" class="db-nav-item">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2zm4.5 5.5a.5.5 0 0 0 0 1h5a.5.5 0 0 0 0-1h-5zm0 2a.5.5 0 0 0 0 1h5a.5.5 0 0 0 0-1h-5zM4 5a1 1 0 1 1 2 0 1 1 0 0 1-2 0z"/>
+        </svg>
+        Nuevo Atleta
+      </a>
+
+      <p class="db-nav-label mt-3">Cuenta</p>
+      <a routerLink="/mi-perfil" routerLinkActive="active" class="db-nav-item">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4z"/>
+        </svg>
+        Mi Perfil
+      </a>
+    </nav>
+
+    <div class="db-sidebar-footer">
+      <div class="db-user-chip">
+        <img src="https://github.com/Isaacoun100.png?size=32" alt="User" class="db-user-avatar">
+        <div class="db-user-info">
+          <span class="db-user-name">Administrador</span>
+          <span class="db-user-role">Comité Montes de Oca</span>
+        </div>
+      </div>
+      <button class="db-logout-btn" (click)="logout()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16">
+          <path fill-rule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0v2z"/>
+          <path fill-rule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3z"/>
+        </svg>
+        Cerrar Sesión
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="db-main">
+
+    <!-- Topbar -->
+    <header class="db-topbar d-flex align-items-center justify-content-between">
+      <div>
+        <h1 class="db-page-title">Mi Perfil</h1>
+        <p class="db-page-sub">Comité Cantonal de Deportes y Recreación Montes de Oca</p>
+      </div>
+      <button class="db-theme-btn" (click)="toggleTheme()" [title]="isDark() ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'">
+        @if (isDark()) {
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm0 1a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0zm0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13zm8-5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 .5.5zM3 8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2A.5.5 0 0 1 3 8zm10.657-5.657a.5.5 0 0 1 0 .707l-1.414 1.415a.5.5 0 1 1-.707-.708l1.414-1.414a.5.5 0 0 1 .707 0zm-9.193 9.193a.5.5 0 0 1 0 .707L3.05 13.657a.5.5 0 0 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0zm9.193 2.121a.5.5 0 0 1-.707 0l-1.414-1.414a.5.5 0 0 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707zM4.464 4.465a.5.5 0 0 1-.707 0L2.343 3.05a.5.5 0 1 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .708z"/>
+          </svg>
+        } @else {
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M6 .278a.768.768 0 0 1 .08.858 7.208 7.208 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277.527 0 1.04-.055 1.533-.16a.787.787 0 0 1 .81.316.733.733 0 0 1-.031.893A8.349 8.349 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.752.752 0 0 1 6 .278z"/>
+          </svg>
+        }
+      </button>
+    </header>
+
+    <div class="mp-content">
+
+      <!-- ── Profile Hero Card ───────────────────────── -->
+      <div class="db-card mp-hero mb-4">
+        <div class="mp-hero-banner"></div>
+        <div class="mp-hero-body">
+          <div class="mp-avatar-wrap">
+            <img src="https://github.com/Isaacoun100.png?size=96" alt="Avatar" class="mp-avatar">
+            <span class="mp-avatar-badge" title="Activo"></span>
+          </div>
+          <div class="mp-hero-info">
+            <h2 class="mp-name">Isaac Herrera Monge</h2>
+            <span class="mp-role-badge">Administrador</span>
+            <p class="mp-institution">Comité Cantonal de Deportes y Recreación Montes de Oca</p>
+          </div>
+          <div class="mp-hero-actions ms-auto">
+            <button class="btn btn-outline-secondary btn-sm px-3">
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" class="me-1" viewBox="0 0 16 16">
+                <path d="M12.854.146a.5.5 0 0 0-.707 0L10.5 1.793 14.207 5.5l1.647-1.646a.5.5 0 0 0 0-.708l-3-3zm.646 6.061L9.793 2.5 3.293 9H3.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.207l6.5-6.5zm-7.468 7.468A.5.5 0 0 1 6 13.5V13h-.5a.5.5 0 0 1-.5-.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.5-.5V10h-.5a.499.499 0 0 1-.175-.032l-.179.178a.5.5 0 0 0-.11.168l-2 5a.5.5 0 0 0 .65.65l5-2a.5.5 0 0 0 .168-.11l.178-.178z"/>
+              </svg>
+              Editar perfil
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-4">
+
+        <!-- ── Left column ─────────────────────────── -->
+        <div class="col-12 col-lg-5">
+
+          <!-- Información Personal -->
+          <div class="db-card mb-4">
+            <div class="db-card-header">
+              <span class="db-card-title">Información Personal</span>
+            </div>
+            <div class="mp-info-list">
+              <div class="mp-info-row">
+                <span class="mp-info-label">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4z"/>
+                  </svg>
+                  Nombre completo
+                </span>
+                <span class="mp-info-value">Isaac Herrera Monge</span>
+              </div>
+              <div class="mp-info-row">
+                <span class="mp-info-label">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4zm2-1a1 1 0 0 0-1 1v.217l7 4.2 7-4.2V4a1 1 0 0 0-1-1H2zm13 2.383-4.708 2.825L15 11.105V5.383zm-.034 6.876-5.64-3.471L8 9.583l-1.326-.795-5.64 3.47A1 1 0 0 0 2 13h12a1 1 0 0 0 .966-.741zM1 11.105l4.708-2.897L1 5.383v5.722z"/>
+                  </svg>
+                  Correo electrónico
+                </span>
+                <span class="mp-info-value">isaacoun100&#64;gmail.com</span>
+              </div>
+              <div class="mp-info-row">
+                <span class="mp-info-label">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M1.885.511a1.745 1.745 0 0 1 2.61.163L6.29 2.98c.329.423.445.974.315 1.494l-.547 2.19a.678.678 0 0 0 .178.643l2.457 2.457a.678.678 0 0 0 .644.178l2.189-.547a1.745 1.745 0 0 1 1.494.315l2.306 1.794c.829.645.905 1.87.163 2.611l-1.034 1.034c-.74.74-1.846 1.065-2.877.702a18.634 18.634 0 0 1-7.01-4.42 18.634 18.634 0 0 1-4.42-7.009c-.362-1.03-.037-2.137.703-2.877L1.885.511z"/>
+                  </svg>
+                  Teléfono
+                </span>
+                <span class="mp-info-value">8888-8888</span>
+              </div>
+              <div class="mp-info-row">
+                <span class="mp-info-label">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10zm0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"/>
+                  </svg>
+                  Ubicación
+                </span>
+                <span class="mp-info-value">Montes de Oca, San José</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Rol y Permisos -->
+          <div class="db-card">
+            <div class="db-card-header">
+              <span class="db-card-title">Rol y Permisos</span>
+            </div>
+            <div class="mp-info-list">
+              <div class="mp-info-row">
+                <span class="mp-info-label">Rol</span>
+                <span class="mp-info-value">
+                  <span class="db-badge db-badge--success">Administrador</span>
+                </span>
+              </div>
+              <div class="mp-info-row">
+                <span class="mp-info-label">Nivel de acceso</span>
+                <span class="mp-info-value">Total</span>
+              </div>
+              <div class="mp-info-row">
+                <span class="mp-info-label">Estado de cuenta</span>
+                <span class="mp-info-value mp-status-active">
+                  <span class="mp-status-dot"></span> Activa
+                </span>
+              </div>
+              <div class="mp-info-row">
+                <span class="mp-info-label">Miembro desde</span>
+                <span class="mp-info-value">Enero 2024</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ── Right column ────────────────────────── -->
+        <div class="col-12 col-lg-7">
+
+          <!-- Quick stats -->
+          <div class="row g-3 mb-4">
+            <div class="col-4">
+              <div class="mp-stat-card">
+                <span class="mp-stat-value">148</span>
+                <span class="mp-stat-label">Atletas gestionados</span>
+              </div>
+            </div>
+            <div class="col-4">
+              <div class="mp-stat-card">
+                <span class="mp-stat-value">10</span>
+                <span class="mp-stat-label">Disciplinas activas</span>
+              </div>
+            </div>
+            <div class="col-4">
+              <div class="mp-stat-card">
+                <span class="mp-stat-value">16</span>
+                <span class="mp-stat-label">Meses activo</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Seguridad -->
+          <div class="db-card mb-4">
+            <div class="db-card-header">
+              <span class="db-card-title">Seguridad</span>
+            </div>
+            <div class="mp-info-list">
+              <div class="mp-info-row">
+                <span class="mp-info-label">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2zm3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/>
+                  </svg>
+                  Contraseña
+                </span>
+                <span class="mp-info-value d-flex align-items-center gap-2">
+                  <span class="mp-password-dots">••••••••</span>
+                  <button class="btn btn-link btn-sm p-0 mp-link-btn">Cambiar</button>
+                </span>
+              </div>
+              <div class="mp-info-row">
+                <span class="mp-info-label">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/>
+                    <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/>
+                  </svg>
+                  Último acceso
+                </span>
+                <span class="mp-info-value">Hoy, 09:14 a. m.</span>
+              </div>
+              <div class="mp-info-row">
+                <span class="mp-info-label">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"/>
+                  </svg>
+                  Sesión iniciada desde
+                </span>
+                <span class="mp-info-value">San José, Costa Rica</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Actividad reciente -->
+          <div class="db-card">
+            <div class="db-card-header">
+              <span class="db-card-title">Actividad Reciente</span>
+            </div>
+            <div class="db-activity">
+              <div class="db-activity-item">
+                <div class="db-activity-dot db-activity-dot--success"></div>
+                <div>
+                  <p class="db-activity-text">Registró al atleta <strong>Carlos Mora</strong> en Natación</p>
+                  <span class="db-activity-time">Hace 2 horas</span>
+                </div>
+              </div>
+              <div class="db-activity-item">
+                <div class="db-activity-dot db-activity-dot--primary"></div>
+                <div>
+                  <p class="db-activity-text">Actualizó el perfil de <strong>Laura Rodríguez</strong></p>
+                  <span class="db-activity-time">Hace 5 horas</span>
+                </div>
+              </div>
+              <div class="db-activity-item">
+                <div class="db-activity-dot db-activity-dot--warning"></div>
+                <div>
+                  <p class="db-activity-text">Marcó solicitud de <strong>Pedro González</strong> como pendiente</p>
+                  <span class="db-activity-time">Ayer</span>
+                </div>
+              </div>
+              <div class="db-activity-item">
+                <div class="db-activity-dot db-activity-dot--success"></div>
+                <div>
+                  <p class="db-activity-text">Añadió la disciplina <strong>Gimnasia</strong></p>
+                  <span class="db-activity-time">Hace 2 días</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
