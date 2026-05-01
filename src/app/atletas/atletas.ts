@@ -3,14 +3,15 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
 import { Router } from '@angular/router';
 
 interface Atleta {
-  id: string;
+  cedula: string;
+  foto: string;
   initials: string;
   nombre: string;
-  disciplina: string;
-  estado: 'Activo' | 'Pendiente' | 'Inactivo';
-  registro: string;
-  sexo: 'M' | 'F';
+  fechaNacimiento: string;
   edad: number;
+  sexo: 'M' | 'F';
+  disciplinas: string[];
+  estado: 'Activo' | 'Pendiente' | 'Inactivo';
 }
 
 @Component({
@@ -24,16 +25,16 @@ export class Atletas implements OnInit {
 
   // ── Data ──────────────────────────────────────────
   readonly atletasMock: Atleta[] = [
-    { id: 'ID-0041', initials: 'CM', nombre: 'Carlos Mora',     disciplina: 'Natación',            estado: 'Activo',    registro: '24 Abr 2025', sexo: 'M', edad: 28 },
-    { id: 'ID-0040', initials: 'LR', nombre: 'Laura Rodríguez', disciplina: 'Atletismo',           estado: 'Activo',    registro: '22 Abr 2025', sexo: 'F', edad: 23 },
-    { id: 'ID-0039', initials: 'PG', nombre: 'Pedro González',  disciplina: 'Fútbol',              estado: 'Pendiente', registro: '20 Abr 2025', sexo: 'M', edad: 19 },
-    { id: 'ID-0038', initials: 'AF', nombre: 'Andrea Flores',   disciplina: 'Gimnasia',            estado: 'Activo',    registro: '18 Abr 2025', sexo: 'F', edad: 17 },
-    { id: 'ID-0037', initials: 'MV', nombre: 'Marco Vargas',    disciplina: 'Baloncesto',          estado: 'Inactivo',  registro: '15 Abr 2025', sexo: 'M', edad: 31 },
-    { id: 'ID-0036', initials: 'SJ', nombre: 'Sofía Jiménez',   disciplina: 'Ciclismo',            estado: 'Activo',    registro: '12 Abr 2025', sexo: 'F', edad: 25 },
-    { id: 'ID-0035', initials: 'RC', nombre: 'Roberto Castro',  disciplina: 'Natación',            estado: 'Pendiente', registro: '10 Abr 2025', sexo: 'M', edad: 22 },
-    { id: 'ID-0034', initials: 'VM', nombre: 'Valeria Mora',    disciplina: 'Voleibol',            estado: 'Activo',    registro: '08 Abr 2025', sexo: 'F', edad: 20 },
-    { id: 'ID-0033', initials: 'DA', nombre: 'Diego Arias',     disciplina: 'Atletismo',           estado: 'Inactivo',  registro: '05 Abr 2025', sexo: 'M', edad: 27 },
-    { id: 'ID-0032', initials: 'MP', nombre: 'María Pérez',     disciplina: 'Gimnasia',            estado: 'Activo',    registro: '01 Abr 2025', sexo: 'F', edad: 15 },
+    { cedula: '1-0234-0567', foto: 'https://i.pravatar.cc/40?img=11', initials: 'CM', nombre: 'Carlos Mora',      fechaNacimiento: '15/03/1997', edad: 28, sexo: 'M', disciplinas: ['Natación'],                       estado: 'Activo'    },
+    { cedula: '1-0890-1234', foto: 'https://i.pravatar.cc/40?img=47', initials: 'LR', nombre: 'Laura Rodríguez', fechaNacimiento: '22/07/2002', edad: 23, sexo: 'F', disciplinas: ['Atletismo'],                      estado: 'Activo'    },
+    { cedula: '1-1234-5678', foto: 'https://i.pravatar.cc/40?img=12', initials: 'PG', nombre: 'Pedro González',  fechaNacimiento: '05/11/2006', edad: 19, sexo: 'M', disciplinas: ['Fútbol', 'Baloncesto'],           estado: 'Pendiente' },
+    { cedula: '1-0567-8901', foto: 'https://i.pravatar.cc/40?img=48', initials: 'AF', nombre: 'Andrea Flores',   fechaNacimiento: '30/01/2008', edad: 17, sexo: 'F', disciplinas: ['Gimnasia'],                       estado: 'Activo'    },
+    { cedula: '1-0345-6789', foto: 'https://i.pravatar.cc/40?img=15', initials: 'MV', nombre: 'Marco Vargas',    fechaNacimiento: '18/06/1994', edad: 31, sexo: 'M', disciplinas: ['Baloncesto'],                     estado: 'Inactivo'  },
+    { cedula: '1-0678-9012', foto: 'https://i.pravatar.cc/40?img=44', initials: 'SJ', nombre: 'Sofía Jiménez',   fechaNacimiento: '09/09/2000', edad: 25, sexo: 'F', disciplinas: ['Ciclismo'],                       estado: 'Activo'    },
+    { cedula: '1-0901-2345', foto: 'https://i.pravatar.cc/40?img=14', initials: 'RC', nombre: 'Roberto Castro',  fechaNacimiento: '27/04/2003', edad: 22, sexo: 'M', disciplinas: ['Natación', 'Atletismo'],          estado: 'Pendiente' },
+    { cedula: '1-0456-7890', foto: 'https://i.pravatar.cc/40?img=49', initials: 'VM', nombre: 'Valeria Mora',    fechaNacimiento: '14/12/2005', edad: 20, sexo: 'F', disciplinas: ['Voleibol'],                       estado: 'Activo'    },
+    { cedula: '1-0123-4567', foto: 'https://i.pravatar.cc/40?img=13', initials: 'DA', nombre: 'Diego Arias',     fechaNacimiento: '03/08/1998', edad: 27, sexo: 'M', disciplinas: ['Atletismo'],                      estado: 'Inactivo'  },
+    { cedula: '1-0789-0123', foto: 'https://i.pravatar.cc/40?img=45', initials: 'MP', nombre: 'María Pérez',     fechaNacimiento: '21/02/2010', edad: 15, sexo: 'F', disciplinas: ['Gimnasia', 'Para Tenis de Mesa'], estado: 'Activo'    },
   ];
 
   // ── Filters ───────────────────────────────────────
@@ -66,7 +67,7 @@ export class Atletas implements OnInit {
 
     return this.atletasMock.filter(a => {
       if (query && !a.nombre.toLowerCase().includes(query)) return false;
-      if (disciplines.length > 0 && !disciplines.includes(a.disciplina)) return false;
+      if (disciplines.length > 0 && !a.disciplinas.some(d => disciplines.includes(d))) return false;
       if (sex && a.sexo !== sex) return false;
       if (min !== null && a.edad < min) return false;
       if (max !== null && a.edad > max) return false;
@@ -79,7 +80,7 @@ export class Atletas implements OnInit {
 
   allSelected = computed(() => {
     const filtered = this.filteredAtletas();
-    return filtered.length > 0 && filtered.every(a => this.selectedIds().has(a.id));
+    return filtered.length > 0 && filtered.every(a => this.selectedIds().has(a.cedula));
   });
 
   someSelected = computed(() => this.selectedIds().size > 0);
@@ -93,7 +94,7 @@ export class Atletas implements OnInit {
     if (this.allSelected()) {
       this.selectedIds.set(new Set());
     } else {
-      this.selectedIds.set(new Set(this.filteredAtletas().map(a => a.id)));
+      this.selectedIds.set(new Set(this.filteredAtletas().map(a => a.cedula)));
     }
   }
 
@@ -103,34 +104,20 @@ export class Atletas implements OnInit {
     this.selectedIds.set(next);
   }
 
-  clearSelection() {
-    this.selectedIds.set(new Set());
-  }
+  clearSelection() { this.selectedIds.set(new Set()); }
 
-  // ── Download ──────────────────────────────────────
-  downloadMenuOpen = signal(false);
-
-  toggleDownloadMenu(e: Event) {
-    e.stopPropagation();
-    this.downloadMenuOpen.update(v => !v);
-  }
-
-  downloadReport(format: 'pdf' | 'excel' | 'word') {
-    this.downloadMenuOpen.set(false);
+  // ── Export ────────────────────────────────────────
+  exportSelection(format: 'csv' | 'pdf' | 'word') {
     // TODO: connect to backend export endpoint
-    alert(`Generando informe en formato ${format.toUpperCase()}...`);
+    alert(`Exportando ${this.selectedCount()} atleta(s) en formato ${format.toUpperCase()}...`);
   }
 
   // ── Dropdown close on outside click ───────────────
   @HostListener('document:click', ['$event'])
   onDocumentClick(e: MouseEvent) {
-    const target = e.target as HTMLElement;
-    if (!target.closest('.at-multiselect')) {
+    if (!(e.target as HTMLElement).closest('.at-multiselect')) {
       this.disciplineMenuOpen.set(false);
       this.categoriaMenuOpen.set(false);
-    }
-    if (!target.closest('.at-download-wrap')) {
-      this.downloadMenuOpen.set(false);
     }
   }
 

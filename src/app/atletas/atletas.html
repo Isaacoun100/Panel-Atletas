@@ -1,8 +1,31 @@
-<div class="db-layout">
+<div class="d-flex" style="min-height:100vh;background:var(--bg)">
 
   <!-- Sidebar -->
-  <aside class="db-sidebar d-flex flex-column">
-    <div class="db-sidebar-header">
+  <aside class="offcanvas-lg offcanvas-start db-sidebar d-flex flex-column"
+         id="appSidebar" tabindex="-1" style="--bs-offcanvas-width:240px">
+
+    <!-- Close button — mobile drawer only -->
+    <div class="d-flex d-lg-none align-items-center justify-content-between px-3 py-2"
+         style="border-bottom:1px solid var(--border)">
+      <div class="d-flex align-items-center gap-2">
+        <span class="db-logo-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0zM4.5 7.5a.5.5 0 0 0 0 1h5.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H4.5z"/>
+          </svg>
+        </span>
+        <span class="db-logo-text">Panel Atletas</span>
+      </div>
+      <button type="button" class="btn p-0" aria-label="Cerrar menú"
+              data-bs-dismiss="offcanvas" data-bs-target="#appSidebar"
+              style="color:var(--text-3);line-height:1">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Logo — desktop only -->
+    <div class="db-sidebar-header d-none d-lg-flex align-items-center gap-2">
       <span class="db-logo-icon">
         <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16">
           <path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0zM4.5 7.5a.5.5 0 0 0 0 1h5.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H4.5z"/>
@@ -62,13 +85,22 @@
   </aside>
 
   <!-- Main content -->
-  <main class="db-main">
+  <div class="flex-grow-1 d-flex flex-column" style="min-width:0;overflow-x:hidden">
 
     <!-- Topbar -->
-    <header class="db-topbar d-flex align-items-center justify-content-between">
-      <div>
-        <h1 class="db-page-title">Atletas</h1>
-        <p class="db-page-sub">Comité Cantonal de Deportes y Recreación Montes de Oca</p>
+    <header class="db-topbar sticky-top d-flex align-items-center justify-content-between gap-2">
+      <div class="d-flex align-items-center gap-2">
+        <button type="button" class="db-theme-btn d-lg-none"
+                data-bs-toggle="offcanvas" data-bs-target="#appSidebar"
+                aria-controls="appSidebar" aria-label="Abrir menú">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z"/>
+          </svg>
+        </button>
+        <div>
+          <h1 class="db-page-title">Atletas</h1>
+          <p class="db-page-sub d-none d-sm-block">Comité Cantonal de Deportes y Recreación Montes de Oca</p>
+        </div>
       </div>
       <div class="d-flex align-items-center gap-2">
         <button class="db-theme-btn" (click)="toggleTheme()" [title]="isDark() ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'">
@@ -82,59 +114,29 @@
             </svg>
           }
         </button>
-        <!-- Download report -->
-        <div class="at-download-wrap">
-          <button class="at-download-btn" (click)="toggleDownloadMenu($event)">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
-              <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
-              <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
-            </svg>
-            Descargar Informe
-            <svg class="at-download-chevron" xmlns="http://www.w3.org/2000/svg" width="11" height="11" fill="currentColor" viewBox="0 0 16 16">
-              <path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/>
-            </svg>
-          </button>
-          @if (downloadMenuOpen()) {
-            <div class="at-download-dropdown">
-              <button class="at-download-option" (click)="downloadReport('pdf')">
-                <span class="at-download-icon at-download-icon--pdf">PDF</span>
-                Documento PDF
-              </button>
-              <button class="at-download-option" (click)="downloadReport('excel')">
-                <span class="at-download-icon at-download-icon--excel">XLS</span>
-                Hoja de Excel
-              </button>
-              <button class="at-download-option" (click)="downloadReport('word')">
-                <span class="at-download-icon at-download-icon--word">DOC</span>
-                Documento Word
-              </button>
-            </div>
-          }
-        </div>
-
-        <button routerLink="/nuevo-atleta" class="btn btn-primary btn-sm px-3">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="me-1" viewBox="0 0 16 16">
-            <path d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2z"/>
-          </svg>
-          Nuevo Atleta
-        </button>
       </div>
     </header>
 
     <!-- Search & filters -->
     <section class="db-section">
       <div class="db-card db-card--overflow">
-        <div class="at-search-bar">
-          <div class="at-search-input-wrap">
+        <div class="p-3 d-flex flex-column gap-2">
+
+          <!-- Search — always full width -->
+          <div class="position-relative">
             <svg class="at-search-icon" xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16">
               <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.099zm-5.242 1.656a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z"/>
             </svg>
             <input type="text" class="at-search-input" placeholder="Buscar atleta por nombre..."
               [value]="searchQuery()" (input)="searchQuery.set($any($event.target).value)">
           </div>
+
+          <!-- Filters row — wrap naturally, items keep natural width -->
+          <div class="d-flex flex-wrap align-items-center gap-2">
+
           <!-- Discipline multi-select -->
-          <div class="at-multiselect">
-            <button class="at-multiselect-btn" (click)="toggleDisciplineMenu($event)"
+          <div class="position-relative">
+            <button class="at-multiselect-btn d-flex align-items-center gap-2" (click)="toggleDisciplineMenu($event)"
               [class.at-multiselect-btn--active]="selectedDisciplines().length > 0">
               <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16">
                 <path d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1H7zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>
@@ -149,7 +151,7 @@
             @if (disciplineMenuOpen()) {
               <div class="at-multiselect-dropdown" (click)="$event.stopPropagation()">
                 @for (d of disciplines; track d) {
-                  <label class="at-multiselect-option">
+                  <label class="at-multiselect-option d-flex align-items-center gap-2">
                     <span class="at-checkbox" [class.at-checkbox--checked]="selectedDisciplines().includes(d)">
                       @if (selectedDisciplines().includes(d)) {
                         <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="currentColor" viewBox="0 0 16 16">
@@ -167,8 +169,8 @@
 
           <!-- Categoría funcional (only when Para Tenis de Mesa is selected) -->
           @if (showCategoriaMenu()) {
-            <div class="at-multiselect">
-              <button class="at-multiselect-btn" (click)="toggleCategoriaMenu($event)"
+            <div class="position-relative">
+              <button class="at-multiselect-btn d-flex align-items-center gap-2" (click)="toggleCategoriaMenu($event)"
                 [class.at-multiselect-btn--active]="selectedCategorias().length > 0">
                 {{ categoriaLabel() }}
                 <svg class="at-chevron" xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
@@ -178,7 +180,7 @@
               @if (categoriaMenuOpen()) {
                 <div class="at-multiselect-dropdown" (click)="$event.stopPropagation()">
                   @for (c of categorias; track c) {
-                    <label class="at-multiselect-option">
+                    <label class="at-multiselect-option d-flex align-items-center gap-2">
                       <span class="at-checkbox" [class.at-checkbox--checked]="selectedCategorias().includes(c)">
                         @if (selectedCategorias().includes(c)) {
                           <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="currentColor" viewBox="0 0 16 16">
@@ -196,7 +198,7 @@
           }
 
           <!-- Age range -->
-          <div class="at-age-range">
+          <div class="d-flex align-items-center gap-1">
             <input type="number" class="at-age-input" placeholder="Edad mín" min="0" max="120"
               [value]="minAge() ?? ''" (input)="minAge.set(+$any($event.target).value || null)">
             <span class="at-age-sep">–</span>
@@ -211,30 +213,25 @@
             <button class="at-sex-btn" [class.at-sex-btn--active]="selectedSex() === 'F'"  (click)="selectedSex.set('F')">F</button>
           </div>
 
-          <span class="at-count-badge">{{ filteredAtletas().length }} atletas</span>
-        </div>
+          <span class="at-count-badge ms-auto">{{ filteredAtletas().length }} atletas</span>
+          </div><!-- /filters row -->
+        </div><!-- /p-3 column -->
       </div>
     </section>
 
-    <!-- Selection bar -->
+    <!-- Selection bar — appears when athletes are selected -->
     @if (someSelected()) {
       <section class="db-section">
-        <div class="at-selection-bar">
-          <span class="at-selection-count">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
-              <path d="M14 1a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H4.414A2 2 0 0 0 3 11.586l-2 2V2a1 1 0 0 1 1-1h12z"/>
-            </svg>
+        <div class="at-selection-bar d-flex align-items-center justify-content-between gap-3">
+          <span class="at-selection-count d-flex align-items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M14 1a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H4.414A2 2 0 0 0 3 11.586l-2 2V2a1 1 0 0 1 1-1h12z"/></svg>
             {{ selectedCount() }} atleta{{ selectedCount() > 1 ? 's' : '' }} seleccionado{{ selectedCount() > 1 ? 's' : '' }}
           </span>
-          <div class="at-selection-actions">
-            <button class="at-sel-btn" (click)="downloadReport('pdf')">
-              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg>
-              Exportar selección
-            </button>
-            <button class="at-sel-btn at-sel-btn--danger">
-              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/></svg>
-              Eliminar selección
-            </button>
+          <div class="d-flex align-items-center gap-2">
+            <span class="small me-1" style="color:var(--text-3)">Exportar como:</span>
+            <button class="at-sel-btn" (click)="exportSelection('csv')">CSV</button>
+            <button class="at-sel-btn" (click)="exportSelection('pdf')">PDF</button>
+            <button class="at-sel-btn" (click)="exportSelection('word')">Word</button>
             <button class="at-sel-btn at-sel-btn--ghost" (click)="clearSelection()">Cancelar</button>
           </div>
         </div>
@@ -257,7 +254,7 @@
                 <th class="at-th-check">
                   <button class="at-row-check" [class.at-row-check--checked]="allSelected()"
                     [class.at-row-check--partial]="partialSelection()"
-                    (click)="toggleSelectAll()" title="Seleccionar todo">
+                    (click)="toggleSelectAll()" title="Seleccionar todos">
                     @if (allSelected()) {
                       <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="currentColor" viewBox="0 0 16 16"><path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/></svg>
                     } @else if (partialSelection()) {
@@ -266,44 +263,51 @@
                   </button>
                 </th>
                 <th>Atleta</th>
-                <th>Disciplina</th>
-                <th>Estado</th>
-                <th>Registro</th>
+                <th>Cédula</th>
+                <th>Fecha nac.</th>
+                <th>Edad</th>
+                <th>Sexo</th>
+                <th>Disciplina(s)</th>
                 <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
-              @for (a of filteredAtletas(); track a.id) {
-                <tr [class.at-row--selected]="selectedIds().has(a.id)">
+              @for (a of filteredAtletas(); track a.cedula) {
+                <tr [class.at-row--selected]="selectedIds().has(a.cedula)">
                   <td class="at-td-check">
-                    <button class="at-row-check" [class.at-row-check--checked]="selectedIds().has(a.id)"
-                      (click)="toggleSelect(a.id)">
-                      @if (selectedIds().has(a.id)) {
+                    <button class="at-row-check" [class.at-row-check--checked]="selectedIds().has(a.cedula)"
+                      (click)="toggleSelect(a.cedula)">
+                      @if (selectedIds().has(a.cedula)) {
                         <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="currentColor" viewBox="0 0 16 16"><path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/></svg>
                       }
                     </button>
                   </td>
+                  <!-- Foto + nombre -->
                   <td>
-                    <div class="db-table-user">
-                      <div class="db-table-avatar">{{ a.initials }}</div>
-                      <div class="at-athlete-info">
-                        <span class="at-athlete-name">{{ a.nombre }}</span>
-                        <span class="at-athlete-id">{{ a.id }}</span>
-                      </div>
+                    <div class="d-flex align-items-center gap-2">
+                      <img [src]="a.foto" [alt]="a.nombre" class="at-athlete-photo rounded-circle" loading="lazy">
+                      <span class="fw-medium small" style="color:var(--text)">{{ a.nombre }}</span>
                     </div>
                   </td>
-                  <td>{{ a.disciplina }}</td>
+
+                  <td class="small" style="color:var(--text-3)">{{ a.cedula }}</td>
+                  <td class="small" style="color:var(--text-3)">{{ a.fechaNacimiento }}</td>
+                  <td>{{ a.edad }}</td>
+
                   <td>
-                    <span class="db-badge"
-                      [class.db-badge--success]="a.estado === 'Activo'"
-                      [class.db-badge--warning]="a.estado === 'Pendiente'"
-                      [class.db-badge--danger]="a.estado === 'Inactivo'">
-                      {{ a.estado }}
-                    </span>
+                    <span class="at-sex-badge" [class.at-sex-badge--m]="a.sexo === 'M'">{{ a.sexo }}</span>
                   </td>
-                  <td>{{ a.registro }}</td>
+
                   <td>
-                    <div class="at-actions">
+                    <div class="d-flex flex-wrap gap-1">
+                      @for (d of a.disciplinas; track d) {
+                        <span class="at-disc-chip">{{ d }}</span>
+                      }
+                    </div>
+                  </td>
+
+                  <td>
+                    <div class="d-flex align-items-center gap-1">
                       <button class="at-action-btn" title="Ver perfil">
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z"/><path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z"/></svg>
                       </button>
@@ -319,7 +323,7 @@
               }
               @if (filteredAtletas().length === 0) {
                 <tr>
-                  <td colspan="6" class="at-empty-row">
+                  <td colspan="8" class="at-empty-row text-center d-flex flex-column align-items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" viewBox="0 0 16 16"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.099zm-5.242 1.656a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z"/></svg>
                     No se encontraron atletas con los filtros seleccionados
                   </td>
@@ -331,5 +335,5 @@
       </div>
     </section>
 
-  </main>
+  </div>
 </div>
