@@ -428,6 +428,97 @@ AFTER UPDATE ON auth.users
 FOR EACH ROW
 EXECUTE FUNCTION public.handle_invitation_accepted();
 
+CREATE OR REPLACE FUNCTION public.handle_profile_id_from_auth()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  NEW.id_user := auth.uid();
+  RETURN NEW;
+END;
+$$;
+
+CREATE OR REPLACE TRIGGER set_profile_id_from_auth
+BEFORE INSERT ON public.users_profiles
+FOR EACH ROW
+EXECUTE FUNCTION public.handle_profile_id_from_auth();
+
+CREATE OR REPLACE FUNCTION public.handle_athlete_id_from_auth()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  NEW.id_user := auth.uid();
+  RETURN NEW;
+END;
+$$;
+
+CREATE OR REPLACE TRIGGER set_athlete_id_from_auth
+BEFORE INSERT ON public.athletes
+FOR EACH ROW
+EXECUTE FUNCTION public.handle_athlete_id_from_auth();
+
+CREATE OR REPLACE FUNCTION public.handle_discipline_user_from_auth()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  NEW.fk_user := auth.uid();
+  RETURN NEW;
+END;
+$$;
+
+CREATE OR REPLACE TRIGGER set_discipline_user_from_auth
+BEFORE INSERT ON public.users_disciplines
+FOR EACH ROW
+EXECUTE FUNCTION public.handle_discipline_user_from_auth();
+
+CREATE OR REPLACE FUNCTION public.handle_block_duplicate_address()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM public.athletes
+    WHERE id_user = auth.uid()
+      AND fk_address IS NOT NULL
+  ) THEN
+    RAISE EXCEPTION 'User already has an address. Use UPDATE instead.';
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+CREATE OR REPLACE TRIGGER block_duplicate_address
+BEFORE INSERT ON public.addresses
+FOR EACH ROW
+EXECUTE FUNCTION public.handle_block_duplicate_address();
+
+CREATE OR REPLACE FUNCTION public.handle_delete_invitation_on_user_delete()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  DELETE FROM public.users_invitations WHERE email = OLD.email;
+  RETURN OLD;
+END;
+$$;
+
+CREATE OR REPLACE TRIGGER delete_invitation_on_user_delete
+AFTER DELETE ON auth.users
+FOR EACH ROW
+EXECUTE FUNCTION public.handle_delete_invitation_on_user_delete();
+
 CREATE OR REPLACE FUNCTION public.handle_profile_role_from_invitation()
 RETURNS TRIGGER
 LANGUAGE plpgsql
