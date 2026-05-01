@@ -79,15 +79,22 @@ body {
 
 /* ── Sidebar ────────────────────────────────────────── */
 .db-sidebar {
-  width: 240px;
-  flex-shrink: 0;
   background: var(--surface);
   border-right: 1px solid var(--border);
   box-shadow: var(--shadow-sm);
-  position: sticky;
-  top: 0;
-  height: 100vh;
   overflow-y: auto;
+}
+
+/* Desktop-only layout properties — must NOT apply on mobile where
+   Bootstrap's offcanvas-lg takes over with position:fixed */
+@media (min-width: 992px) {
+  .db-sidebar {
+    width: 240px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+  }
 }
 
 .db-sidebar-header {
@@ -472,10 +479,6 @@ body {
 
 /* ── Responsive ─────────────────────────────────────── */
 @media (max-width: 768px) {
-  .db-sidebar {
-    display: none;
-  }
-
   .db-topbar {
     padding: 1rem;
   }
