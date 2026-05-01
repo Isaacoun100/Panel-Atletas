@@ -579,6 +579,53 @@
 .na-card--alert  { border-color: var(--warning); }
 .na-card--disclaimer { border-color: var(--primary); }
 
+/* ── Medal list ─────────────────────────────────────── */
+.na-medal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.na-medal-entry {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.na-medal-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.na-medal-badge--oro    { background: oklch(0.95 0.07 85);  color: oklch(0.50 0.14 85); }
+.na-medal-badge--plata  { background: oklch(0.94 0.01 250); color: oklch(0.40 0.02 250); }
+.na-medal-badge--bronce { background: oklch(0.95 0.07 50);  color: oklch(0.45 0.12 50); }
+
+/* ── File input ─────────────────────────────────────── */
+.na-input--file {
+  padding: 0.4rem 0.6rem;
+  cursor: pointer;
+}
+
+.na-input--file::file-selector-button {
+  font-size: 0.8rem;
+  padding: 0.2rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  color: var(--text-2);
+  cursor: pointer;
+  margin-right: 0.5rem;
+}
+
 /* ── Responsive ─────────────────────────────────────── */
 @media (max-width: 768px) {
   .na-method-grid { grid-template-columns: 1fr; }

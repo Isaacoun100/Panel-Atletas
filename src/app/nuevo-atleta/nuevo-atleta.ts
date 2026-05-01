@@ -2,10 +2,13 @@ import { Component, OnInit, HostListener, signal, computed } from '@angular/core
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { TitleCasePipe } from '@angular/common';
+
+interface Medalla { prueba: string; tipo: string; anio: string; }
 
 @Component({
   selector: 'app-nuevo-atleta',
-  imports: [RouterLink, RouterLinkActive, FormsModule],
+  imports: [RouterLink, RouterLinkActive, FormsModule, TitleCasePipe],
   templateUrl: './nuevo-atleta.html',
   styleUrl: './nuevo-atleta.css',
 })
@@ -18,12 +21,13 @@ export class NuevoAtleta implements OnInit {
   emailList = signal<string[]>([]);
   emailError = signal('');
 
-  // ── Datos personales ──────────────────────────────
+  // ── 1. Datos personales ───────────────────────────
   nombre = '';
   primerApellido = '';
   segundoApellido = '';
   tipoId = 'cedula';
   numeroId = '';
+  contrasena = '';
   fechaNacimiento = '';
   sexo = '';
 
@@ -39,31 +43,47 @@ export class NuevoAtleta implements OnInit {
 
   get esMinor(): boolean { return this.edad > 0 && this.edad < 18; }
 
-  // ── Encargado (if < 18) ───────────────────────────
+  // ── 2. Encargado (if < 18) ────────────────────────
   nombreEncargado = '';
   telefonoEncargado = '';
 
-  // ── Contacto y residencia ─────────────────────────
+  // ── 3. Contacto ───────────────────────────────────
   telefono = '';
   correoManual = '';
   distrito = '';
-  direccionExacta = '';
-  residePermanente = '';
-  canton = '';
 
-  get mostrarCanton(): boolean { return this.residePermanente === 'no'; }
-
-  // ── Educación y empleo ────────────────────────────
-  nivelEducativo = '';
-  trabaja = '';
-  ocupacion = '';
-
-  // ── Actividad deportiva ───────────────────────────
+  // ── 4. Actividad ──────────────────────────────────
   recRecreativa = false;
   recDeportiva = false;
-  esRepresentacion = '';
-  horario = '';
 
+  // Computed: show deportiva-only sections
+  get showDeportiva(): boolean { return this.recDeportiva; }
+
+  readonly disciplinasRecreativas = [
+    'Aeróbicos', 'Yoga', 'Caminata', 'Baile', 'Zumba', 'Pilates', 'Natación recreativa',
+  ];
+
+  readonly disciplinasDeportivas = [
+    'Natación', 'Atletismo', 'Fútbol', 'Gimnasia', 'Baloncesto',
+    'Ciclismo', 'Voleibol', 'Para Tenis de Mesa', 'Tenis', 'Judo', 'Taekwondo',
+  ];
+
+  get disciplineOptions(): string[] {
+    const opts: string[] = [];
+    if (this.recRecreativa) opts.push(...this.disciplinasRecreativas);
+    if (this.recDeportiva) opts.push(...this.disciplinasDeportivas);
+    return opts;
+  }
+
+  onTipoChange() {
+    const available = this.disciplineOptions;
+    this.selectedDisciplines.update(list => list.filter(d => available.includes(d)));
+    if (!this.recDeportiva) this.selectedCategorias.set([]);
+  }
+
+  esRepresentacion = '';
+
+  // Discipline multi-select
   disciplineMenuOpen = signal(false);
   selectedDisciplines = signal<string[]>([]);
   categoriaMenuOpen = signal(false);
@@ -73,67 +93,63 @@ export class NuevoAtleta implements OnInit {
     this.selectedDisciplines().includes('Para Tenis de Mesa')
   );
 
-  readonly disciplines = [
-    'Natación', 'Atletismo', 'Fútbol', 'Gimnasia',
-    'Baloncesto', 'Ciclismo', 'Voleibol', 'Para Tenis de Mesa',
-  ];
   readonly categorias = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+  readonly frequencies = [1, 2, 3, 4, 5, 6, 7];
 
-  // ── Participación y logros ────────────────────────
+  // ── 5. Participación (deportiva only) ────────────
   participoJDN = '';
-  participoRegional = '';
   participoInternacional = '';
   obtuvoPremio = '';
-  tipoPremio = '';
-  disciplinaPremio = '';
-  anioPremio = '';
 
-  // ── Objetivos y motivación ────────────────────────
-  objetivoPrincipal = '';
+  medallas = signal<Medalla[]>([]);
+  medallaTempPrueba = '';
+  medallaTempTipo = '';
+  medallaTempAnio = '';
+
+  addMedalla() {
+    if (!this.medallaTempPrueba.trim() || !this.medallaTempTipo || !this.medallaTempAnio) return;
+    this.medallas.update(m => [...m, {
+      prueba: this.medallaTempPrueba.trim(),
+      tipo: this.medallaTempTipo,
+      anio: this.medallaTempAnio,
+    }]);
+    this.medallaTempPrueba = '';
+    this.medallaTempTipo = '';
+    this.medallaTempAnio = '';
+  }
+
+  removeMedalla(i: number) {
+    this.medallas.update(m => m.filter((_, idx) => idx !== i));
+  }
+
+  // ── 6. Seguimiento ────────────────────────────────
   frecuenciaSemanal = '';
-  abandonoProgramas = '';
-  apoyoFamiliar = '';
+  apoyoFamiliar = '';   // deportiva only
   nivelSatisfaccion = '';
 
-  // ── Salud ─────────────────────────────────────────
-  condicionMedica = '';
-  alergias = '';
-  condicionSaludMental = '';
-  requiereAdaptacion = '';
-  seguroMedico = '';
-
-  // ── Vínculo con el Comité ─────────────────────────
-  familiarComite = '';
-  nombreFamiliar = '';
-  relacionFamiliar = '';
-  disciplinaFamiliar = '';
+  // ── 7. Vínculo con el Comité ──────────────────────
+  familiarComite = '';  // deportiva only
   otraComite = '';
   nombreOtraComite = '';
-  perteneceClub = '';
+  perteneceClub = '';   // deportiva only
   nombreClub = '';
 
-  // ── Instalaciones y accesibilidad ─────────────────
+  // ── 8. Instalaciones ──────────────────────────────
   instalacionesAdecuadas = '';
-  limitacionFisica = '';
-  requiereTransporte = '';
-  tieneImplementos = '';
 
-  // ── Comunicación ──────────────────────────────────
-  comoSeEntero = '';
-  desearRecibir = '';
-  medioPreferido = '';
+  // ── 9. Inclusión (deportiva only) ─────────────────
+  tieneDiscapacidad = '';
+  tipoDiscapacidad = '';
+  descripcionDiscapacidad = '';
+  clasificacionFuncional = '';
+  categoriaFuncionalSel = '';
 
-  // ── Descargo ──────────────────────────────────────
+  // ── 10. Descargo ──────────────────────────────────
   autorizaDatos = '';
-  autorizaImagen = '';
-  firmaNombre = '';
+  aceptaVeracidad = '';
 
   get canSubmit(): boolean {
-    return (
-      this.autorizaDatos === 'si' &&
-      this.autorizaImagen === 'si' &&
-      this.firmaNombre.trim().length > 0
-    );
+    return this.autorizaDatos === 'si' && this.aceptaVeracidad === 'si';
   }
 
   // ── Dropdown handlers ─────────────────────────────
