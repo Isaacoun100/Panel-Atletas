@@ -64,6 +64,10 @@
   --shadow-lg: 0 16px 48px oklch(0.0 0.0 0 / 0.55);
 }
 
+html {
+  overflow-x: hidden;
+}
+
 body {
   font-family: var(--font-ui);
   color: var(--text);
