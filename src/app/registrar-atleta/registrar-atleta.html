@@ -1,1 +1,492 @@
-<p>registrar-atleta works!</p>
+<!-- Public self-registration form — no sidebar, accessible via invite link -->
+<div class="ra-page">
+
+  <!-- Header -->
+  <div class="ra-header">
+    <img src="logo-vaciado.png" alt="Panel Atletas" class="ra-logo">
+    <h1 class="ra-title">Registro de Atleta</h1>
+    <p class="ra-subtitle">Comité Cantonal de Deportes y Recreación Montes de Oca</p>
+  </div>
+
+  <!-- Submitted confirmation -->
+  @if (submitted) {
+    <div class="container" style="max-width:680px">
+      <div class="ra-success">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
+        </svg>
+        <h2>¡Registro enviado!</h2>
+        <p>Tu información fue recibida correctamente.</p>
+      </div>
+    </div>
+  }
+
+  @if (!submitted) {
+    <div class="container" style="max-width:720px">
+
+      <!-- 1. Datos personales -->
+      <div class="ra-card">
+        <div class="ra-card-header">1. Datos personales</div>
+        <div class="ra-body">
+          <div class="row g-3">
+            <div class="col-12 col-md-4">
+              <label class="ra-label" for="nombre">Nombre</label>
+              <input id="nombre" type="text" class="ra-input" placeholder="Ej. Carlos" [(ngModel)]="nombre">
+            </div>
+            <div class="col-12 col-md-4">
+              <label class="ra-label" for="ap1">Primer apellido</label>
+              <input id="ap1" type="text" class="ra-input" placeholder="Ej. Mora" [(ngModel)]="primerApellido">
+            </div>
+            <div class="col-12 col-md-4">
+              <label class="ra-label" for="ap2">Segundo apellido</label>
+              <input id="ap2" type="text" class="ra-input" placeholder="Ej. Jiménez" [(ngModel)]="segundoApellido">
+            </div>
+            <div class="col-12">
+              <label class="ra-label">Identificación</label>
+              <div class="ra-id-row">
+                <select class="ra-select ra-select--short" [(ngModel)]="tipoId">
+                  <option value="cedula">Cédula</option>
+                  <option value="dimex">DIMEX</option>
+                  <option value="pasaporte">Pasaporte</option>
+                </select>
+                <input type="text" class="ra-input" placeholder="Número de identificación" [(ngModel)]="numeroId">
+              </div>
+            </div>
+            <div class="col-12 col-md-4">
+              <label class="ra-label" for="pass">Contraseña</label>
+              <input id="pass" type="password" class="ra-input" placeholder="Crea una contraseña" [(ngModel)]="contrasena" autocomplete="new-password">
+            </div>
+            <div class="col-12 col-md-4">
+              <label class="ra-label" for="fecNac">Fecha de nacimiento</label>
+              <input id="fecNac" type="date" class="ra-input" [(ngModel)]="fechaNacimiento">
+            </div>
+            <div class="col-12 col-md-4">
+              <label class="ra-label ra-label--opt">Edad</label>
+              <div class="ra-readonly">{{ edad > 0 ? edad + ' años' : '—' }}</div>
+            </div>
+            <div class="col-12">
+              <label class="ra-label">Sexo</label>
+              <div class="ra-toggle-group">
+                <button type="button" class="ra-toggle-btn" [class.ra-toggle-btn--active]="sexo === 'M'" (click)="sexo = 'M'">Masculino</button>
+                <button type="button" class="ra-toggle-btn" [class.ra-toggle-btn--active]="sexo === 'F'" (click)="sexo = 'F'">Femenino</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Encargado (if < 18) -->
+      @if (esMinor) {
+        <div class="ra-card ra-card--alert">
+          <div class="ra-card-header d-flex align-items-center justify-content-between">
+            <span>2. Información del encargado</span>
+            <span class="ra-badge-warn">Menor de edad</span>
+          </div>
+          <div class="ra-body">
+            <div class="row g-3">
+              <div class="col-12 col-md-6">
+                <label class="ra-label" for="nomEnc">Nombre del encargado</label>
+                <input id="nomEnc" type="text" class="ra-input" placeholder="Nombre completo" [(ngModel)]="nombreEncargado">
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="ra-label" for="telEnc">Teléfono del encargado</label>
+                <input id="telEnc" type="tel" class="ra-input" placeholder="Ej. 8888-8888" [(ngModel)]="telefonoEncargado">
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- 3. Contacto -->
+      <div class="ra-card">
+        <div class="ra-card-header">3. Contacto</div>
+        <div class="ra-body">
+          <div class="row g-3">
+            <div class="col-12 col-md-4">
+              <label class="ra-label" for="tel">Teléfono</label>
+              <input id="tel" type="tel" class="ra-input" placeholder="Ej. 8888-8888" [(ngModel)]="telefono">
+            </div>
+            <div class="col-12 col-md-4">
+              <label class="ra-label" for="email">Correo electrónico</label>
+              <input id="email" type="email" class="ra-input" placeholder="correo@ejemplo.com" [(ngModel)]="correoManual">
+            </div>
+            <div class="col-12 col-md-4">
+              <label class="ra-label" for="dist">Distrito de residencia</label>
+              <select id="dist" class="ra-select" [(ngModel)]="distrito">
+                <option value="">Seleccionar...</option>
+                <option value="san-pedro">San Pedro</option>
+                <option value="sabanilla">Sabanilla</option>
+                <option value="mercedes">Mercedes</option>
+                <option value="san-rafael">San Rafael</option>
+                <option value="otro">Otro</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. Actividad deportiva -->
+      <div class="ra-card ra-card--overflow">
+        <div class="ra-card-header">4. Actividad deportiva</div>
+        <div class="ra-body">
+          <div class="d-flex flex-column gap-3">
+
+            <div>
+              <label class="ra-label">Tipo de actividad</label>
+              <div class="ra-check-group">
+                <label class="ra-check-option">
+                  <input type="checkbox" [(ngModel)]="recRecreativa" (ngModelChange)="onTipoChange()">
+                  <span class="ra-checkbox-box" [class.ra-checkbox-box--checked]="recRecreativa">
+                    @if (recRecreativa) { <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="currentColor" viewBox="0 0 16 16"><path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/></svg> }
+                  </span>
+                  Recreativa
+                </label>
+                <label class="ra-check-option">
+                  <input type="checkbox" [(ngModel)]="recDeportiva" (ngModelChange)="onTipoChange()">
+                  <span class="ra-checkbox-box" [class.ra-checkbox-box--checked]="recDeportiva">
+                    @if (recDeportiva) { <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="currentColor" viewBox="0 0 16 16"><path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/></svg> }
+                  </span>
+                  Deportiva
+                </label>
+              </div>
+            </div>
+
+            @if (recRecreativa || recDeportiva) {
+              <!-- Discipline multi-select -->
+              <div>
+                <label class="ra-label">Disciplinas</label>
+                <div class="ra-multiselect">
+                  <button type="button" class="ra-multiselect-btn" (click)="toggleDisciplineMenu($event)"
+                    [class.ra-multiselect-btn--active]="selectedDisciplines().length > 0">
+                    {{ disciplineLabel() }}
+                    <svg class="ra-chevron" xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/></svg>
+                  </button>
+                  @if (disciplineMenuOpen()) {
+                    <div class="ra-multiselect-dropdown" (click)="$event.stopPropagation()">
+                      @for (d of disciplineOptions; track d) {
+                        <label class="ra-multiselect-option d-flex align-items-center gap-2">
+                          <span class="ra-checkbox" [class.ra-checkbox--checked]="selectedDisciplines().includes(d)">
+                            @if (selectedDisciplines().includes(d)) { <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="currentColor" viewBox="0 0 16 16"><path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/></svg> }
+                          </span>
+                          <input type="checkbox" hidden [checked]="selectedDisciplines().includes(d)" (change)="toggleDiscipline(d)">
+                          {{ d }}
+                        </label>
+                      }
+                    </div>
+                  }
+                </div>
+                @if (selectedDisciplines().length > 0) {
+                  <div class="d-flex flex-wrap gap-1 mt-2">
+                    @for (d of selectedDisciplines(); track d) {
+                      <span class="ra-chip">{{ d }}
+                        <button type="button" class="ra-chip-remove" (click)="toggleDiscipline(d)">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="currentColor" viewBox="0 0 16 16"><path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/></svg>
+                        </button>
+                      </span>
+                    }
+                  </div>
+                }
+              </div>
+
+              <!-- Para Tenis de Mesa categoría -->
+              @if (showCategoriaMenu()) {
+                <div>
+                  <label class="ra-label">Categoría funcional <span class="ra-label-opt">(Para Tenis de Mesa)</span></label>
+                  <div class="ra-multiselect">
+                    <button type="button" class="ra-multiselect-btn" (click)="toggleCategoriaMenu($event)"
+                      [class.ra-multiselect-btn--active]="selectedCategorias().length > 0">
+                      {{ categoriaLabel() }}
+                      <svg class="ra-chevron" xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/></svg>
+                    </button>
+                    @if (categoriaMenuOpen()) {
+                      <div class="ra-multiselect-dropdown" (click)="$event.stopPropagation()">
+                        @for (c of categorias; track c) {
+                          <label class="ra-multiselect-option d-flex align-items-center gap-2">
+                            <span class="ra-checkbox" [class.ra-checkbox--checked]="selectedCategorias().includes(c)">
+                              @if (selectedCategorias().includes(c)) { <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="currentColor" viewBox="0 0 16 16"><path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/></svg> }
+                            </span>
+                            <input type="checkbox" hidden [checked]="selectedCategorias().includes(c)" (change)="toggleCategoria(c)">
+                            {{ c }}
+                          </label>
+                        }
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+
+              <!-- ¿Representa? — only if deportiva -->
+              @if (showDeportiva) {
+                <div>
+                  <label class="ra-label">¿Representa al comité competitivamente?</label>
+                  <div class="ra-toggle-group">
+                    <button type="button" class="ra-toggle-btn" [class.ra-toggle-btn--active]="esRepresentacion === 'si'" (click)="esRepresentacion = 'si'">Sí</button>
+                    <button type="button" class="ra-toggle-btn" [class.ra-toggle-btn--active]="esRepresentacion === 'no'" (click)="esRepresentacion = 'no'">No</button>
+                  </div>
+                </div>
+              }
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. Participación (deportiva only) -->
+      @if (showDeportiva) {
+        <div class="ra-card">
+          <div class="ra-card-header">5. Participación deportiva</div>
+          <div class="ra-body d-flex flex-column gap-3">
+            <div class="row g-3">
+              <div class="col-12 col-md-6">
+                <label class="ra-label">¿Ha participado en Juegos Deportivos Nacionales?</label>
+                <div class="ra-toggle-group">
+                  <button type="button" class="ra-toggle-btn" [class.ra-toggle-btn--active]="participoJDN === 'si'" (click)="participoJDN = 'si'">Sí</button>
+                  <button type="button" class="ra-toggle-btn" [class.ra-toggle-btn--active]="participoJDN === 'no'" (click)="participoJDN = 'no'">No</button>
+                </div>
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="ra-label">¿Ha participado en competencias internacionales?</label>
+                <div class="ra-toggle-group">
+                  <button type="button" class="ra-toggle-btn" [class.ra-toggle-btn--active]="participoInternacional === 'si'" (click)="participoInternacional = 'si'">Sí</button>
+                  <button type="button" class="ra-toggle-btn" [class.ra-toggle-btn--active]="participoInternacional === 'no'" (click)="participoInternacional = 'no'">No</button>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label class="ra-label">¿Ha obtenido medallas?</label>
+              <div class="ra-toggle-group">
+                <button type="button" class="ra-toggle-btn" [class.ra-toggle-btn--active]="obtuvoPremio === 'si'" (click)="obtuvoPremio = 'si'">Sí</button>
+                <button type="button" class="ra-toggle-btn" [class.ra-toggle-btn--active]="obtuvoPremio === 'no'" (click)="obtuvoPremio = 'no'">No</button>
+              </div>
+            </div>
+
+            @if (obtuvoPremio === 'si') {
+              <div class="ra-conditional-block">
+                <div class="row g-2 align-items-end">
+                  <div class="col-12 col-sm-4">
+                    <label class="ra-label ra-label--opt" for="prueba">Prueba</label>
+                    <input id="prueba" type="text" class="ra-input" placeholder="Ej. 100m libre" [(ngModel)]="medallaTempPrueba">
+                  </div>
+                  <div class="col-12 col-sm-4">
+                    <label class="ra-label ra-label--opt">Medalla</label>
+                    <div class="ra-toggle-group">
+                      <button type="button" class="ra-toggle-btn ra-toggle-btn--gold"   [class.ra-toggle-btn--active]="medallaTempTipo === 'oro'"    (click)="medallaTempTipo = 'oro'">Oro</button>
+                      <button type="button" class="ra-toggle-btn ra-toggle-btn--silver" [class.ra-toggle-btn--active]="medallaTempTipo === 'plata'"  (click)="medallaTempTipo = 'plata'">Plata</button>
+                      <button type="button" class="ra-toggle-btn ra-toggle-btn--bronze" [class.ra-toggle-btn--active]="medallaTempTipo === 'bronce'" (click)="medallaTempTipo = 'bronce'">Bronce</button>
+                    </div>
+                  </div>
+                  <div class="col-8 col-sm-2">
+                    <label class="ra-label ra-label--opt" for="anioMed">Año</label>
+                    <input id="anioMed" type="number" class="ra-input" placeholder="2023" min="1990" [max]="2026" [(ngModel)]="medallaTempAnio">
+                  </div>
+                  <div class="col-4 col-sm-2">
+                    <button type="button" class="ra-add-btn w-100" (click)="addMedalla()">+ Agregar</button>
+                  </div>
+                </div>
+                @if (medallas().length > 0) {
+                  <div class="d-flex flex-column gap-1 mt-2">
+                    @for (m of medallas(); track $index) {
+                      <div class="ra-medal-entry">
+                        <span class="ra-medal-badge ra-medal-badge--{{ m.tipo }}">{{ m.tipo | titlecase }}</span>
+                        <span class="small fw-medium">{{ m.prueba }}</span>
+                        <span class="small text-muted">{{ m.anio }}</span>
+                        <button type="button" class="ra-chip-remove ms-auto" (click)="removeMedalla($index)">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16"><path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/></svg>
+                        </button>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- 6. Seguimiento -->
+      <div class="ra-card">
+        <div class="ra-card-header">6. Seguimiento</div>
+        <div class="ra-body d-flex flex-column gap-3">
+          <div>
+            <label class="ra-label">Frecuencia semanal (días)</label>
+            <div class="ra-toggle-group">
+              @for (d of frequencies; track d) {
+                <button type="button" class="ra-toggle-btn" [class.ra-toggle-btn--active]="frecuenciaSemanal === d.toString()" (click)="frecuenciaSemanal = d.toString()">{{ d }}</button>
+              }
+            </div>
+          </div>
+          @if (showDeportiva) {
+            <div>
+              <label class="ra-label">¿Cuenta con apoyo familiar?</label>
+              <div class="ra-toggle-group">
+                <button type="button" class="ra-toggle-btn" [class.ra-toggle-btn--active]="apoyoFamiliar === 'si'" (click)="apoyoFamiliar = 'si'">Sí</button>
+                <button type="button" class="ra-toggle-btn" [class.ra-toggle-btn--active]="apoyoFamiliar === 'no'" (click)="apoyoFamiliar = 'no'">No</button>
+              </div>
+            </div>
+          }
+          <div>
+            <label class="ra-label">Nivel de satisfacción</label>
+            <div class="ra-toggle-group flex-wrap">
+              <button type="button" class="ra-toggle-btn" [class.ra-toggle-btn--active]="nivelSatisfaccion === 'muy-satisfecho'"  (click)="nivelSatisfaccion = 'muy-satisfecho'">Muy satisfecho</button>
+              <button type="button" class="ra-toggle-btn" [class.ra-toggle-btn--active]="nivelSatisfaccion === 'satisfecho'"       (click)="nivelSatisfaccion = 'satisfecho'">Satisfecho</button>
+              <button type="button" class="ra-toggle-btn" [class.ra-toggle-btn--active]="nivelSatisfaccion === 'insatisfecho'"     (click)="nivelSatisfaccion = 'insatisfecho'">Insatisfecho</button>
+              <button type="button" class="ra-toggle-btn" [class.ra-toggle-btn--active]="nivelSatisfaccion === 'muy-insatisfecho'" (click)="nivelSatisfaccion = 'muy-insatisfecho'">Muy insatisfecho</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 7. Vínculo -->
+      <div class="ra-card">
+        <div class="ra-card-header">7. Vínculo con el Comité</div>
+        <div class="ra-body d-flex flex-column gap-3">
+          @if (showDeportiva) {
+            <div>
+              <label class="ra-label">¿Tiene familiares en el Comité?</label>
+              <div class="ra-toggle-group">
+                <button type="button" class="ra-toggle-btn" [class.ra-toggle-btn--active]="familiarComite === 'si'" (click)="familiarComite = 'si'">Sí</button>
+                <button type="button" class="ra-toggle-btn" [class.ra-toggle-btn--active]="familiarComite === 'no'" (click)="familiarComite = 'no'">No</button>
+              </div>
+            </div>
+          }
+          <div>
+            <label class="ra-label">¿Ha pertenecido a otro Comité?</label>
+            <div class="ra-toggle-group">
+              <button type="button" class="ra-toggle-btn" [class.ra-toggle-btn--active]="otraComite === 'si'" (click)="otraComite = 'si'">Sí</button>
+              <button type="button" class="ra-toggle-btn" [class.ra-toggle-btn--active]="otraComite === 'no'" (click)="otraComite = 'no'">No</button>
+            </div>
+            @if (otraComite === 'si') {
+              <input type="text" class="ra-input mt-2" placeholder="Nombre del Comité anterior" [(ngModel)]="nombreOtraComite" style="max-width:360px">
+            }
+          </div>
+          @if (showDeportiva) {
+            <div>
+              <label class="ra-label">¿Pertenece a algún club?</label>
+              <div class="ra-toggle-group">
+                <button type="button" class="ra-toggle-btn" [class.ra-toggle-btn--active]="perteneceClub === 'si'" (click)="perteneceClub = 'si'">Sí</button>
+                <button type="button" class="ra-toggle-btn" [class.ra-toggle-btn--active]="perteneceClub === 'no'" (click)="perteneceClub = 'no'">No</button>
+              </div>
+              @if (perteneceClub === 'si') {
+                <input type="text" class="ra-input mt-2" placeholder="Nombre del club" [(ngModel)]="nombreClub" style="max-width:360px">
+              }
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- 8. Instalaciones -->
+      <div class="ra-card">
+        <div class="ra-card-header">8. Instalaciones</div>
+        <div class="ra-body">
+          <label class="ra-label">¿Las instalaciones que utiliza son adecuadas?</label>
+          <div class="ra-toggle-group">
+            <button type="button" class="ra-toggle-btn" [class.ra-toggle-btn--active]="instalacionesAdecuadas === 'si'"           (click)="instalacionesAdecuadas = 'si'">Sí</button>
+            <button type="button" class="ra-toggle-btn" [class.ra-toggle-btn--active]="instalacionesAdecuadas === 'no'"           (click)="instalacionesAdecuadas = 'no'">No</button>
+            <button type="button" class="ra-toggle-btn" [class.ra-toggle-btn--active]="instalacionesAdecuadas === 'parcialmente'" (click)="instalacionesAdecuadas = 'parcialmente'">Parcialmente</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 9. Inclusión (deportiva) -->
+      @if (showDeportiva) {
+        <div class="ra-card">
+          <div class="ra-card-header">9. Inclusión</div>
+          <div class="ra-body d-flex flex-column gap-3">
+            <div>
+              <label class="ra-label">¿Tiene alguna discapacidad?</label>
+              <div class="ra-toggle-group">
+                <button type="button" class="ra-toggle-btn" [class.ra-toggle-btn--active]="tieneDiscapacidad === 'si'" (click)="tieneDiscapacidad = 'si'">Sí</button>
+                <button type="button" class="ra-toggle-btn" [class.ra-toggle-btn--active]="tieneDiscapacidad === 'no'" (click)="tieneDiscapacidad = 'no'">No</button>
+              </div>
+            </div>
+            @if (tieneDiscapacidad === 'si') {
+              <div class="ra-conditional-block">
+                <div class="row g-3">
+                  <div class="col-12 col-md-4">
+                    <label class="ra-label ra-label--opt">Tipo</label>
+                    <div class="ra-toggle-group">
+                      <button type="button" class="ra-toggle-btn" [class.ra-toggle-btn--active]="tipoDiscapacidad === 'fisica'"   (click)="tipoDiscapacidad = 'fisica'">Física</button>
+                      <button type="button" class="ra-toggle-btn" [class.ra-toggle-btn--active]="tipoDiscapacidad === 'cognitiva'" (click)="tipoDiscapacidad = 'cognitiva'">Cognitiva</button>
+                    </div>
+                  </div>
+                  <div class="col-12 col-md-8">
+                    <label class="ra-label ra-label--opt" for="descDisc">Descripción</label>
+                    <textarea id="descDisc" class="ra-textarea" rows="2" placeholder="Describa brevemente..." [(ngModel)]="descripcionDiscapacidad"></textarea>
+                  </div>
+                </div>
+              </div>
+            }
+            <div>
+              <label class="ra-label">¿Tiene clasificación funcional?</label>
+              <div class="ra-toggle-group">
+                <button type="button" class="ra-toggle-btn" [class.ra-toggle-btn--active]="clasificacionFuncional === 'si'" (click)="clasificacionFuncional = 'si'">Sí</button>
+                <button type="button" class="ra-toggle-btn" [class.ra-toggle-btn--active]="clasificacionFuncional === 'no'" (click)="clasificacionFuncional = 'no'">No</button>
+              </div>
+            </div>
+            @if (clasificacionFuncional === 'si') {
+              <div class="ra-conditional-block">
+                <div class="row g-3">
+                  <div class="col-12 col-md-6">
+                    <label class="ra-label ra-label--opt">Categoría</label>
+                    <div class="ra-toggle-group">
+                      @for (cat of categorias; track cat) {
+                        <button type="button" class="ra-toggle-btn" [class.ra-toggle-btn--active]="categoriaFuncionalSel === cat" (click)="categoriaFuncionalSel = cat">{{ cat }}</button>
+                      }
+                    </div>
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <label class="ra-label ra-label--opt">Documento de clasificación</label>
+                    <input type="file" class="ra-input" accept=".pdf,.jpg,.jpeg,.png">
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- 10. Descargo -->
+      <div class="ra-card ra-card--disclaimer">
+        <div class="ra-card-header">10. Descargo de responsabilidad</div>
+        <div class="ra-body d-flex flex-column gap-3">
+          <div>
+            <label class="ra-label">Autorizo el uso de mis datos para fines estadísticos del Comité Cantonal de Deportes y Recreación Montes de Oca</label>
+            <div class="ra-toggle-group">
+              <button type="button" class="ra-toggle-btn" [class.ra-toggle-btn--active]="autorizaDatos === 'si'" (click)="autorizaDatos = 'si'">Sí, autorizo</button>
+              <button type="button" class="ra-toggle-btn" [class.ra-toggle-btn--active]="autorizaDatos === 'no'" (click)="autorizaDatos = 'no'">No autorizo</button>
+            </div>
+          </div>
+          <div>
+            <label class="ra-label">He leído y acepto que la información brindada es verídica y completa</label>
+            <div class="ra-toggle-group">
+              <button type="button" class="ra-toggle-btn" [class.ra-toggle-btn--active]="aceptaVeracidad === 'si'" (click)="aceptaVeracidad = 'si'">Sí, acepto</button>
+              <button type="button" class="ra-toggle-btn" [class.ra-toggle-btn--active]="aceptaVeracidad === 'no'" (click)="aceptaVeracidad = 'no'">No acepto</button>
+            </div>
+          </div>
+
+          <!-- Checklist -->
+          <div class="ra-checklist">
+            <div class="ra-check-status" [class.ra-check-status--done]="autorizaDatos === 'si'">
+              <span class="ra-check-icon">@if (autorizaDatos === 'si') { <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" fill="currentColor" viewBox="0 0 16 16"><path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/></svg> }</span>
+              Autorización de datos
+            </div>
+            <div class="ra-check-status" [class.ra-check-status--done]="aceptaVeracidad === 'si'">
+              <span class="ra-check-icon">@if (aceptaVeracidad === 'si') { <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" fill="currentColor" viewBox="0 0 16 16"><path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/></svg> }</span>
+              Aceptación de veracidad
+            </div>
+          </div>
+
+          <button type="button" class="btn btn-primary btn-lg w-100" [disabled]="!canSubmit" (click)="onSubmit()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="me-2" viewBox="0 0 16 16"><path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4z"/></svg>
+            Enviar registro
+          </button>
+        </div>
+      </div>
+
+    </div>
+  }
+
+  <div class="ra-footer">
+    <p>Comité Cantonal de Deportes y Recreación Montes de Oca &nbsp;·&nbsp; Panel Atletas</p>
+  </div>
+</div>

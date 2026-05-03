@@ -1,0 +1,349 @@
+/* ── Page wrapper ────────────────────────────────────── */
+.ra-page {
+  background: var(--bg);
+  min-height: 100vh;
+  padding-bottom: 3rem;
+}
+
+/* ── Header ─────────────────────────────────────────── */
+.ra-header {
+  text-align: center;
+  padding: 2.5rem 1rem 1.5rem;
+}
+
+.ra-logo {
+  max-width: 120px;
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.ra-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 0.25rem;
+}
+
+.ra-subtitle {
+  font-size: 0.85rem;
+  color: var(--text-3);
+  margin: 0;
+}
+
+/* ── Cards ──────────────────────────────────────────── */
+.ra-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+/* Cards that contain dropdowns must not clip them */
+.ra-card--overflow { overflow: visible; }
+
+.ra-card--alert    { border-color: var(--warning); }
+.ra-card--disclaimer { border-color: var(--primary); }
+
+.ra-card-header {
+  padding: 0.85rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.ra-body {
+  padding: 1.25rem;
+}
+
+/* ── Form controls ──────────────────────────────────── */
+.ra-label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-2);
+  margin-bottom: 0.35rem;
+}
+
+.ra-label::after { content: ' *'; color: var(--danger); font-weight: 700; }
+.ra-label--opt::after { content: none; }
+
+.ra-input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 0.15s;
+  font-family: var(--font-ui);
+}
+
+.ra-input::placeholder { color: var(--text-3); }
+.ra-input:focus { border-color: var(--primary); background: var(--surface); }
+
+.ra-select {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 0.875rem;
+  outline: none;
+  cursor: pointer;
+  font-family: var(--font-ui);
+}
+
+.ra-select:focus { border-color: var(--primary); }
+
+.ra-select--short { width: 130px; flex-shrink: 0; }
+
+.ra-textarea {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 0.875rem;
+  outline: none;
+  resize: vertical;
+  font-family: var(--font-ui);
+}
+
+.ra-textarea:focus { border-color: var(--primary); }
+
+.ra-readonly {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  color: var(--text-3);
+  font-size: 0.875rem;
+  font-style: italic;
+  min-height: 38px;
+}
+
+.ra-id-row { display: flex; gap: 0.5rem; }
+
+/* ── Toggle group ────────────────────────────────────── */
+.ra-toggle-group {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  width: fit-content;
+}
+
+.ra-toggle-group.flex-wrap {
+  flex-wrap: wrap;
+  overflow: visible;
+  border: none;
+  border-radius: 0;
+  gap: 0.35rem;
+  width: auto;
+}
+
+.ra-toggle-group.flex-wrap .ra-toggle-btn {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.ra-toggle-btn {
+  padding: 0.42rem 0.85rem;
+  border: none;
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.12s, color 0.12s;
+  border-right: 1px solid var(--border);
+  font-family: var(--font-ui);
+}
+
+.ra-toggle-btn:last-child { border-right: none; }
+.ra-toggle-btn:hover { background: var(--surface); color: var(--text); }
+.ra-toggle-btn--active { background: var(--primary-soft); color: var(--primary); font-weight: 600; }
+
+.ra-toggle-btn--gold.ra-toggle-btn--active   { background: oklch(0.95 0.07 85);  color: oklch(0.50 0.14 85); }
+.ra-toggle-btn--silver.ra-toggle-btn--active { background: oklch(0.94 0.01 250); color: oklch(0.40 0.02 250); }
+.ra-toggle-btn--bronze.ra-toggle-btn--active { background: oklch(0.95 0.07 50);  color: oklch(0.45 0.12 50); }
+
+/* ── Checkboxes ──────────────────────────────────────── */
+.ra-check-group { display: flex; gap: 1rem; flex-wrap: wrap; }
+
+.ra-check-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: var(--text-2);
+  user-select: none;
+  margin: 0;
+}
+
+.ra-check-option input[type="checkbox"] { display: none; }
+
+.ra-checkbox-box {
+  width: 17px; height: 17px;
+  border: 1.5px solid var(--border-strong);
+  border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.1s, border-color 0.1s;
+}
+
+.ra-checkbox-box--checked { background: var(--primary); border-color: var(--primary); color: #fff; }
+
+/* ── Multi-select ────────────────────────────────────── */
+.ra-multiselect { position: relative; }
+
+.ra-multiselect-btn {
+  display: flex; align-items: center; gap: 0.4rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-size: 0.875rem; font-weight: 500;
+  cursor: pointer; white-space: nowrap;
+  transition: border-color 0.12s, color 0.12s, background 0.12s;
+}
+
+.ra-multiselect-btn:hover { border-color: var(--primary); color: var(--text); }
+.ra-multiselect-btn--active { border-color: var(--primary); background: var(--primary-soft); color: var(--primary); }
+.ra-chevron { opacity: 0.5; margin-left: 2px; }
+
+.ra-multiselect-dropdown {
+  position: absolute; top: calc(100% + 6px); left: 0; z-index: 200;
+  min-width: 210px; background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg); box-shadow: var(--shadow-md);
+  padding: 0.4rem; display: flex; flex-direction: column; gap: 1px;
+}
+
+.ra-multiselect-option {
+  padding: 0.45rem 0.6rem; border-radius: var(--radius-sm);
+  font-size: 0.875rem; color: var(--text-2);
+  cursor: pointer; user-select: none; margin: 0;
+  transition: background 0.1s, color 0.1s;
+}
+
+.ra-multiselect-option:hover { background: var(--surface-2); color: var(--text); }
+
+.ra-checkbox {
+  width: 16px; height: 16px;
+  border: 1.5px solid var(--border-strong); border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: background 0.1s, border-color 0.1s;
+}
+
+.ra-checkbox--checked { background: var(--primary); border-color: var(--primary); color: #fff; }
+
+/* ── Chip ────────────────────────────────────────────── */
+.ra-chip {
+  display: inline-flex; align-items: center; gap: 0.35rem;
+  padding: 0.25rem 0.5rem 0.25rem 0.6rem;
+  border-radius: 999px; font-size: 0.78rem; font-weight: 500;
+  background: var(--primary-soft); color: var(--primary);
+  border: 1px solid var(--primary);
+}
+
+.ra-chip-remove {
+  display: flex; align-items: center; justify-content: center;
+  background: none; border: none; cursor: pointer;
+  color: inherit; opacity: 0.6; padding: 0; line-height: 1;
+  transition: opacity 0.1s;
+}
+
+.ra-chip-remove:hover { opacity: 1; }
+
+/* ── Add button ──────────────────────────────────────── */
+.ra-add-btn {
+  display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--primary); border-radius: var(--radius);
+  background: var(--primary-soft); color: var(--primary);
+  font-size: 0.875rem; font-weight: 500; cursor: pointer;
+  transition: background 0.12s, color 0.12s; white-space: nowrap;
+}
+
+.ra-add-btn:hover { background: var(--primary); color: #fff; }
+
+/* ── Medal entry ─────────────────────────────────────── */
+.ra-medal-entry {
+  display: flex; align-items: center; gap: 0.75rem;
+  padding: 0.5rem 0.75rem; background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--radius);
+}
+
+.ra-medal-badge {
+  font-size: 0.7rem; font-weight: 700;
+  padding: 0.2rem 0.55rem; border-radius: 999px; white-space: nowrap; flex-shrink: 0;
+}
+
+.ra-medal-badge--oro    { background: oklch(0.95 0.07 85);  color: oklch(0.50 0.14 85); }
+.ra-medal-badge--plata  { background: oklch(0.94 0.01 250); color: oklch(0.40 0.02 250); }
+.ra-medal-badge--bronce { background: oklch(0.95 0.07 50);  color: oklch(0.45 0.12 50); }
+
+/* ── Conditional block ───────────────────────────────── */
+.ra-conditional-block {
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1rem;
+}
+
+/* ── Disclaimer checklist ────────────────────────────── */
+.ra-checklist {
+  display: flex; flex-direction: column; gap: 0.5rem;
+  padding: 0.85rem 1rem; background: var(--surface-2);
+  border: 1px solid var(--border); border-radius: var(--radius);
+}
+
+.ra-check-status {
+  display: flex; align-items: center; gap: 0.5rem;
+  font-size: 0.82rem; color: var(--text-3);
+}
+
+.ra-check-status--done { color: var(--success); }
+
+.ra-check-icon {
+  width: 16px; height: 16px; border-radius: 50%;
+  border: 1.5px solid currentColor;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+
+.ra-check-status--done .ra-check-icon { background: var(--success); border-color: var(--success); color: #fff; }
+
+/* ── Badge / misc ────────────────────────────────────── */
+.ra-badge-warn {
+  font-size: 0.72rem; font-weight: 600;
+  background: var(--warning-soft); color: var(--warning-text);
+  border-radius: 999px; padding: 0.15rem 0.6rem;
+}
+
+.ra-label-opt { font-weight: 400; color: var(--text-3); }
+
+/* ── Success state ───────────────────────────────────── */
+.ra-success {
+  text-align: center; padding: 3rem 1rem;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
+  color: var(--success);
+}
+
+.ra-success h2 { color: var(--text); font-size: 1.4rem; font-weight: 700; margin: 1rem 0 0.5rem; }
+.ra-success p  { color: var(--text-2); font-size: 0.9rem; margin: 0; }
+
+/* ── Footer ──────────────────────────────────────────── */
+.ra-footer {
+  text-align: center; padding: 1.5rem 1rem 0;
+  font-size: 0.75rem; color: var(--text-3);
+}
