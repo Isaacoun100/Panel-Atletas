@@ -1,17 +1,17 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { VistaFormulario } from './vista-formulario';
+import { Administrar } from './administrar';
 
-describe('VistaFormulario', () => {
-  let component: VistaFormulario;
-  let fixture: ComponentFixture<VistaFormulario>;
+describe('Administrar', () => {
+  let component: Administrar;
+  let fixture: ComponentFixture<Administrar>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [VistaFormulario],
+      imports: [Administrar],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(VistaFormulario);
+    fixture = TestBed.createComponent(Administrar);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });

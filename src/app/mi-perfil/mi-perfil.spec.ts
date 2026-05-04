@@ -1,17 +1,17 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { DashboardAdmin } from './dashboard-admin';
+import { MiPerfil } from './mi-perfil';
 
-describe('DashboardAdmin', () => {
-  let component: DashboardAdmin;
-  let fixture: ComponentFixture<DashboardAdmin>;
+describe('MiPerfil', () => {
+  let component: MiPerfil;
+  let fixture: ComponentFixture<MiPerfil>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [DashboardAdmin],
+      imports: [MiPerfil],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(DashboardAdmin);
+    fixture = TestBed.createComponent(MiPerfil);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });
