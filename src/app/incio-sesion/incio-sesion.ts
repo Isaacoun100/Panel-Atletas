@@ -8,10 +8,27 @@ import { FormsModule } from '@angular/forms';
   templateUrl: './incio-sesion.html',
   styleUrl: './incio-sesion.css',
 })
-export class IncioSesion {
+export class IncioSesion implements OnInit {
   constructor(private router: Router) {}
 
   isDark = signal(false);
+
+  // ── Forgot password ───────────────────────────────
+  showForgot = signal(false);
+  forgotEmail = '';
+  forgotSent = signal(false);
+  forgotError = signal('');
+
+  openForgot() { this.showForgot.set(true); this.forgotSent.set(false); this.forgotError.set(''); }
+  closeForgot() { this.showForgot.set(false); this.forgotEmail = ''; }
+
+  submitForgot() {
+    const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.forgotEmail.trim());
+    if (!valid) { this.forgotError.set('Ingresá un correo válido.'); return; }
+    this.forgotError.set('');
+    this.forgotSent.set(true);
+    // TODO: call backend password reset API
+  }
 
   ngOnInit() {
     const saved = localStorage.getItem('theme');
