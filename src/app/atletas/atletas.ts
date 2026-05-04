@@ -1,6 +1,7 @@
 import { Component, OnInit, HostListener, signal, computed } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { Router } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 
 interface Atleta {
   cedula: string;
@@ -16,7 +17,7 @@ interface Atleta {
 
 @Component({
   selector: 'app-atletas',
-  imports: [RouterLink, RouterLinkActive],
+  imports: [RouterLink, RouterLinkActive, FormsModule],
   templateUrl: './atletas.html',
   styleUrl: './atletas.css',
 })
@@ -105,6 +106,29 @@ export class Atletas implements OnInit {
   }
 
   clearSelection() { this.selectedIds.set(new Set()); }
+
+  // ── View / Edit panel ─────────────────────────────
+  panelAtleta = signal<Atleta | null>(null);
+  panelMode = signal<'view' | 'edit'>('view');
+  editForm: Atleta = {} as Atleta;
+  panelSaved = signal(false);
+
+  openPanel(a: Atleta, mode: 'view' | 'edit') {
+    this.editForm = { ...a, disciplinas: [...a.disciplinas] };
+    this.panelMode.set(mode);
+    this.panelAtleta.set(a);
+    this.panelSaved.set(false);
+  }
+
+  closePanel() { this.panelAtleta.set(null); }
+
+  savePanel() {
+    // Apply edits back to the mock array
+    const idx = this.atletasMock.findIndex(a => a.cedula === this.editForm.cedula);
+    if (idx !== -1) Object.assign(this.atletasMock[idx], this.editForm);
+    this.panelSaved.set(true);
+    setTimeout(() => this.panelSaved.set(false), 2500);
+  }
 
   // ── Export ────────────────────────────────────────
   exportSelection(format: 'csv' | 'pdf' | 'word') {
