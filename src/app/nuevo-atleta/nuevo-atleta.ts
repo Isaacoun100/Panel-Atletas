@@ -20,6 +20,7 @@ export class NuevoAtleta implements OnInit {
   emailInput = '';
   emailList = signal<string[]>([]);
   emailError = signal('');
+  invitacionesEnviadas = signal(false);
 
   // ── 1. Datos personales ───────────────────────────
   nombre = '';
@@ -218,6 +219,14 @@ export class NuevoAtleta implements OnInit {
 
   onEmailKeydown(e: KeyboardEvent) {
     if (e.key === 'Enter') { e.preventDefault(); this.addEmail(); }
+  }
+
+  sendInvitations() {
+    // TODO: connect to backend
+    this.invitacionesEnviadas.set(true);
+    this.emailList.set([]);
+    this.emailInput = '';
+    setTimeout(() => this.invitacionesEnviadas.set(false), 4000);
   }
 
   // ── Theme & auth ──────────────────────────────────
