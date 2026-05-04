@@ -2,6 +2,7 @@ import { Component, OnInit, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { TitleCasePipe } from '@angular/common';
 
 interface AdminUser {
   foto: string;
@@ -13,13 +14,14 @@ interface AdminUser {
 
 interface Disciplina {
   nombre: string;
+  tipo: 'recreativa' | 'deportiva';
   activa: boolean;
   totalAtletas: number;
 }
 
 @Component({
   selector: 'app-administrar',
-  imports: [RouterLink, RouterLinkActive, FormsModule],
+  imports: [RouterLink, RouterLinkActive, FormsModule, TitleCasePipe],
   templateUrl: './administrar.html',
   styleUrl: './administrar.css',
 })
@@ -41,24 +43,53 @@ export class Administrar implements OnInit {
   };
 
   disciplinas: Disciplina[] = [
-    { nombre: 'Natación',            activa: true,  totalAtletas: 28 },
-    { nombre: 'Atletismo',           activa: true,  totalAtletas: 22 },
-    { nombre: 'Fútbol',              activa: true,  totalAtletas: 18 },
-    { nombre: 'Gimnasia',            activa: true,  totalAtletas: 15 },
-    { nombre: 'Baloncesto',          activa: true,  totalAtletas: 12 },
-    { nombre: 'Ciclismo',            activa: false, totalAtletas:  8 },
-    { nombre: 'Voleibol',            activa: true,  totalAtletas: 14 },
-    { nombre: 'Para Tenis de Mesa',  activa: true,  totalAtletas:  6 },
-    { nombre: 'Tenis',               activa: false, totalAtletas:  5 },
-    { nombre: 'Judo',                activa: true,  totalAtletas:  9 },
-    { nombre: 'Taekwondo',           activa: true,  totalAtletas:  7 },
-    { nombre: 'Aeróbicos',           activa: true,  totalAtletas: 11 },
-    { nombre: 'Yoga',                activa: false, totalAtletas:  4 },
-    { nombre: 'Zumba',               activa: true,  totalAtletas: 10 },
+    { nombre: 'Natación',            tipo: 'deportiva',  activa: true,  totalAtletas: 28 },
+    { nombre: 'Atletismo',           tipo: 'deportiva',  activa: true,  totalAtletas: 22 },
+    { nombre: 'Fútbol',              tipo: 'deportiva',  activa: true,  totalAtletas: 18 },
+    { nombre: 'Gimnasia',            tipo: 'deportiva',  activa: true,  totalAtletas: 15 },
+    { nombre: 'Baloncesto',          tipo: 'deportiva',  activa: true,  totalAtletas: 12 },
+    { nombre: 'Ciclismo',            tipo: 'deportiva',  activa: false, totalAtletas:  8 },
+    { nombre: 'Voleibol',            tipo: 'deportiva',  activa: true,  totalAtletas: 14 },
+    { nombre: 'Para Tenis de Mesa',  tipo: 'deportiva',  activa: true,  totalAtletas:  6 },
+    { nombre: 'Tenis',               tipo: 'deportiva',  activa: false, totalAtletas:  5 },
+    { nombre: 'Judo',                tipo: 'deportiva',  activa: true,  totalAtletas:  9 },
+    { nombre: 'Taekwondo',           tipo: 'deportiva',  activa: true,  totalAtletas:  7 },
+    { nombre: 'Aeróbicos',           tipo: 'recreativa', activa: true,  totalAtletas: 11 },
+    { nombre: 'Yoga',                tipo: 'recreativa', activa: false, totalAtletas:  4 },
+    { nombre: 'Zumba',               tipo: 'recreativa', activa: true,  totalAtletas: 10 },
   ];
+
+  // ── Add discipline form ───────────────────────────
+  newDiscNombre = '';
+  newDiscTipo: 'recreativa' | 'deportiva' = 'deportiva';
+  newDiscError = signal('');
+
+  addDisciplina() {
+    const nombre = this.newDiscNombre.trim();
+    if (!nombre) { this.newDiscError.set('Ingresá un nombre.'); return; }
+    if (this.disciplinas.some(d => d.nombre.toLowerCase() === nombre.toLowerCase())) {
+      this.newDiscError.set('Esta disciplina ya existe.'); return;
+    }
+    this.newDiscError.set('');
+    this.disciplinas = [...this.disciplinas, { nombre, tipo: this.newDiscTipo, activa: true, totalAtletas: 0 }];
+    this.newDiscNombre = '';
+    this.markChanged();
+  }
 
   get disciplinasActivas(): number {
     return this.disciplinas.filter(d => d.activa).length;
+  }
+
+  hasChanges = signal(false);
+  saveSuccess = signal(false);
+
+  markChanged() { this.hasChanges.set(true); }
+
+  saveChanges() {
+    // TODO: persist to backend
+    this.hasChanges.set(false);
+    this.saveSuccess.set(true);
+    setTimeout(() => this.saveSuccess.set(false), 3000);
   }
 
   constructor(private router: Router) {}

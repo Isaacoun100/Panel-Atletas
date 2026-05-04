@@ -128,7 +128,7 @@
                   <td>
                     <div class="d-flex align-items-center gap-2">
                       <span class="db-badge flex-shrink-0" [class]="rolBadgeClass[u.rol]">{{ u.rol }}</span>
-                      <select class="adm-rol-select" [(ngModel)]="u.rol">
+                      <select class="adm-rol-select" [(ngModel)]="u.rol" (ngModelChange)="markChanged()">
                         @for (r of roles; track r) {
                           <option [value]="r">{{ r }}</option>
                         }
@@ -147,8 +147,7 @@
         <div class="db-card-header d-flex align-items-center justify-content-between">
           <span class="db-card-title">Disciplinas</span>
           <span class="small" style="color:var(--text-3)">
-            {{ disciplinas.length }} total &nbsp;·&nbsp;
-            {{ disciplinasActivas }} activas
+            {{ disciplinas.length }} total &nbsp;·&nbsp; {{ disciplinasActivas }} activas
           </span>
         </div>
         <div class="table-responsive">
@@ -156,6 +155,7 @@
             <thead>
               <tr>
                 <th>Disciplina</th>
+                <th>Tipo</th>
                 <th>Atletas</th>
                 <th>Estado</th>
               </tr>
@@ -164,11 +164,19 @@
               @for (d of disciplinas; track d.nombre) {
                 <tr>
                   <td class="fw-medium small" style="color:var(--text)">{{ d.nombre }}</td>
+                  <td>
+                    <span class="db-badge"
+                      [class.db-badge--success]="d.tipo === 'deportiva'"
+                      [class.db-badge--accent]="d.tipo === 'recreativa'">
+                      {{ d.tipo | titlecase }}
+                    </span>
+                  </td>
                   <td class="small" style="color:var(--text-3)">{{ d.totalAtletas }}</td>
                   <td>
                     <div class="form-check form-switch mb-0 d-flex align-items-center gap-2">
                       <input class="form-check-input adm-switch" type="checkbox"
                              role="switch" [(ngModel)]="d.activa"
+                             (ngModelChange)="markChanged()"
                              [id]="'disc-' + d.nombre">
                       <label class="form-check-label small" [for]="'disc-' + d.nombre"
                              style="color:var(--text-3)">
@@ -178,10 +186,55 @@
                   </td>
                 </tr>
               }
+
+              <!-- Add discipline row -->
+              <tr class="adm-add-row">
+                <td>
+                  <input type="text" class="adm-add-input" placeholder="Nombre de la disciplina"
+                         [(ngModel)]="newDiscNombre" (keydown.enter)="addDisciplina()">
+                  @if (newDiscError()) {
+                    <span class="adm-add-error">{{ newDiscError() }}</span>
+                  }
+                </td>
+                <td>
+                  <div class="adm-tipo-group">
+                    <button type="button" class="adm-tipo-btn"
+                      [class.adm-tipo-btn--active]="newDiscTipo === 'deportiva'"
+                      (click)="newDiscTipo = 'deportiva'">Deportiva</button>
+                    <button type="button" class="adm-tipo-btn"
+                      [class.adm-tipo-btn--active]="newDiscTipo === 'recreativa'"
+                      (click)="newDiscTipo = 'recreativa'">Recreativa</button>
+                  </div>
+                </td>
+                <td></td>
+                <td>
+                  <button class="btn btn-primary btn-sm" (click)="addDisciplina()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" class="me-1" viewBox="0 0 16 16"><path d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2z"/></svg>
+                    Agregar
+                  </button>
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
       </div>
+
+      <!-- Floating save bar -->
+      @if (hasChanges()) {
+        <div class="adm-save-bar">
+          @if (saveSuccess()) {
+            <span class="adm-save-ok">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/></svg>
+              Cambios guardados
+            </span>
+          }
+          <span class="small" style="color:var(--text-3)">Hay cambios sin guardar</span>
+          <button class="btn btn-primary btn-sm px-4" (click)="saveChanges()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" class="me-1" viewBox="0 0 16 16"><path d="M2 1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H9.5a1 1 0 0 0-1 1v7.293l2.646-2.647a.5.5 0 0 1 .708.708l-3.5 3.5a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L7.5 9.293V2a2 2 0 0 1 2-2H14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h2.5a.5.5 0 0 1 0 1H2z"/></svg>
+            Guardar cambios
+          </button>
+        </div>
+      }
 
     </div>
 
