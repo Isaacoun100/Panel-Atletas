@@ -1,0 +1,31 @@
+# Database Constraints
+
+## users_disciplines
+
+### representative_sport_only
+`is_representative` can only be `TRUE` when `participation_type = 'sport'`. Athletes in recreational disciplines cannot be marked as representatives.
+
+---
+
+## athletes
+
+### check_guardian_minor *(trigger)*
+`legal_guardian_name` and `legal_guardian_phone` are required when the athlete is under 18, and must be NULL when the athlete is 18 or older. Enforced via trigger instead of CHECK because `birth_date` lives in `users_profiles`.
+
+### weekly_exercise range
+`weekly_exercise` must be between 1 and 7 (days per week). NULL is allowed when the field is not filled.
+
+### previous_committee_consistency
+`previous_committee_name` must be NULL when `has_previous_committee = FALSE`, and must be set when `has_previous_committee = TRUE`.
+
+### club_consistency
+`club_name` must be NULL when `is_club_member = FALSE`, and must be set when `is_club_member = TRUE`.
+
+### disability_consistency
+When `has_disability = TRUE`, both `disability_type` and `disability_description` are required. When `has_disability = FALSE`, both must be NULL.
+
+### functional_classification_consistency
+When `has_functional_classification = TRUE`, both `classification_category` and `classification_document_url` are required. When `has_functional_classification = FALSE`, both must be NULL.
+
+### consent_required
+`accepts_data_usage` and `accepts_info_accuracy` must both be `TRUE`. The athlete record cannot be inserted or updated to a state where either is `FALSE`. This enforces that consent is explicitly granted before the record is persisted.
