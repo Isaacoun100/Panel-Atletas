@@ -11,15 +11,6 @@ All application tables have Row Level Security (RLS) enabled. Access is governed
 
 ## Table Policies
 
-### `dni_types`
-
-| Operation | Who | Condition |
-|-----------|-----|-----------|
-| SELECT | Authenticated | Always |
-| ALL | Admin | `is_admin()` |
-
----
-
 ### `users_profiles`
 
 | Operation | Who | Condition |
@@ -27,28 +18,10 @@ All application tables have Row Level Security (RLS) enabled. Access is governed
 | SELECT | Authenticated | `id_user = auth.uid()` |
 | SELECT | Admin | `is_admin()` |
 | INSERT | Authenticated | `id_user = auth.uid()` |
-| UPDATE | Authenticated | `id_user = auth.uid()` |
+| UPDATE | Authenticated | `id_user = auth.uid()`, role column cannot change |
 | UPDATE | Admin | `is_admin()` |
 
-Users may only read and modify their own profile record. Admins have unrestricted read and write access across all profiles.
-
----
-
-### `cantons`
-
-| Operation | Who | Condition |
-|-----------|-----|-----------|
-| SELECT | Authenticated | Always |
-| ALL | Admin | `is_admin()` |
-
----
-
-### `districts`
-
-| Operation | Who | Condition |
-|-----------|-----|-----------|
-| SELECT | Authenticated | Always |
-| ALL | Admin | `is_admin()` |
+Users may only read and modify their own profile. Admins have unrestricted read and write access. The user UPDATE policy enforces that `role` cannot be changed by the user — only admins can change roles.
 
 ---
 
@@ -59,21 +32,21 @@ Users may only read and modify their own profile record. Admins have unrestricte
 | SELECT | Authenticated | Always |
 | ALL | Admin | `is_admin()` |
 
-Catalog tables (`cantons`, `districts`, `disciplines`) are publicly readable by any authenticated user. Mutations are restricted to admins.
+Readable by any authenticated user. Mutations restricted to admins.
 
 ---
 
-### `addresses`
+### `users_disciplines`
 
 | Operation | Who | Condition |
 |-----------|-----|-----------|
-| SELECT | Authenticated | Address is linked to the requesting user via `athletes.fk_address` |
-| SELECT | Admin | `is_admin()` |
-| INSERT | Authenticated | Always |
-| UPDATE | Authenticated | Address is linked to the requesting user via `athletes.fk_address` |
+| SELECT | Authenticated | `fk_user = auth.uid()` |
+| INSERT | Authenticated | `fk_user = auth.uid()` |
+| UPDATE | Authenticated | `fk_user = auth.uid()` |
+| DELETE | Authenticated | `fk_user = auth.uid()` |
 | ALL | Admin | `is_admin()` |
 
-Users can only read or update addresses that belong to their own athlete record. Any authenticated user may insert a new address row (required during registration before the athlete record is linked).
+Users have full self-service control over their own discipline enrollments.
 
 ---
 
@@ -90,17 +63,17 @@ Each athlete may only access and modify their own record.
 
 ---
 
-### `users_disciplines`
+### `medals`
 
 | Operation | Who | Condition |
 |-----------|-----|-----------|
-| SELECT | Authenticated | `fk_user = auth.uid()` |
-| INSERT | Authenticated | `fk_user = auth.uid()` |
-| UPDATE | Authenticated | `fk_user = auth.uid()` |
-| DELETE | Authenticated | `fk_user = auth.uid()` |
+| SELECT | Authenticated | `id_user = auth.uid()` |
+| INSERT | Authenticated | `id_user = auth.uid()` |
+| UPDATE | Authenticated | `id_user = auth.uid()` |
+| DELETE | Authenticated | `id_user = auth.uid()` |
 | ALL | Admin | `is_admin()` |
 
-Users have full self-service control over their own discipline registrations. Admins manage all records.
+Users have full control over their own medal records.
 
 ---
 

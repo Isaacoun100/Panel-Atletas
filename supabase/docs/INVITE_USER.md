@@ -27,7 +27,7 @@ POST /functions/v1/invite-user
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `email` | string | Yes | Email address to invite |
-| `initial_role` | string | Yes | Role assigned on registration. One of: `athlete`, `coach`, `admin` |
+| `initial_role` | string | Yes | Role assigned on registration. One of: `athlete`, `admin` |
 
 ## Responses
 
