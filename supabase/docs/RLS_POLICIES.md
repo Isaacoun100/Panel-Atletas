@@ -13,38 +13,37 @@ All application tables have Row Level Security (RLS) enabled. Access is governed
 
 ### `users_profiles`
 
-| Operation | Who | Condition |
-|-----------|-----|-----------|
-| SELECT | Authenticated | `id_user = auth.uid()` |
-| SELECT | Admin | `is_admin()` |
-| INSERT | Authenticated | `id_user = auth.uid()` |
-| UPDATE | Authenticated | `id_user = auth.uid()`, role column cannot change |
-| UPDATE | Admin | `is_admin()` |
+| Operation | Policy | Condition |
+|-----------|--------|-----------|
+| SELECT | `profiles_select` | `id_user = auth.uid() OR is_admin()` |
+| INSERT | `profiles_insert` | `id_user = auth.uid()` |
+| UPDATE | `profiles_update` | `id_user = auth.uid() OR is_admin()`. Role column locked for non-admins via WITH CHECK. |
 
-Users may only read and modify their own profile. Admins have unrestricted read and write access. The user UPDATE policy enforces that `role` cannot be changed by the user — only admins can change roles.
+Merged user + admin into single policy per operation. `role` cannot be changed by regular users — only admins pass the WITH CHECK for role updates.
 
 ---
 
 ### `disciplines`
 
-| Operation | Who | Condition |
-|-----------|-----|-----------|
-| SELECT | Authenticated | Always |
-| ALL | Admin | `is_admin()` |
+| Operation | Policy | Condition |
+|-----------|--------|-----------|
+| SELECT | `disciplines_select` | Always (any authenticated user) |
+| INSERT | `disciplines_insert` | `is_admin()` |
+| UPDATE | `disciplines_update` | `is_admin()` |
+| DELETE | `disciplines_delete` | `is_admin()` |
 
-Readable by any authenticated user. Mutations restricted to admins.
+Readable by any authenticated user. Mutations restricted to admins. Admin split into explicit per-operation policies to avoid duplicate SELECT evaluation.
 
 ---
 
 ### `users_disciplines`
 
-| Operation | Who | Condition |
-|-----------|-----|-----------|
-| SELECT | Authenticated | `fk_user = auth.uid()` |
-| INSERT | Authenticated | `fk_user = auth.uid()` |
-| UPDATE | Authenticated | `fk_user = auth.uid()` |
-| DELETE | Authenticated | `fk_user = auth.uid()` |
-| ALL | Admin | `is_admin()` |
+| Operation | Policy | Condition |
+|-----------|--------|-----------|
+| SELECT | `user_disciplines_select` | `fk_user = auth.uid() OR is_admin()` |
+| INSERT | `user_disciplines_insert` | `fk_user = auth.uid() OR is_admin()` |
+| UPDATE | `user_disciplines_update` | `fk_user = auth.uid() OR is_admin()` |
+| DELETE | `user_disciplines_delete` | `fk_user = auth.uid() OR is_admin()` |
 
 Users have full self-service control over their own discipline enrollments.
 
@@ -52,26 +51,25 @@ Users have full self-service control over their own discipline enrollments.
 
 ### `athletes`
 
-| Operation | Who | Condition |
-|-----------|-----|-----------|
-| SELECT | Authenticated | `id_user = auth.uid()` |
-| INSERT | Authenticated | `id_user = auth.uid()` |
-| UPDATE | Authenticated | `id_user = auth.uid()` |
-| ALL | Admin | `is_admin()` |
+| Operation | Policy | Condition |
+|-----------|--------|-----------|
+| SELECT | `athletes_select` | `id_user = auth.uid() OR is_admin()` |
+| INSERT | `athletes_insert` | `id_user = auth.uid() OR is_admin()` |
+| UPDATE | `athletes_update` | `id_user = auth.uid() OR is_admin()` |
+| DELETE | `athletes_delete` | `is_admin()` |
 
-Each athlete may only access and modify their own record.
+Each athlete may only access and modify their own record. Only admins can delete athlete records.
 
 ---
 
 ### `medals`
 
-| Operation | Who | Condition |
-|-----------|-----|-----------|
-| SELECT | Authenticated | `id_user = auth.uid()` |
-| INSERT | Authenticated | `id_user = auth.uid()` |
-| UPDATE | Authenticated | `id_user = auth.uid()` |
-| DELETE | Authenticated | `id_user = auth.uid()` |
-| ALL | Admin | `is_admin()` |
+| Operation | Policy | Condition |
+|-----------|--------|-----------|
+| SELECT | `medals_select` | `id_user = auth.uid() OR is_admin()` |
+| INSERT | `medals_insert` | `id_user = auth.uid() OR is_admin()` |
+| UPDATE | `medals_update` | `id_user = auth.uid() OR is_admin()` |
+| DELETE | `medals_delete` | `id_user = auth.uid() OR is_admin()` |
 
 Users have full control over their own medal records.
 
@@ -79,9 +77,9 @@ Users have full control over their own medal records.
 
 ### `users_invitations`
 
-| Operation | Who | Condition |
-|-----------|-----|-----------|
-| SELECT | Admin | `is_admin()` |
+| Operation | Policy | Condition |
+|-----------|--------|-----------|
+| SELECT | `invitations_select` | `is_admin()` |
 
 Admins can read invitation records via the Data API. All mutations (INSERT, UPDATE, DELETE) are handled exclusively by Edge Functions using the service role key, which bypasses RLS.
 

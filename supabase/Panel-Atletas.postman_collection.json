@@ -223,6 +223,76 @@
           ]
         },
         {
+          "name": "Own Profile",
+          "description": "Admins are also invited users — they must create and manage their own profile the same way athletes do. These endpoints use ADMIN_JWT.",
+          "item": [
+            {
+              "name": "Create Own Profile",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "apikey", "value": "{{SUPABASE_KEY}}", "type": "text" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_JWT}}", "type": "text" },
+                  { "key": "Content-Type", "value": "application/json", "type": "text" },
+                  { "key": "Prefer", "value": "return=representation", "type": "text" }
+                ],
+                "url": {
+                  "raw": "{{SUPABASE_URL}}/rest/v1/users_profiles",
+                  "host": ["{{SUPABASE_URL}}"],
+                  "path": ["rest", "v1", "users_profiles"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Brian\",\n  \"first_last_name\": \"Ramirez\",\n  \"second_last_name\": \"Arias\",\n  \"dni_type\": \"cedula\",\n  \"dni\": \"123456789\",\n  \"birth_date\": \"2000-01-01\",\n  \"sex\": \"male\",\n  \"profile_image_url\": null\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "description": "`id_user` and `role` injected by triggers. Role comes from the accepted invitation — will be `admin` if invited as admin."
+              }
+            },
+            {
+              "name": "Get Own Profile",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "apikey", "value": "{{SUPABASE_KEY}}", "type": "text" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_JWT}}", "type": "text" }
+                ],
+                "url": {
+                  "raw": "{{SUPABASE_URL}}/rest/v1/users_profiles?select=*",
+                  "host": ["{{SUPABASE_URL}}"],
+                  "path": ["rest", "v1", "users_profiles"],
+                  "query": [{ "key": "select", "value": "*" }]
+                },
+                "description": "Returns the admin's own profile. Note: because admins pass the `is_admin()` check, this returns ALL profiles. Use `id_user=eq.{{USER_ID}}` to filter to their own."
+              }
+            },
+            {
+              "name": "Update Own Profile",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  { "key": "apikey", "value": "{{SUPABASE_KEY}}", "type": "text" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_JWT}}", "type": "text" },
+                  { "key": "Content-Type", "value": "application/json", "type": "text" },
+                  { "key": "Prefer", "value": "return=representation", "type": "text" }
+                ],
+                "url": {
+                  "raw": "{{SUPABASE_URL}}/rest/v1/users_profiles?id_user=eq.{{USER_ID}}",
+                  "host": ["{{SUPABASE_URL}}"],
+                  "path": ["rest", "v1", "users_profiles"],
+                  "query": [{ "key": "id_user", "value": "eq.{{USER_ID}}" }]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"profile_image_url\": \"https://example.com/avatar.jpg\"\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "description": "Updates the admin's own profile. Always filter by `id_user=eq.{{USER_ID}}` — without it, the PATCH applies to all visible rows (all profiles for an admin)."
+              }
+            }
+          ]
+        },
+        {
           "name": "Disciplines",
           "description": "Admin CRUD for the disciplines catalog.",
           "item": [
@@ -262,10 +332,10 @@
                 },
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"name\": \"Natación\",\n  \"discipline_type\": \"individual\"\n}",
+                  "raw": "{\n  \"name\": \"Natación\",\n  \"discipline_type\": \"sport\",\n  \"is_active\": true\n}",
                   "options": { "raw": { "language": "json" } }
                 },
-                "description": "Creates a new discipline. **discipline_type** — one of: `individual`, `team`."
+                "description": "Creates a new discipline.\n\n**Required fields:**\n- `name` — VARCHAR(64), must be unique\n- `discipline_type` — one of: `sport`, `recreational`\n\n**Optional (defaults to true):**\n- `is_active` — BOOLEAN"
               }
             },
             {
@@ -380,6 +450,47 @@
                 },
                 "description": "Returns all athlete records. RLS restricts this to admins only."
               }
+            },
+            {
+              "name": "Update Any Athlete Record",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  { "key": "apikey", "value": "{{SUPABASE_KEY}}", "type": "text" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_JWT}}", "type": "text" },
+                  { "key": "Content-Type", "value": "application/json", "type": "text" },
+                  { "key": "Prefer", "value": "return=representation", "type": "text" }
+                ],
+                "url": {
+                  "raw": "{{SUPABASE_URL}}/rest/v1/athletes?id_user=eq.{{USER_ID}}",
+                  "host": ["{{SUPABASE_URL}}"],
+                  "path": ["rest", "v1", "athletes"],
+                  "query": [{ "key": "id_user", "value": "eq.{{USER_ID}}" }]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"is_active\": false\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "description": "Updates any athlete record. Admin only per RLS."
+              }
+            },
+            {
+              "name": "Delete Any Athlete Record",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  { "key": "apikey", "value": "{{SUPABASE_KEY}}", "type": "text" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_JWT}}", "type": "text" }
+                ],
+                "url": {
+                  "raw": "{{SUPABASE_URL}}/rest/v1/athletes?id_user=eq.{{USER_ID}}",
+                  "host": ["{{SUPABASE_URL}}"],
+                  "path": ["rest", "v1", "athletes"],
+                  "query": [{ "key": "id_user", "value": "eq.{{USER_ID}}" }]
+                },
+                "description": "Deletes an athlete record. Admin only per RLS. The athlete's profile in users_profiles is NOT deleted — only the athletes row."
+              }
             }
           ]
         },
@@ -463,10 +574,10 @@
                 },
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"name\": \"Brian\",\n  \"first_last_name\": \"Ramirez\",\n  \"second_last_name\": \"Arias\",\n  \"dni_type\": \"cedula\",\n  \"dni\": \"123456789\",\n  \"birth_date\": \"2000-01-01\",\n  \"sex\": \"male\"\n}",
+                  "raw": "{\n  \"name\": \"Brian\",\n  \"first_last_name\": \"Ramirez\",\n  \"second_last_name\": \"Arias\",\n  \"dni_type\": \"cedula\",\n  \"dni\": \"123456789\",\n  \"birth_date\": \"2000-01-01\",\n  \"sex\": \"male\",\n  \"profile_image_url\": null\n}",
                   "options": { "raw": { "language": "json" } }
                 },
-                "description": "Creates the profile for the authenticated user. `id_user` and `role` are injected automatically by triggers — do not send them in the body.\n\n**dni_type** — one of: `cedula`, `dimex`, `pasaporte`\n**sex** — one of: `male`, `female`\n\nCalled once after the user first signs in via invitation link."
+                "description": "Creates the profile for the authenticated user. `id_user` and `role` are injected automatically by triggers — do not send them in the body.\n\n**All fields are NOT NULL.** All must be provided:\n- `name` — VARCHAR(64)\n- `first_last_name` — VARCHAR(64)\n- `second_last_name` — VARCHAR(64)\n- `dni_type` — one of: `cedula`, `dimex`, `pasaporte`\n- `dni` — VARCHAR(32), must be unique\n- `birth_date` — DATE (YYYY-MM-DD)\n- `sex` — one of: `male`, `female`\n- `profile_image_url` — TEXT, nullable\n\nCalled once after the user first signs in via invitation link."
               }
             },
             {
@@ -533,10 +644,10 @@
                 },
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"phone\": \"+50688887777\",\n  \"district_of_residence\": \"san_pedro\",\n  \"nacional_games_participation\": false,\n  \"international_games_participation\": false,\n  \"weekly_exercise\": 3,\n  \"has_family_support\": false,\n  \"satisfaction_level\": \"satisfied\",\n  \"has_family_in_committee\": false,\n  \"has_previous_committee\": false,\n  \"previous_committee_name\": null,\n  \"is_club_member\": false,\n  \"club_name\": null,\n  \"facility_satisfaction_level\": \"yes\",\n  \"has_disability\": false,\n  \"disability_type\": null,\n  \"disability_description\": null,\n  \"has_functional_classification\": false,\n  \"classification_category\": null,\n  \"classification_document_url\": null,\n  \"accepts_data_usage\": true,\n  \"accepts_info_accuracy\": true\n}",
+                  "raw": "{\n  \"phone\": \"+50688887777\",\n  \"district_of_residence\": \"san_pedro\",\n  \"legal_guardian_name\": null,\n  \"legal_guardian_phone\": null,\n  \"nacional_games_participation\": false,\n  \"international_games_participation\": false,\n  \"weekly_exercise\": 3,\n  \"has_family_support\": false,\n  \"satisfaction_level\": \"satisfied\",\n  \"has_family_in_committee\": false,\n  \"has_previous_committee\": false,\n  \"previous_committee_name\": null,\n  \"is_club_member\": false,\n  \"club_name\": null,\n  \"facility_satisfaction_level\": \"yes\",\n  \"has_disability\": false,\n  \"disability_type\": null,\n  \"disability_description\": null,\n  \"has_functional_classification\": false,\n  \"classification_category\": null,\n  \"classification_document_url\": null,\n  \"accepts_data_usage\": true,\n  \"accepts_info_accuracy\": true\n}",
                   "options": { "raw": { "language": "json" } }
                 },
-                "description": "`id_user` is injected automatically by the `set_athlete_id_from_auth` trigger — do not send it in the body.\n\n**district_of_residence** — one of: `san_pedro`, `sabanilla`, `mercedes`, `san_rafael`, `other`\n**satisfaction_level** — one of: `very_satisfied`, `satisfied`, `neutral`, `dissatisfied`\n**facility_satisfaction_level** — one of: `yes`, `no`, `partial`\n**disability_type** — one of: `physical`, `cognitive` (required when `has_disability = true`)\n**classification_category** — one of: `a1`, `a2`, `b1`, `b2`, `c1`, `c2` (required when `has_functional_classification = true`)\n\n`accepts_data_usage` and `accepts_info_accuracy` must both be `true` — the constraint `consent_required` will reject the record otherwise.\n\nFor athletes under 18, `legal_guardian_name` and `legal_guardian_phone` are required (enforced by trigger)."
+                "description": "`id_user` is injected automatically by the `set_athlete_id_from_auth` trigger — do not send it in the body.\n\n**All fields are NOT NULL.** Only the following are nullable due to conditional constraints:\n- `legal_guardian_name` + `legal_guardian_phone` — null when athlete is ≥ 18, required when under 18 (trigger enforces against birth_date in users_profiles)\n- `previous_committee_name` — null when `has_previous_committee = false`, required when `true`\n- `club_name` — null when `is_club_member = false`, required when `true`\n- `disability_type` + `disability_description` — null when `has_disability = false`, required when `true`. Values: `physical`, `cognitive`\n- `classification_category` + `classification_document_url` — null when `has_functional_classification = false`, required when `true`. Values: `a1`, `a2`, `b1`, `b2`, `c1`, `c2`\n\n**Required fields:**\n- `phone` — VARCHAR(64)\n- `district_of_residence` — one of: `san_pedro`, `sabanilla`, `mercedes`, `san_rafael`, `other`\n- `weekly_exercise` — SMALLINT 1–7\n- `satisfaction_level` — one of: `very_satisfied`, `satisfied`, `neutral`, `dissatisfied`\n- `facility_satisfaction_level` — one of: `yes`, `no`, `partial`\n- `accepts_data_usage` — must be `true`\n- `accepts_info_accuracy` — must be `true`\n\nBoolean flags default to `false`: `nacional_games_participation`, `international_games_participation`, `has_family_support`, `has_family_in_committee`, `has_previous_committee`, `is_club_member`, `has_disability`, `has_functional_classification`"
               }
             },
             {
@@ -623,7 +734,7 @@
                   "raw": "{\n  \"fk_discipline\": 1,\n  \"participation_type\": \"sport\",\n  \"is_representative\": false\n}",
                   "options": { "raw": { "language": "json" } }
                 },
-                "description": "`fk_user` is injected automatically by the `set_discipline_user_from_auth` trigger — do not send it in the body.\n\n**participation_type** — one of: `sport`, `recreational`\n\n`is_representative` can only be `true` when `participation_type = 'sport'` (enforced by constraint). Fails with a unique constraint error if the user is already enrolled in the same discipline."
+                "description": "`fk_user` is injected automatically by the `set_discipline_user_from_auth` trigger — do not send it in the body.\n\n**Required fields:**\n- `fk_discipline` — INTEGER, id of the discipline\n- `participation_type` — one of: `sport`, `recreational`\n\n**Optional (defaults to false):**\n- `is_representative` — BOOLEAN. Can only be `true` when `participation_type = 'sport'` (constraint enforced by DB). Must be `false` for recreational.\n\nFails with a unique constraint error if the user is already enrolled in the same discipline."
               }
             },
             {
@@ -713,7 +824,7 @@
                   "raw": "{\n  \"id_user\": \"{{USER_ID}}\",\n  \"competition_name\": \"Juegos Nacionales 2024\",\n  \"year\": 2024,\n  \"medal_type\": \"gold\"\n}",
                   "options": { "raw": { "language": "json" } }
                 },
-                "description": "Creates a medal record for the authenticated user. `id_user` must match the authenticated user's UUID — RLS rejects any mismatch.\n\n**medal_type** — one of: `gold`, `silver`, `bronze`"
+                "description": "Creates a medal record for the authenticated user. `id_user` must match the authenticated user's UUID — RLS rejects any mismatch.\n\n**Required fields (all):**\n- `id_user` — UUID, must equal auth.uid()\n- `competition_name` — VARCHAR(64)\n- `year` — SMALLINT\n- `medal_type` — one of: `gold`, `silver`, `bronze`\n\nNo nullable fields in this table."
               }
             },
             {

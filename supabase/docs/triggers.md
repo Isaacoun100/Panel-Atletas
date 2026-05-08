@@ -88,6 +88,22 @@ Injects `fk_user` from the authenticated session. Client does not send `fk_user`
 
 ---
 
+## protect_last_admin
+
+**Table:** `public.users_profiles`
+**Event:** `BEFORE DELETE OR UPDATE`
+**Function:** `handle_last_admin_protection()`
+
+Prevents removing the last active admin — by deleting their profile, downgrading their role, or deactivating their account.
+
+**Logic:**
+- Only fires when affected row has `role = 'admin'` AND `is_active = TRUE`
+- On DELETE: always checks remaining admin count
+- On UPDATE: only checks if `role` changes away from `admin` OR `is_active` becomes `FALSE`
+- If no other active admin exists, raises: `Cannot remove the last active admin.`
+
+---
+
 ## check_guardian_minor
 
 **Table:** `public.athletes`

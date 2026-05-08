@@ -40,11 +40,6 @@ BEGIN
     'recreational'
   );
 
-  CREATE TYPE public.discipline_type AS ENUM (
-    'individual',
-    'team'
-  );
-
   CREATE TYPE public.medal_type AS ENUM (
     'gold',
     'silver',
@@ -101,7 +96,7 @@ CREATE TABLE public.users_profiles (
   id_user           UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   name              VARCHAR(64) NOT NULL,
   first_last_name   VARCHAR(64) NOT NULL,
-  second_last_name  VARCHAR(64),
+  second_last_name  VARCHAR(64) NOT NULL,
   dni_type          public.dni_type NOT NULL,
   dni               VARCHAR(32) NOT NULL UNIQUE,
   birth_date        DATE NOT NULL,
@@ -120,8 +115,8 @@ END $$;
 
 CREATE TABLE public.disciplines (
   id_discipline    SERIAL PRIMARY KEY,
-  name             VARCHAR(64) NOT NULL UNIQUE,
-  discipline_type  public.discipline_type NOT NULL,
+  name             VARCHAR(64) NOT NULL,
+  discipline_type  public.participation_type NOT NULL,
   is_active        BOOLEAN NOT NULL DEFAULT TRUE
 );
 
@@ -155,7 +150,7 @@ CREATE TABLE public.athletes (
   id_user                    UUID PRIMARY KEY REFERENCES public.users_profiles(id_user) ON DELETE CASCADE,
 
   phone                      VARCHAR(64) NOT NULL,
-  district_of_residence      public.district,
+  district_of_residence      public.district NOT NULL,
 
   legal_guardian_name        VARCHAR(64),
   legal_guardian_phone       VARCHAR(64),
@@ -163,10 +158,10 @@ CREATE TABLE public.athletes (
   nacional_games_participation      BOOLEAN NOT NULL DEFAULT FALSE,
   international_games_participation BOOLEAN NOT NULL DEFAULT FALSE,
 
-  weekly_exercise            SMALLINT CHECK (weekly_exercise >= 1 AND weekly_exercise <= 7),
+  weekly_exercise            SMALLINT NOT NULL CHECK (weekly_exercise >= 1 AND weekly_exercise <= 7),
 
   has_family_support         BOOLEAN NOT NULL DEFAULT FALSE,
-  satisfaction_level         public.satisfaction_level,
+  satisfaction_level         public.satisfaction_level NOT NULL,
 
   has_family_in_committee    BOOLEAN NOT NULL DEFAULT FALSE,
 
@@ -176,7 +171,7 @@ CREATE TABLE public.athletes (
   is_club_member             BOOLEAN NOT NULL DEFAULT FALSE,
   club_name                  VARCHAR(64),
 
-  facility_satisfaction_level public.facility_condition,
+  facility_satisfaction_level public.facility_condition NOT NULL,
 
   has_disability             BOOLEAN NOT NULL DEFAULT FALSE,
   disability_type            public.disability_type,
@@ -188,7 +183,7 @@ CREATE TABLE public.athletes (
 
   accepts_data_usage         BOOLEAN NOT NULL DEFAULT FALSE,
   accepts_info_accuracy      BOOLEAN NOT NULL DEFAULT FALSE,
-  accepted_at                TIMESTAMPTZ,
+  accepted_at                TIMESTAMPTZ NOT NULL DEFAULT now(),
 
   created_at                 TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at                 TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -246,8 +241,8 @@ CREATE TABLE public.users_invitations (
   status        public.invitation_status NOT NULL DEFAULT 'sent',
   created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
-  last_sent_at  TIMESTAMPTZ,
-  expires_at    TIMESTAMPTZ,
+  last_sent_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  expires_at    TIMESTAMPTZ NOT NULL,
   attempts      INTEGER NOT NULL DEFAULT 0 CHECK (attempts >= 0),
   initial_role  public.user_role NOT NULL DEFAULT 'athlete',
   fk_invited_by UUID REFERENCES public.users_profiles(id_user) ON DELETE SET NULL
@@ -405,7 +400,7 @@ BEGIN
   FROM public.users_profiles
   WHERE id_user = NEW.id_user;
 
-  v_is_minor := (CURRENT_DATE - v_birth_date) < INTERVAL '18 years';
+  v_is_minor := v_birth_date > (CURRENT_DATE - INTERVAL '18 years');
 
   IF v_is_minor = FALSE AND (NEW.legal_guardian_name IS NOT NULL OR NEW.legal_guardian_phone IS NOT NULL) THEN
     RAISE EXCEPTION 'Guardian information is only allowed for athletes under 18.';
@@ -424,6 +419,40 @@ BEFORE INSERT OR UPDATE ON public.athletes
 FOR EACH ROW
 EXECUTE FUNCTION public.handle_guardian_minor_check();
 
+-- Prevents deleting or demoting the last active admin.
+CREATE OR REPLACE FUNCTION public.handle_last_admin_protection()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_admin_count INTEGER;
+BEGIN
+  IF OLD.role = 'admin' AND OLD.is_active = TRUE THEN
+    IF TG_OP = 'DELETE' OR NEW.role != 'admin' OR NEW.is_active = FALSE THEN
+      SELECT COUNT(*) INTO v_admin_count
+      FROM public.users_profiles
+      WHERE role = 'admin'
+        AND is_active = TRUE
+        AND id_user != OLD.id_user;
+
+      IF v_admin_count = 0 THEN
+        RAISE EXCEPTION 'Cannot remove the last active admin.';
+      END IF;
+    END IF;
+  END IF;
+
+  IF TG_OP = 'DELETE' THEN RETURN OLD; END IF;
+  RETURN NEW;
+END;
+$$;
+
+CREATE OR REPLACE TRIGGER protect_last_admin
+BEFORE DELETE OR UPDATE ON public.users_profiles
+FOR EACH ROW
+EXECUTE FUNCTION public.handle_last_admin_protection();
+
 -- =========================
 -- HELPER FUNCTION FOR RLS
 -- =========================
@@ -432,6 +461,24 @@ DO $$
 BEGIN
   RAISE NOTICE 'Creating RLS helper function is_admin...';
 END $$;
+
+CREATE OR REPLACE FUNCTION public.get_my_is_active()
+RETURNS BOOLEAN
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT is_active FROM public.users_profiles WHERE id_user = auth.uid();
+$$;
+
+CREATE OR REPLACE FUNCTION public.get_my_role()
+RETURNS public.user_role
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT role FROM public.users_profiles WHERE id_user = auth.uid();
+$$;
 
 CREATE OR REPLACE FUNCTION public.is_admin()
 RETURNS BOOLEAN
@@ -473,130 +520,124 @@ BEGIN
   RAISE NOTICE 'Creating RLS policies for users_profiles...';
 END $$;
 
-CREATE POLICY "Users can read their own profile"
+CREATE POLICY "profiles_select"
 ON public.users_profiles FOR SELECT TO authenticated
-USING (id_user = auth.uid());
+USING (id_user = (SELECT auth.uid()) OR is_admin());
 
-CREATE POLICY "Users can insert their own profile"
+CREATE POLICY "profiles_insert"
 ON public.users_profiles FOR INSERT TO authenticated
-WITH CHECK (id_user = auth.uid());
+WITH CHECK (id_user = (SELECT auth.uid()));
 
-CREATE POLICY "Users can update their own profile"
+CREATE POLICY "profiles_update"
 ON public.users_profiles FOR UPDATE TO authenticated
-USING (id_user = auth.uid())
+USING (id_user = (SELECT auth.uid()) OR is_admin())
 WITH CHECK (
-  id_user = auth.uid()
-  AND role = (SELECT role FROM public.users_profiles WHERE id_user = auth.uid())
+  -- Admin updating another user's profile: full access
+  (is_admin() AND id_user != (SELECT auth.uid()))
+  OR
+  -- Anyone updating own profile: role and is_active locked
+  (
+    id_user = (SELECT auth.uid())
+    AND role = public.get_my_role()
+    AND is_active = public.get_my_is_active()
+  )
 );
-
-CREATE POLICY "Admins can read all profiles"
-ON public.users_profiles FOR SELECT TO authenticated
-USING (public.is_admin());
-
-CREATE POLICY "Admins can update all profiles"
-ON public.users_profiles FOR UPDATE TO authenticated
-USING (public.is_admin())
-WITH CHECK (public.is_admin());
 
 DO $$
 BEGIN
   RAISE NOTICE 'Creating RLS policies for disciplines...';
 END $$;
 
-CREATE POLICY "Authenticated users can read disciplines"
+CREATE POLICY "disciplines_select"
 ON public.disciplines FOR SELECT TO authenticated
 USING (TRUE);
 
-CREATE POLICY "Admins can manage disciplines"
-ON public.disciplines FOR ALL TO authenticated
-USING (public.is_admin())
-WITH CHECK (public.is_admin());
+CREATE POLICY "disciplines_insert"
+ON public.disciplines FOR INSERT TO authenticated
+WITH CHECK (is_admin());
+
+CREATE POLICY "disciplines_update"
+ON public.disciplines FOR UPDATE TO authenticated
+USING (is_admin()) WITH CHECK (is_admin());
+
+CREATE POLICY "disciplines_delete"
+ON public.disciplines FOR DELETE TO authenticated
+USING (is_admin());
 
 DO $$
 BEGIN
   RAISE NOTICE 'Creating RLS policies for users_disciplines...';
 END $$;
 
-CREATE POLICY "Users can read their own disciplines"
+CREATE POLICY "user_disciplines_select"
 ON public.users_disciplines FOR SELECT TO authenticated
-USING (fk_user = auth.uid());
+USING (fk_user = (SELECT auth.uid()) OR is_admin());
 
-CREATE POLICY "Users can insert their own disciplines"
+CREATE POLICY "user_disciplines_insert"
 ON public.users_disciplines FOR INSERT TO authenticated
-WITH CHECK (fk_user = auth.uid());
+WITH CHECK (fk_user = (SELECT auth.uid()) OR is_admin());
 
-CREATE POLICY "Users can update their own disciplines"
+CREATE POLICY "user_disciplines_update"
 ON public.users_disciplines FOR UPDATE TO authenticated
-USING (fk_user = auth.uid())
-WITH CHECK (fk_user = auth.uid());
+USING (fk_user = (SELECT auth.uid()) OR is_admin())
+WITH CHECK (fk_user = (SELECT auth.uid()) OR is_admin());
 
-CREATE POLICY "Users can delete their own disciplines"
+CREATE POLICY "user_disciplines_delete"
 ON public.users_disciplines FOR DELETE TO authenticated
-USING (fk_user = auth.uid());
-
-CREATE POLICY "Admins can manage all user disciplines"
-ON public.users_disciplines FOR ALL TO authenticated
-USING (public.is_admin())
-WITH CHECK (public.is_admin());
+USING (fk_user = (SELECT auth.uid()) OR is_admin());
 
 DO $$
 BEGIN
   RAISE NOTICE 'Creating RLS policies for athletes...';
 END $$;
 
-CREATE POLICY "Athletes can read their own record"
+CREATE POLICY "athletes_select"
 ON public.athletes FOR SELECT TO authenticated
-USING (id_user = auth.uid());
+USING (id_user = (SELECT auth.uid()) OR is_admin());
 
-CREATE POLICY "Athletes can insert their own record"
+CREATE POLICY "athletes_insert"
 ON public.athletes FOR INSERT TO authenticated
-WITH CHECK (id_user = auth.uid());
+WITH CHECK (id_user = (SELECT auth.uid()) OR is_admin());
 
-CREATE POLICY "Athletes can update their own record"
+CREATE POLICY "athletes_update"
 ON public.athletes FOR UPDATE TO authenticated
-USING (id_user = auth.uid())
-WITH CHECK (id_user = auth.uid());
+USING (id_user = (SELECT auth.uid()) OR is_admin())
+WITH CHECK (id_user = (SELECT auth.uid()) OR is_admin());
 
-CREATE POLICY "Admins can manage all athlete records"
-ON public.athletes FOR ALL TO authenticated
-USING (public.is_admin())
-WITH CHECK (public.is_admin());
+CREATE POLICY "athletes_delete"
+ON public.athletes FOR DELETE TO authenticated
+USING (is_admin());
 
 DO $$
 BEGIN
   RAISE NOTICE 'Creating RLS policies for medals...';
 END $$;
 
-CREATE POLICY "Users can read their own medals"
+CREATE POLICY "medals_select"
 ON public.medals FOR SELECT TO authenticated
-USING (id_user = auth.uid());
+USING (id_user = (SELECT auth.uid()) OR is_admin());
 
-CREATE POLICY "Users can insert their own medals"
+CREATE POLICY "medals_insert"
 ON public.medals FOR INSERT TO authenticated
-WITH CHECK (id_user = auth.uid());
+WITH CHECK (id_user = (SELECT auth.uid()) OR is_admin());
 
-CREATE POLICY "Users can update their own medals"
+CREATE POLICY "medals_update"
 ON public.medals FOR UPDATE TO authenticated
-USING (id_user = auth.uid())
-WITH CHECK (id_user = auth.uid());
+USING (id_user = (SELECT auth.uid()) OR is_admin())
+WITH CHECK (id_user = (SELECT auth.uid()) OR is_admin());
 
-CREATE POLICY "Users can delete their own medals"
+CREATE POLICY "medals_delete"
 ON public.medals FOR DELETE TO authenticated
-USING (id_user = auth.uid());
-
-CREATE POLICY "Admins can manage all medals"
-ON public.medals FOR ALL TO authenticated
-USING (public.is_admin())
-WITH CHECK (public.is_admin());
+USING (id_user = (SELECT auth.uid()) OR is_admin());
 
 DO $$
 BEGIN
   RAISE NOTICE 'Creating RLS policies for users_invitations...';
 END $$;
 
-CREATE POLICY "Admins can read invitations"
+CREATE POLICY "invitations_select"
 ON public.users_invitations FOR SELECT TO authenticated
-USING (public.is_admin());
+USING (is_admin());
 
 -- =========================
 -- INDEXES
@@ -613,6 +654,21 @@ CREATE INDEX idx_users_disciplines_discipline ON public.users_disciplines(fk_dis
 CREATE INDEX idx_medals_user ON public.medals(id_user);
 CREATE INDEX idx_users_invitations_email ON public.users_invitations(email);
 CREATE INDEX idx_users_invitations_status ON public.users_invitations(status);
+CREATE INDEX idx_users_invitations_invited_by ON public.users_invitations(fk_invited_by);
+
+-- =========================
+-- SECURITY: Revoke direct RPC access to internal trigger functions
+-- =========================
+REVOKE EXECUTE ON FUNCTION public.handle_athlete_id_from_auth() FROM anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.handle_delete_invitation_on_user_delete() FROM anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.handle_discipline_user_from_auth() FROM anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.handle_guardian_minor_check() FROM anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.handle_invitation_accepted() FROM anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.handle_profile_id_from_auth() FROM anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.handle_profile_role_from_invitation() FROM anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.get_my_is_active() FROM anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.get_my_role() FROM anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.is_admin() FROM anon;
 
 DO $$
 BEGIN
