@@ -659,16 +659,18 @@ CREATE INDEX idx_users_invitations_invited_by ON public.users_invitations(fk_inv
 -- =========================
 -- SECURITY: Revoke direct RPC access to internal trigger functions
 -- =========================
-REVOKE EXECUTE ON FUNCTION public.handle_athlete_id_from_auth() FROM anon, authenticated;
-REVOKE EXECUTE ON FUNCTION public.handle_delete_invitation_on_user_delete() FROM anon, authenticated;
-REVOKE EXECUTE ON FUNCTION public.handle_discipline_user_from_auth() FROM anon, authenticated;
-REVOKE EXECUTE ON FUNCTION public.handle_guardian_minor_check() FROM anon, authenticated;
-REVOKE EXECUTE ON FUNCTION public.handle_invitation_accepted() FROM anon, authenticated;
-REVOKE EXECUTE ON FUNCTION public.handle_profile_id_from_auth() FROM anon, authenticated;
-REVOKE EXECUTE ON FUNCTION public.handle_profile_role_from_invitation() FROM anon, authenticated;
-REVOKE EXECUTE ON FUNCTION public.get_my_is_active() FROM anon, authenticated;
-REVOKE EXECUTE ON FUNCTION public.get_my_role() FROM anon, authenticated;
-REVOKE EXECUTE ON FUNCTION public.is_admin() FROM anon;
+REVOKE EXECUTE ON FUNCTION public.handle_athlete_id_from_auth() FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.handle_delete_invitation_on_user_delete() FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.handle_discipline_user_from_auth() FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.handle_guardian_minor_check() FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.handle_invitation_accepted() FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.handle_last_admin_protection() FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.handle_profile_id_from_auth() FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.handle_profile_role_from_invitation() FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.rls_auto_enable() FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.get_my_is_active() FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.get_my_role() FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.is_admin() FROM PUBLIC;
 
 DO $$
 BEGIN

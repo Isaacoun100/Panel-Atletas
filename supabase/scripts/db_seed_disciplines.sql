@@ -1,4 +1,4 @@
-TRUNCATE public.disciplines CASCADE;
+TRUNCATE public.disciplines RESTART IDENTITY CASCADE;
 
 INSERT INTO public.disciplines (name, discipline_type, is_active) VALUES
   ('Ajedrez',       'sport',        TRUE),
@@ -15,13 +15,9 @@ INSERT INTO public.disciplines (name, discipline_type, is_active) VALUES
   ('Tenis de Mesa', 'recreational', TRUE),
   ('Triatlón',      'sport',        TRUE),
   ('Triatlón',      'recreational', TRUE),
-  ('Zumba',         'sport',        TRUE),
   ('Zumba',         'recreational', TRUE),
-  ('Funcionales',   'sport',        TRUE),
   ('Funcionales',   'recreational', TRUE),
-  ('Yoga',          'sport',        TRUE),
   ('Yoga',          'recreational', TRUE),
-  ('Adulto Mayor',  'sport',        TRUE),
   ('Adulto Mayor',  'recreational', TRUE),
   ('Baloncesto',    'sport',        TRUE),
   ('Baloncesto',    'recreational', TRUE),
