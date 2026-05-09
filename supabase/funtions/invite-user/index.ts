@@ -40,10 +40,10 @@ Deno.serve(async (req) => {
       })
     }
 
-    const { email, initial_role } = await req.json()
+    const { emails, initial_role } = await req.json()
 
-    if (!email || !initial_role) {
-      return new Response(JSON.stringify({ error: 'Missing email or initial_role' }), {
+    if (!emails || !Array.isArray(emails) || emails.length === 0 || !initial_role) {
+      return new Response(JSON.stringify({ error: 'Missing emails or initial_role' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
@@ -56,54 +56,56 @@ Deno.serve(async (req) => {
       })
     }
 
-    const { data: existing } = await supabaseAdmin
-      .from('users_invitations')
-      .select('id_invitation')
-      .eq('email', email)
-      .not('status', 'eq', 'cancelled')
-      .maybeSingle()
+    const results: { email: string; status: 'sent' | 'error'; reason?: string }[] = []
 
-    if (existing) {
-      return new Response(JSON.stringify({ error: 'Invitation already exists for this email' }), {
-        status: 409,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    for (const email of emails) {
+      const { data: existing } = await supabaseAdmin
+        .from('users_invitations')
+        .select('id_invitation')
+        .eq('email', email)
+        .not('status', 'eq', 'cancelled')
+        .maybeSingle()
+
+      if (existing) {
+        results.push({ email, status: 'error', reason: 'Invitation already exists' })
+        continue
+      }
+
+      const { error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+        data: { initial_role },
       })
+
+      if (inviteError) {
+        results.push({ email, status: 'error', reason: inviteError.message })
+        continue
+      }
+
+      const now = new Date().toISOString()
+
+      const { error: insertError } = await supabaseAdmin
+        .from('users_invitations')
+        .insert({
+          email,
+          status: 'sent',
+          initial_role,
+          last_sent_at: now,
+          attempts: 1,
+          fk_invited_by: user.id,
+          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        })
+
+      if (insertError) {
+        results.push({ email, status: 'error', reason: insertError.message })
+        continue
+      }
+
+      results.push({ email, status: 'sent' })
     }
 
-    const { error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
-      data: { initial_role },
-    })
+    const allFailed = results.every(r => r.status === 'error')
 
-    if (inviteError) {
-      return new Response(JSON.stringify({ error: inviteError.message }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
-    }
-
-    const now = new Date().toISOString()
-
-    const { error: insertError } = await supabaseAdmin
-      .from('users_invitations')
-      .insert({
-        email,
-        status: 'sent',
-        initial_role,
-        last_sent_at: now,
-        attempts: 1,
-        fk_invited_by: user.id,
-        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-      })
-
-    if (insertError) {
-      return new Response(JSON.stringify({ error: insertError.message }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
-    }
-
-    return new Response(JSON.stringify({ success: true, email }), {
-      status: 200,
+    return new Response(JSON.stringify({ results }), {
+      status: allFailed ? 500 : 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (err) {

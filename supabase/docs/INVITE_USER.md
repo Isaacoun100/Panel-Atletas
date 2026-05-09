@@ -1,13 +1,14 @@
 # invite-user
 
-Edge Function that creates and sends an invitation to a new user. Restricted to authenticated admins.
+Edge Function that creates and sends invitations to one or more users. Restricted to authenticated admins.
 
 ## Behavior
 
 1. Validates the caller has an active admin role.
-2. Rejects if an active invitation already exists for the given email.
-3. Sends an invite email via Supabase Auth (`inviteUserByEmail`), which delivers a magic link.
+2. For each email: rejects if an active invitation already exists.
+3. Sends an invite email via Supabase Auth (`inviteUserByEmail`), delivering a magic link.
 4. Inserts a record in `users_invitations` with status `sent`, expiring in 7 days.
+5. Returns per-email results — partial success is possible.
 
 ## Endpoint
 
@@ -26,26 +27,25 @@ POST /functions/v1/invite-user
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `email` | string | Yes | Email address to invite |
-| `initial_role` | string | Yes | Role assigned on registration. One of: `athlete`, `admin` |
+| `emails` | string[] | Yes | Array of email addresses to invite |
+| `initial_role` | string | Yes | Role assigned on registration. One of: `athlete`, `coach`, `admin` |
 
 ## Responses
 
 | Status | Meaning |
 |--------|---------|
-| `200` | Invitation sent successfully |
+| `200` | All or some invitations sent (check per-email results) |
 | `400` | Missing or invalid fields |
 | `401` | Missing or invalid JWT |
 | `403` | Caller is not an active admin |
-| `409` | Active invitation already exists for this email |
-| `500` | Auth or database error |
+| `500` | All invitations failed |
 
 ## Example Call
 
 ```ts
 const { data, error } = await supabase.functions.invoke('invite-user', {
   body: {
-    email: 'athlete@example.com',
+    emails: ['athlete@example.com', 'another@example.com'],
     initial_role: 'athlete',
   },
 })
@@ -54,5 +54,10 @@ const { data, error } = await supabase.functions.invoke('invite-user', {
 ## Example Response
 
 ```json
-{ "success": true, "email": "athlete@example.com" }
+{
+  "results": [
+    { "email": "athlete@example.com", "status": "sent" },
+    { "email": "another@example.com", "status": "error", "reason": "Invitation already exists" }
+  ]
+}
 ```

@@ -128,8 +128,7 @@ END $$;
 CREATE TABLE public.users_disciplines (
   id_user_discipline SERIAL PRIMARY KEY,
   fk_user            UUID NOT NULL REFERENCES public.users_profiles(id_user) ON DELETE CASCADE,
-  fk_discipline      INTEGER NOT NULL REFERENCES public.disciplines(id_discipline),
-  participation_type public.participation_type NOT NULL,
+  fk_discipline      INTEGER NOT NULL REFERENCES public.disciplines(id_discipline) ON DELETE NO ACTION,
   is_representative  BOOLEAN NOT NULL DEFAULT FALSE,
   created_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
 
@@ -245,7 +244,8 @@ CREATE TABLE public.users_invitations (
   expires_at    TIMESTAMPTZ NOT NULL,
   attempts      INTEGER NOT NULL DEFAULT 0 CHECK (attempts >= 0),
   initial_role  public.user_role NOT NULL DEFAULT 'athlete',
-  fk_invited_by UUID REFERENCES public.users_profiles(id_user) ON DELETE SET NULL
+  fk_invited_by UUID REFERENCES public.users_profiles(id_user) ON DELETE SET NULL,
+  message       TEXT
 );
 
 -- =========================
@@ -383,6 +383,57 @@ CREATE OR REPLACE TRIGGER set_discipline_user_from_auth
 BEFORE INSERT ON public.users_disciplines
 FOR EACH ROW
 EXECUTE FUNCTION public.handle_discipline_user_from_auth();
+
+CREATE OR REPLACE FUNCTION public.handle_discipline_representative_check()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_type public.participation_type;
+BEGIN
+  SELECT discipline_type INTO v_type
+  FROM public.disciplines
+  WHERE id_discipline = NEW.fk_discipline;
+
+  IF v_type = 'recreational' AND NEW.is_representative = TRUE THEN
+    RAISE EXCEPTION 'is_representative can only be true for sport disciplines.';
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+REVOKE EXECUTE ON FUNCTION public.handle_discipline_representative_check() FROM PUBLIC;
+
+CREATE OR REPLACE TRIGGER set_representative_from_discipline
+BEFORE INSERT OR UPDATE ON public.users_disciplines
+FOR EACH ROW EXECUTE FUNCTION public.handle_discipline_representative_check();
+
+-- Blocks enrollment in inactive disciplines.
+CREATE OR REPLACE FUNCTION public.handle_discipline_active_check()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+DECLARE
+  v_active BOOLEAN;
+BEGIN
+  SELECT is_active INTO v_active
+  FROM public.disciplines
+  WHERE id_discipline = NEW.fk_discipline;
+
+  IF v_active IS FALSE THEN
+    RAISE EXCEPTION 'Cannot enroll in an inactive discipline.';
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+REVOKE EXECUTE ON FUNCTION public.handle_discipline_active_check() FROM PUBLIC;
+
+CREATE OR REPLACE TRIGGER discipline_active_check
+BEFORE INSERT ON public.users_disciplines
+FOR EACH ROW EXECUTE FUNCTION public.handle_discipline_active_check();
 
 -- Enforces guardian fields only for athletes under 18.
 -- Cross-table check (birth_date in users_profiles, guardian fields in athletes).

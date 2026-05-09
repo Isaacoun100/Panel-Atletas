@@ -42,27 +42,6 @@
       "description": "Public Supabase Auth endpoints. No role required. Used by any user to authenticate or manage their own session.",
       "item": [
         {
-          "name": "Sign Up",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "apikey", "value": "{{SUPABASE_KEY}}", "type": "text" },
-              { "key": "Content-Type", "value": "application/json", "type": "text" }
-            ],
-            "url": {
-              "raw": "{{SUPABASE_URL}}/auth/v1/signup",
-              "host": ["{{SUPABASE_URL}}"],
-              "path": ["auth", "v1", "signup"]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"someone@email.com\",\n  \"password\": \"xpQSRuBYgvUsMzUkdHSx\"\n}",
-              "options": { "raw": { "language": "json" } }
-            },
-            "description": "Creates a new user account. Returns a session if email confirmation is disabled."
-          }
-        },
-        {
           "name": "Sign In (Password)",
           "request": {
             "method": "POST",
@@ -121,10 +100,10 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"someone@email.com\",\n  \"password\": \"new-password\"\n}",
+              "raw": "{\n  \"password\": \"new-password\"\n}",
               "options": { "raw": { "language": "json" } }
             },
-            "description": "Updates the authenticated user's credentials. Use only to change email or password. Do not use for profile data — that belongs in users_profiles via the Data API."
+            "description": "Updates the authenticated user's password. Used after password recovery or invite flows.\n\nRequires the `access_token` from the recovery/invite link as Bearer token.\n\n**Do not send `email`** — email changes are not supported in this app."
           }
         },
         {
@@ -137,12 +116,13 @@
               { "key": "Content-Type", "value": "application/json", "type": "text" }
             ],
             "url": {
-              "raw": "{{SUPABASE_URL}}/auth/v1/logout",
+              "raw": "{{SUPABASE_URL}}/auth/v1/logout?scope=global",
               "host": ["{{SUPABASE_URL}}"],
-              "path": ["auth", "v1", "logout"]
+              "path": ["auth", "v1", "logout"],
+              "query": [{ "key": "scope", "value": "global" }]
             },
             "body": { "mode": "none" },
-            "description": "Invalidates the current session token. Client must discard the stored JWT after this call."
+            "description": "Invalidates all sessions for the user (`scope=global`). Use after password change to force re-login everywhere. Client must discard the stored JWT after this call."
           }
         }
       ]
@@ -156,7 +136,7 @@
           "description": "Manage user invitations. Admin only.",
           "item": [
             {
-              "name": "Invite User",
+              "name": "Invite Users",
               "request": {
                 "method": "POST",
                 "header": [
@@ -170,10 +150,10 @@
                 },
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"email\": \"athlete@example.com\",\n  \"initial_role\": \"athlete\"\n}",
+                  "raw": "{\n  \"emails\": [\"athlete@example.com\", \"another@example.com\"],\n  \"initial_role\": \"athlete\"\n}",
                   "options": { "raw": { "language": "json" } }
                 },
-                "description": "Invites a new user by email. The Edge Function uses the Supabase Admin API to create the user in auth.users and sends an invitation email with a magic link.\n\nWhen the user clicks the link, Supabase verifies the token and redirects them to the app. The trigger `on_user_email_confirmed` automatically marks the invitation as `accepted`.\n\nFails with 409 if an active invitation already exists for the email.\n\n**initial_role** — one of: `athlete`, `admin`"
+                "description": "Invites one or more users by email. Sends a magic link invitation to each address.\n\n**Required fields:**\n- `emails` — array of email strings (one or more)\n- `initial_role` — one of: `athlete`, `coach`, `admin`\n\nEach email is processed independently. Response includes per-email results:\n```json\n{ \"results\": [ { \"email\": \"...\", \"status\": \"sent\" | \"error\", \"reason\": \"...\" } ] }\n```\n\nFails per-email with reason `Invitation already exists` if active invitation found.\n\nWhen user clicks magic link, trigger `on_user_email_confirmed` marks invitation as `accepted`."
               },
               "response": []
             },
@@ -375,7 +355,92 @@
                   "path": ["rest", "v1", "disciplines"],
                   "query": [{ "key": "id_discipline", "value": "eq.1" }]
                 },
-                "description": "Deleting a discipline fails if any user is enrolled in it (FK constraint). Remove enrollments first."
+                "description": "Deletes a discipline. Blocked by FK constraint if any user has ever been enrolled (enrollment history preserved). To delete, remove all enrollments first.\n\n**Deactivation** (`is_active: false`) is always allowed and is the preferred way to retire a discipline."
+              }
+            },
+            {
+              "name": "Get User Enrollments",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "apikey", "value": "{{SUPABASE_KEY}}", "type": "text" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_JWT}}", "type": "text" }
+                ],
+                "url": {
+                  "raw": "{{SUPABASE_URL}}/rest/v1/users_disciplines?select=*,disciplines(name,discipline_type)&fk_user=eq.{{USER_ID}}&disciplines.is_active=eq.true",
+                  "host": ["{{SUPABASE_URL}}"],
+                  "path": ["rest", "v1", "users_disciplines"],
+                  "query": [
+                    { "key": "select", "value": "*,disciplines(name,discipline_type)" },
+                    { "key": "fk_user", "value": "eq.{{USER_ID}}" },
+                    { "key": "disciplines.is_active", "value": "eq.true" }
+                  ]
+                },
+                "description": "Returns active discipline enrollments for a specific user (inactive disciplines excluded).\n\n**Query param:**\n- `fk_user=eq.{{USER_ID}}` — filter by target user UUID"
+              }
+            },
+            {
+              "name": "Enroll User in Discipline",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "apikey", "value": "{{SUPABASE_KEY}}", "type": "text" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_JWT}}", "type": "text" },
+                  { "key": "Content-Type", "value": "application/json", "type": "text" },
+                  { "key": "Prefer", "value": "return=representation", "type": "text" }
+                ],
+                "url": {
+                  "raw": "{{SUPABASE_URL}}/rest/v1/users_disciplines",
+                  "host": ["{{SUPABASE_URL}}"],
+                  "path": ["rest", "v1", "users_disciplines"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"fk_user\": \"{{USER_ID}}\",\n  \"fk_discipline\": 1,\n  \"is_representative\": false\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "description": "Enrolls any user in a discipline.\n\n**Required fields:**\n- `fk_user` — UUID of the target user\n- `fk_discipline` — integer ID of the discipline\n\n**Optional:**\n- `is_representative` — boolean, default `false`. Only valid for sport disciplines — trigger blocks `true` for recreational disciplines.\n\nBlocked if discipline is inactive."
+              }
+            },
+            {
+              "name": "Update User Enrollment",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  { "key": "apikey", "value": "{{SUPABASE_KEY}}", "type": "text" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_JWT}}", "type": "text" },
+                  { "key": "Content-Type", "value": "application/json", "type": "text" },
+                  { "key": "Prefer", "value": "return=representation", "type": "text" }
+                ],
+                "url": {
+                  "raw": "{{SUPABASE_URL}}/rest/v1/users_disciplines?id_user_discipline=eq.1",
+                  "host": ["{{SUPABASE_URL}}"],
+                  "path": ["rest", "v1", "users_disciplines"],
+                  "query": [{ "key": "id_user_discipline", "value": "eq.1" }]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"is_representative\": true\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "description": "Updates a user's enrollment. Typically used to toggle `is_representative`.\n\n**Filter by** `id_user_discipline` (enrollment row ID)."
+              }
+            },
+            {
+              "name": "Remove User Enrollment",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  { "key": "apikey", "value": "{{SUPABASE_KEY}}", "type": "text" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_JWT}}", "type": "text" }
+                ],
+                "url": {
+                  "raw": "{{SUPABASE_URL}}/rest/v1/users_disciplines?id_user_discipline=eq.1",
+                  "host": ["{{SUPABASE_URL}}"],
+                  "path": ["rest", "v1", "users_disciplines"],
+                  "query": [{ "key": "id_user_discipline", "value": "eq.1" }]
+                },
+                "description": "Removes a user's enrollment from a discipline.\n\n**Filter by** `id_user_discipline` (enrollment row ID)."
               }
             }
           ]
@@ -422,10 +487,54 @@
                 },
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"is_active\": false,\n  \"role\": \"admin\"\n}",
+                  "raw": "{\n  \"role\": \"athlete\"\n}",
                   "options": { "raw": { "language": "json" } }
                 },
-                "description": "Updates any user's profile. Intended for admin operations like changing roles or deactivating accounts.\n\n**role** — one of: `athlete`, `admin`. Only admins can change this field."
+                "description": "Updates any user's profile. Intended for admin operations like changing roles.\n\n**role** — one of: `athlete`, `admin`. Only admins can change this field.\n\n**is_active cannot be changed here** — use the `Block / Unblock User` endpoint instead."
+              }
+            },
+            {
+              "name": "Block / Unblock User",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "apikey", "value": "{{SUPABASE_KEY}}", "type": "text" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_JWT}}", "type": "text" },
+                  { "key": "Content-Type", "value": "application/json", "type": "text" }
+                ],
+                "url": {
+                  "raw": "{{SUPABASE_URL}}/functions/v1/set-user-active",
+                  "host": ["{{SUPABASE_URL}}"],
+                  "path": ["functions", "v1", "set-user-active"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"user_id\": \"{{USER_ID}}\",\n  \"is_active\": false\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "description": "Activates or deactivates a user. Simultaneously updates `users_profiles.is_active` and bans/unbans the user in Supabase Auth.\n\n**Required fields:**\n- `user_id` — UUID of the target user\n- `is_active` — `true` to activate, `false` to deactivate\n\n`is_active: false` → sets `ban_duration: '876600h'` (permanent ban). User cannot log in.\n`is_active: true` → sets `ban_duration: 'none'`. Restores login access.\n\nAdmin cannot change their own active status. Last active admin is protected by `protect_last_admin` trigger."
+              }
+            },
+            {
+              "name": "Delete User",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "apikey", "value": "{{SUPABASE_KEY}}", "type": "text" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_JWT}}", "type": "text" },
+                  { "key": "Content-Type", "value": "application/json", "type": "text" }
+                ],
+                "url": {
+                  "raw": "{{SUPABASE_URL}}/functions/v1/delete-user",
+                  "host": ["{{SUPABASE_URL}}"],
+                  "path": ["functions", "v1", "delete-user"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"user_id\": \"{{USER_ID}}\"\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "description": "Permanently deletes a non-admin user. Cascades automatically:\n- `users_profiles` — FK CASCADE\n- `athletes` — FK CASCADE\n- `users_disciplines` — FK CASCADE\n- `medals` — FK CASCADE\n- `users_invitations` — trigger `delete_invitation_on_user_delete`\n\n**Required fields:**\n- `user_id` — UUID of the target user\n\nBlocked if target user is an admin. Admin cannot delete their own account.\n\n⚠️ Irreversible."
               }
             }
           ]
@@ -706,12 +815,15 @@
                   { "key": "Authorization", "value": "Bearer {{USER_JWT}}", "type": "text" }
                 ],
                 "url": {
-                  "raw": "{{SUPABASE_URL}}/rest/v1/users_disciplines?select=*,disciplines(name,discipline_type)",
+                  "raw": "{{SUPABASE_URL}}/rest/v1/users_disciplines?select=*,disciplines(name,discipline_type)&disciplines.is_active=eq.true",
                   "host": ["{{SUPABASE_URL}}"],
                   "path": ["rest", "v1", "users_disciplines"],
-                  "query": [{ "key": "select", "value": "*,disciplines(name,discipline_type)" }]
+                  "query": [
+                    { "key": "select", "value": "*,disciplines(name,discipline_type)" },
+                    { "key": "disciplines.is_active", "value": "eq.true" }
+                  ]
                 },
-                "description": "Returns all discipline enrollments for the authenticated user with discipline details. RLS filters automatically."
+                "description": "Returns active discipline enrollments for the authenticated user. Inactive disciplines excluded. RLS filters to own enrollments automatically."
               }
             },
             {
@@ -731,10 +843,10 @@
                 },
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"fk_discipline\": 1,\n  \"participation_type\": \"sport\",\n  \"is_representative\": false\n}",
+                  "raw": "{\n  \"fk_discipline\": 1,\n  \"is_representative\": false\n}",
                   "options": { "raw": { "language": "json" } }
                 },
-                "description": "`fk_user` is injected automatically by the `set_discipline_user_from_auth` trigger — do not send it in the body.\n\n**Required fields:**\n- `fk_discipline` — INTEGER, id of the discipline\n- `participation_type` — one of: `sport`, `recreational`\n\n**Optional (defaults to false):**\n- `is_representative` — BOOLEAN. Can only be `true` when `participation_type = 'sport'` (constraint enforced by DB). Must be `false` for recreational.\n\nFails with a unique constraint error if the user is already enrolled in the same discipline."
+                "description": "`fk_user` is injected automatically by the `set_discipline_user_from_auth` trigger — do not send it in the body.\n\n**Required fields:**\n- `fk_discipline` — INTEGER, id of the discipline\n\n**Optional (defaults to false):**\n- `is_representative` — BOOLEAN. Only relevant for `sport` disciplines. Automatically forced to `false` for `recreational` disciplines by DB trigger.\n\nFails with a unique constraint error if the user is already enrolled in the same discipline."
               }
             },
             {
@@ -755,7 +867,7 @@
                 },
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"participation_type\": \"recreational\",\n  \"is_representative\": false\n}",
+                  "raw": "{\n  \"is_representative\": false\n}",
                   "options": { "raw": { "language": "json" } }
                 },
                 "description": "Updates a discipline enrollment. RLS blocks updates to enrollments belonging to other users."
