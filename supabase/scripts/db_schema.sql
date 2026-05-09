@@ -413,7 +413,10 @@ FOR EACH ROW EXECUTE FUNCTION public.handle_discipline_representative_check();
 
 -- Blocks enrollment in inactive disciplines.
 CREATE OR REPLACE FUNCTION public.handle_discipline_active_check()
-RETURNS TRIGGER LANGUAGE plpgsql AS $$
+RETURNS TRIGGER LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
 DECLARE
   v_active BOOLEAN;
 BEGIN
@@ -547,6 +550,23 @@ AS $$
 $$;
 
 -- =========================
+-- PRIVATE SCHEMA (not exposed via PostgREST)
+-- =========================
+CREATE SCHEMA IF NOT EXISTS private;
+
+CREATE OR REPLACE FUNCTION private.get_any_is_active(p_id_user UUID)
+RETURNS BOOLEAN
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT is_active FROM public.users_profiles WHERE id_user = p_id_user;
+$$;
+
+GRANT EXECUTE ON FUNCTION private.get_any_is_active(UUID) TO authenticated;
+
+-- =========================
 -- ENABLE RLS
 -- =========================
 
@@ -583,10 +603,10 @@ CREATE POLICY "profiles_update"
 ON public.users_profiles FOR UPDATE TO authenticated
 USING (id_user = (SELECT auth.uid()) OR is_admin())
 WITH CHECK (
-  -- Admin updating another user's profile: full access
-  (is_admin() AND id_user != (SELECT auth.uid()))
+  -- Admin updating another user: role only, is_active locked via private function
+  (is_admin() AND id_user != (SELECT auth.uid()) AND is_active = private.get_any_is_active(id_user))
   OR
-  -- Anyone updating own profile: role and is_active locked
+  -- Self update: role and is_active locked
   (
     id_user = (SELECT auth.uid())
     AND role = public.get_my_role()
@@ -722,6 +742,22 @@ REVOKE EXECUTE ON FUNCTION public.rls_auto_enable() FROM PUBLIC;
 REVOKE EXECUTE ON FUNCTION public.get_my_is_active() FROM PUBLIC;
 REVOKE EXECUTE ON FUNCTION public.get_my_role() FROM PUBLIC;
 REVOKE EXECUTE ON FUNCTION public.is_admin() FROM PUBLIC;
+
+-- =========================
+-- CRON JOBS
+-- =========================
+CREATE EXTENSION IF NOT EXISTS pg_cron;
+
+SELECT cron.schedule(
+  'expire-invitations',
+  '0 * * * *',
+  $$
+    UPDATE public.users_invitations
+    SET status = 'expired'
+    WHERE status = 'sent'
+      AND expires_at < now();
+  $$
+);
 
 DO $$
 BEGIN
