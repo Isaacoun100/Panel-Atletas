@@ -17,9 +17,13 @@ All application tables have Row Level Security (RLS) enabled. Access is governed
 |-----------|--------|-----------|
 | SELECT | `profiles_select` | `id_user = auth.uid() OR is_admin()` |
 | INSERT | `profiles_insert` | `id_user = auth.uid()` |
-| UPDATE | `profiles_update` | `id_user = auth.uid() OR is_admin()`. Role column locked for non-admins via WITH CHECK. |
+| UPDATE | `profiles_update` | See details below |
 
-Merged user + admin into single policy per operation. `role` cannot be changed by regular users — only admins pass the WITH CHECK for role updates.
+**`profiles_update` WITH CHECK:**
+- **Admin updating another user:** allowed, but `is_active` is locked to its current value via `private.get_any_is_active()`. To change `is_active`, use the `set-user-active` edge function.
+- **Self update:** allowed, but `role` and `is_active` are both locked to current values.
+
+`is_active` cannot be changed via direct PATCH by anyone — admin or user. Use the `set-user-active` edge function which also syncs Auth ban state.
 
 ---
 
@@ -85,23 +89,13 @@ Admins can read invitation records via the Data API. All mutations (INSERT, UPDA
 
 ---
 
-## Helper Function
+## Helper Functions
 
-```sql
-CREATE OR REPLACE FUNCTION public.is_admin()
-RETURNS BOOLEAN
-LANGUAGE sql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-  SELECT EXISTS (
-    SELECT 1
-    FROM public.users_profiles
-    WHERE id_user = auth.uid()
-      AND role = 'admin'
-      AND is_active = TRUE
-  );
-$$;
-```
+| Function | Schema | Purpose |
+|----------|--------|---------|
+| `is_admin()` | `public` | Returns TRUE if caller has `role='admin'` and `is_active=TRUE` |
+| `get_my_role()` | `public` | Returns the caller's current `role` |
+| `get_my_is_active()` | `public` | Returns the caller's current `is_active` |
+| `get_any_is_active(uuid)` | `private` | Returns `is_active` for any user by ID — used internally by `profiles_update` to lock is_active for admin updates |
 
-The function runs with `SECURITY DEFINER` to bypass RLS on `users_profiles` during the admin check, preventing infinite recursion.
+All are `SECURITY DEFINER` to bypass RLS during execution, preventing infinite recursion. `get_any_is_active` is in the `private` schema — not exposed via PostgREST `/rpc/`.

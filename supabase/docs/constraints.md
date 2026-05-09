@@ -1,9 +1,22 @@
 # Database Constraints
 
+## disciplines
+
+### delete_blocked_by_history
+A discipline cannot be hard-deleted if any user has ever been enrolled in it (`users_disciplines` FK `NO ACTION`). Enrollment history is preserved. Use `is_active = false` to retire a discipline instead.
+
+### deactivation_always_allowed
+Setting `is_active = false` is always permitted regardless of current enrollments. Existing enrollment rows are kept as historical records.
+
+---
+
 ## users_disciplines
 
-### representative_sport_only
-`is_representative` can only be `TRUE` when `participation_type = 'sport'`. Athletes in recreational disciplines cannot be marked as representatives.
+### representative_sport_only *(trigger)*
+`is_representative` can only be `TRUE` for sport-type disciplines. Enforced by the `set_representative_from_discipline` trigger — raises an exception if `is_representative = TRUE` is set on a recreational discipline.
+
+### enrollment_active_discipline_only *(trigger)*
+New enrollments are blocked if the target discipline has `is_active = FALSE`. Enforced by the `discipline_active_check` trigger on INSERT.
 
 ---
 

@@ -118,3 +118,37 @@ Enforces that guardian fields are only present for athletes under 18, and are re
 - If the athlete is **under 18**: both `legal_guardian_name` and `legal_guardian_phone` are required
 
 **Why a trigger instead of a CHECK constraint:** CHECK constraints cannot reference other tables. The birth_date lives in `users_profiles`, so cross-table validation requires a trigger.
+
+---
+
+## set_representative_from_discipline
+
+**Table:** `public.users_disciplines`
+**Event:** `BEFORE INSERT OR UPDATE`
+**Function:** `handle_discipline_representative_check()`
+
+Enforces that `is_representative = TRUE` is only valid for sport-type disciplines.
+
+**Logic:**
+- Looks up `discipline_type` from `disciplines` for the enrollment's `fk_discipline`
+- If `discipline_type = 'recreational'` and `is_representative = TRUE` → raises exception
+
+**Error:** `is_representative can only be true for sport disciplines.`
+
+---
+
+## discipline_active_check
+
+**Table:** `public.users_disciplines`
+**Event:** `BEFORE INSERT`
+**Function:** `handle_discipline_active_check()`
+
+Blocks enrollment in disciplines that are inactive (`is_active = FALSE`).
+
+**Logic:**
+- Looks up `is_active` from `disciplines` for the enrollment's `fk_discipline`
+- If `is_active = FALSE` → raises exception
+
+**Error:** `Cannot enroll in an inactive discipline.`
+
+**Note:** Does not fire on UPDATE — existing enrollments are preserved as historical records even if the discipline is later deactivated.
