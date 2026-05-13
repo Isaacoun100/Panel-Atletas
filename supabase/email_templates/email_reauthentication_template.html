@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Restablecer contraseña - Panel de Atletas del CCDR de Montes de Oca</title>
+  <title>Código de verificación - Panel de Atletas del CCDR de Montes de Oca</title>
 </head>
 <body style="margin:0;padding:0;background-color:#f4f6f9;font-family:'Segoe UI',Arial,sans-serif;">
 
@@ -28,31 +28,27 @@
           <tr>
             <td style="padding:48px 40px 32px;">
               <h1 style="margin:0 0 16px;font-size:24px;color:#1a1a2e;font-weight:700;">
-                Restablecer contraseña
+                Código de verificación
               </h1>
               <p style="margin:0 0 24px;font-size:16px;color:#4a4a6a;line-height:1.6;">
-                Recibimos una solicitud para restablecer la contraseña de tu cuenta en el <strong>Panel de Atletas del CCDR de Montes de Oca</strong>. Haz clic en el botón para crear una nueva contraseña.
+                Para continuar con tu acción en el <strong>Panel de Atletas del CCDR de Montes de Oca</strong>, ingresa el siguiente código de verificación:
               </p>
 
-              <!-- CTA BUTTON -->
-              <table cellpadding="0" cellspacing="0" style="margin:0 0 32px;">
+              <!-- OTP CODE BOX -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 32px;">
                 <tr>
-                  <td style="background-color:#e63946;border-radius:8px;">
-                    <a
-                      href="{{ .ConfirmationURL }}"
-                      style="display:inline-block;padding:14px 32px;font-size:16px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:8px;"
-                    >
-                      Restablecer contraseña
-                    </a>
+                  <td align="center">
+                    <div style="display:inline-block;background-color:#1a1a2e;border-radius:12px;padding:20px 40px;">
+                      <span style="font-size:36px;font-weight:700;color:#ffffff;letter-spacing:10px;font-family:'Courier New',monospace;">
+                        {{ .Token }}
+                      </span>
+                    </div>
                   </td>
                 </tr>
               </table>
 
-              <p style="margin:0 0 8px;font-size:14px;color:#8888aa;">
-                O copia este enlace en tu navegador:
-              </p>
-              <p style="margin:0;font-size:13px;color:#4a4a6a;word-break:break-all;">
-                {{ .ConfirmationURL }}
+              <p style="margin:0;font-size:14px;color:#8888aa;text-align:center;">
+                Este código expira en 10 minutos.
               </p>
             </td>
           </tr>
@@ -68,7 +64,7 @@
           <tr>
             <td style="padding:24px 40px;text-align:center;">
               <p style="margin:0;font-size:12px;color:#aaaacc;line-height:1.6;">
-                Este enlace expira en 1 hora. Si no solicitaste restablecer tu contraseña, puedes ignorar este correo.<br/>
+                Si no solicitaste este código, puedes ignorar este correo.<br/>
                 &copy; 2026 Panel de Atletas del CCDR de Montes de Oca. Todos los derechos reservados.
               </p>
             </td>
