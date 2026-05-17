@@ -121,3 +121,8 @@ __screenshots__/
 # System files
 .DS_Store
 Thumbs.db
+
+# Real secrets - NEVER commit these
+.env
+.env.local
+.env.production
