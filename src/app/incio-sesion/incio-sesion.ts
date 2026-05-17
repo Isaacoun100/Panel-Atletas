@@ -1,4 +1,7 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal,inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { AuthService } from '../core/services/auth.service';
+import { SignInResponse } from '../core/models/auth.model';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 
@@ -11,13 +14,23 @@ import { FormsModule } from '@angular/forms';
 export class IncioSesion implements OnInit {
   constructor(private router: Router) {}
 
+  private authService = inject(AuthService);
+
   isDark = signal(false);
 
-  // ── Forgot password ───────────────────────────────
+  //Sign in variables
+  email = '';
+  password = '';
+
+  // Forgot password
   showForgot = signal(false);
   forgotEmail = '';
   forgotSent = signal(false);
   forgotError = signal('');
+
+  // For the login
+  isLoading = signal(false);
+  errorMessage = signal('');
 
   openForgot() { this.showForgot.set(true); this.forgotSent.set(false); this.forgotError.set(''); }
   closeForgot() { this.showForgot.set(false); this.forgotEmail = ''; }
@@ -46,6 +59,20 @@ export class IncioSesion implements OnInit {
   }
 
   onLogin() {
-    this.router.navigate(['/dashboard']);
+    this.isLoading.set(true);
+    this.errorMessage.set('')
+
+    this.authService.signIn(this.email, this.password).subscribe({
+      next: (response) => {
+        localStorage.setItem('access_token', response.access_token)
+        this.router.navigate(['/dashboard']);
+        this.isLoading.set(false);
+      },
+      error: () => {
+        this.errorMessage.set('Usuario o contraseña no válido')
+        this.isLoading.set(false);
+      }
+    })
+
   }
 }

@@ -73,9 +73,11 @@
               <input
                 type="text"
                 id="usuario"
+                name="usuario"
                 class="form-control form-control-lg"
                 placeholder="Ingresa tu usuario"
                 autocomplete="username"
+                [(ngModel)]="email"
               />
             </div>
 
@@ -84,9 +86,11 @@
               <input
                 type="password"
                 id="contrasena"
+                name="contrasena"
                 class="form-control form-control-lg"
                 placeholder="Ingresa tu contraseña"
                 autocomplete="current-password"
+                [(ngModel)]="password"
               />
             </div>
 
@@ -95,6 +99,13 @@
                 Iniciar sesión
               </button>
             </div>
+
+            <div class="text-center mt-3">
+              @if (errorMessage()) {
+                <p class="text-danger">{{ errorMessage() }}</p>
+              }
+            </div>
+
             <div class="text-center mt-3">
               <button type="button" class="btn btn-link btn-sm p-0"
                 style="font-size:0.85rem;color:var(--primary);text-decoration:none"
@@ -168,5 +179,6 @@
       </div>
 
     </div>
+
   </div>
 </div>
