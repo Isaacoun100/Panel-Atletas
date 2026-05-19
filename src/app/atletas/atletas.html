@@ -156,7 +156,7 @@
             </button>
             @if (disciplineMenuOpen()) {
               <div class="at-multiselect-dropdown" (click)="$event.stopPropagation()">
-                @for (d of disciplines; track d) {
+                @for (d of disciplinesList; track d) {
                   <label class="at-multiselect-option d-flex align-items-center gap-2">
                     <span class="at-checkbox" [class.at-checkbox--checked]="selectedDisciplines().includes(d)">
                       @if (selectedDisciplines().includes(d)) {
