@@ -85,7 +85,7 @@ export class Atletas implements OnInit {
     const source = this.atletasReales().length > 0 ? this.atletasReales() : this.atletasMock;
 
     return source.filter(a => {
-      if (query && !a.nombre.toLowerCase().includes(query)) return false;
+      if (query && !a.nombre.toLowerCase().includes(query) && !a.cedula.toLowerCase().includes(query)) return false;
       if (disciplines.length > 0 && !a.disciplinas.some(d => disciplines.includes(d))) return false;
       if (sex && a.sexo !== sex) return false;
       if (min !== null && a.edad < min) return false;
