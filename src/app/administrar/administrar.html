@@ -147,7 +147,11 @@
         <div class="db-card-header d-flex align-items-center justify-content-between">
           <span class="db-card-title">Disciplinas</span>
           <span class="small" style="color:var(--text-3)">
-            {{ disciplinas.length }} total &nbsp;·&nbsp; {{ disciplinasActivas }} activas
+            @if (isLoading()) {
+              Cargando...
+            } @else {
+              {{ disciplinas().length }} total &nbsp;·&nbsp; {{ disciplinasActivas }} activas
+            }
           </span>
         </div>
         <div class="table-responsive">
@@ -161,7 +165,7 @@
               </tr>
             </thead>
             <tbody>
-              @for (d of disciplinas; track d.nombre) {
+              @for (d of disciplinas(); track d.id_discipline) {
                 <tr>
                   <td class="fw-medium small" style="color:var(--text)">{{ d.nombre }}</td>
                   <td>
@@ -177,8 +181,8 @@
                       <input class="form-check-input adm-switch" type="checkbox"
                              role="switch" [(ngModel)]="d.activa"
                              (ngModelChange)="markChanged()"
-                             [id]="'disc-' + d.nombre">
-                      <label class="form-check-label small" [for]="'disc-' + d.nombre"
+                             [id]="'disc-' + d.id_discipline">
+                      <label class="form-check-label small" [for]="'disc-' + d.id_discipline"
                              style="color:var(--text-3)">
                         {{ d.activa ? 'Activa' : 'Inactiva' }}
                       </label>
@@ -237,6 +241,14 @@
       }
 
     </div>
+
+    <!-- Notificación temporal -->
+    @if (mensajeVisible()) {
+      <div class="adm-toast" [class.adm-toast--success]="mensajeTipo() === 'success'"
+           [class.adm-toast--error]="mensajeTipo() === 'error'">
+        {{ mensajeTexto() }}
+      </div>
+    }
 
   </div>
 </div>
