@@ -30,7 +30,7 @@ export class AdminDisciplinesService {
   }
 
   createDiscipline(data: { name: string; discipline_type: string; is_active?: boolean }) {
-    return this.http.post(`${this.base}/rest/v1/disciplines`, data, { headers: this.getHeaders() });
+    return this.http.post(`${this.base}/rest/v1/disciplines`, data, { headers: { ...this.getHeaders(), 'Prefer': 'return=representation' }});
   }
 
   updateDiscipline(id: number, data: Partial<Discipline>) {
