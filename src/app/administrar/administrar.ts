@@ -23,6 +23,7 @@ interface DisciplinaUI {
   tipo: 'recreativa' | 'deportiva';
   activa: boolean;
   totalAtletas: number;
+  original_activa?: boolean;
 }
 
 @Component({
@@ -31,6 +32,8 @@ interface DisciplinaUI {
   templateUrl: './administrar.html',
   styleUrl: './administrar.css',
 })
+
+
 
 export class Administrar implements OnInit {
   private adminDisciplinesService = inject(AdminDisciplinesService);
@@ -52,6 +55,7 @@ export class Administrar implements OnInit {
     'Atleta':        'db-badge--accent',
   };
 
+  // ── Disciplinas
   disciplinas = signal<DisciplinaUI[]>([]);
   isLoading = signal(false);
   errorMessage = signal('');
@@ -62,25 +66,28 @@ export class Administrar implements OnInit {
   newDiscError = signal('');
 
   // ── Estado de cambios ───────────────────────────────────────────────
-  hasChanges = signal(false);
+  hasChangesDisciplinas = signal(false);
   saveSuccess = signal(false);
-
 
   // Notificación
   mensajeVisible = signal(false);
   mensajeTexto = signal('');
   mensajeTipo = signal<'success' | 'error'>('success');
 
+  // ── Snapshot original para detectar cambios en disciplinas ─────────
+  private disciplinasOriginal: DisciplinaUI[] = [];
+
+  // ── Disciplinas activas ───────────────────────────────────
+  get disciplinasActivas(): number {
+    return this.disciplinas().filter(d => d.activa).length;
+  }
+
+
   mostrarMensaje(texto: string, tipo: 'success' | 'error') {
     this.mensajeTexto.set(texto);
     this.mensajeTipo.set(tipo);
     this.mensajeVisible.set(true);
     setTimeout(() => this.mensajeVisible.set(false), 3000);
-  }
-
-  // ── Disciplinas activas ───────────────────────────────────
-  get disciplinasActivas(): number {
-    return this.disciplinas().filter(d => d.activa).length;
   }
 
 
@@ -100,9 +107,13 @@ export class Administrar implements OnInit {
           nombre: d.name,
           tipo: d.discipline_type === 'sport' ? 'deportiva' : 'recreativa',
           activa: d.is_active,
-          totalAtletas: 0, // Este campo requiere consulta adicional, por ahora 0
+          totalAtletas: 0,
+          original_activa: d.is_active
         }));
         this.disciplinas.set(disciplinasReales);
+        // Guardar copia original para detectar cambios
+        this.disciplinasOriginal = JSON.parse(JSON.stringify(disciplinasReales));
+        this.hasChangesDisciplinas.set(false);
         this.isLoading.set(false);
       },
       error: (err) => {
@@ -115,100 +126,150 @@ export class Administrar implements OnInit {
 
   // Crear nueva disciplina
   addDisciplina() {
-  const nombre = this.newDiscNombre.trim();
-  if (!nombre) {
-    this.newDiscError.set('Ingresá un nombre.');
-    return;
-  }
-
-  // Se verifica si hay una disciplina duplicada, con el mismo nombre y el mismo tipo
-  const existe = this.disciplinas().some(d => 
-    d.nombre.toLowerCase() === nombre.toLowerCase() && 
-    d.tipo === this.newDiscTipo
-  );
-  
-  if (existe) {
-    this.newDiscError.set(`Ya existe una disciplina "${nombre}" de tipo ${this.newDiscTipo}.`);
-    return;
-  }
-
-  this.newDiscError.set('');
-  this.isLoading.set(true);
-
-  const newDiscipline = {
-    name: nombre,
-    discipline_type: this.newDiscTipo === 'deportiva' ? 'sport' : 'recreational',
-    is_active: true
-  };
-
-  this.adminDisciplinesService.createDiscipline(newDiscipline).subscribe({
-    next: (response: any) => {
-      const created = Array.isArray(response) ? response[0] : response;
-      const newId = created?.id_discipline || Date.now();
-      
-      const nueva: DisciplinaUI = {
-        id_discipline: newId,
-        nombre: nombre,
-        tipo: this.newDiscTipo,
-        activa: true,
-        totalAtletas: 0
-      };
-      
-      this.disciplinas.update(lista => [...lista, nueva]);
-      this.newDiscNombre = '';
-      this.isLoading.set(false);
-      
-      this.mostrarMensaje(`Disciplina "${nombre}" (${this.newDiscTipo}) agregada correctamente`, 'success');
-    },
-    error: (err) => {
-      console.error('Error creando disciplina:', err);
-      this.newDiscError.set('Error al crear disciplina');
-      this.isLoading.set(false);
-      this.mostrarMensaje(`Error al crear "${nombre}"`, 'error');
+    const nombre = this.newDiscNombre.trim();
+    if (!nombre) {
+      this.newDiscError.set('Ingresá un nombre.');
+      return;
     }
-  });
-}
+    
+    // Se verifica si hay una disciplina duplicada, con el mismo nombre y el mismo tipo
+    const existe = this.disciplinas().some(d => d.nombre.toLowerCase() === nombre.toLowerCase() && 
+    d.tipo === this.newDiscTipo);
+    
+    if (existe) {
+      this.newDiscError.set(`Ya existe una disciplina "${nombre}" de tipo ${this.newDiscTipo}.`);
+      return;
+    }
+    
+    this.newDiscError.set('');
+    this.isLoading.set(true);
+
+    const newDiscipline = {
+      name: nombre,
+      discipline_type: this.newDiscTipo === 'deportiva' ? 'sport' : 'recreational',
+      is_active: true
+    };
+    
+    this.adminDisciplinesService.createDiscipline(newDiscipline).subscribe({
+      next: (response: any) => {
+        const created = Array.isArray(response) ? response[0] : response;
+        
+        // Se valida que la API devolvió el ID real
+        if (!created?.id_discipline) {
+          console.error('La API no devolvió id_discipline:', response);
+          this.newDiscError.set('Error al crear disciplina: la respuesta no incluye un identificador válido');
+          this.isLoading.set(false);
+          this.mostrarMensaje(`Error al crear "${nombre}"`, 'error');
+          return;
+        }
+        
+        const nueva: DisciplinaUI = {
+          id_discipline: created.id_discipline,
+          nombre: nombre,
+          tipo: this.newDiscTipo,
+          activa: true,
+          totalAtletas: 0,
+          original_activa: true
+        };
+        
+        this.disciplinas.update(lista => [...lista, nueva]);
+        this.disciplinasOriginal = JSON.parse(JSON.stringify(this.disciplinas()));
+        this.newDiscNombre = '';
+        this.isLoading.set(false);
+        this.hasChangesDisciplinas.set(false);
+        this.mostrarMensaje(`Disciplina "${nombre}" (${this.newDiscTipo}) agregada correctamente`, 'success');
+      },
+      error: (err) => {
+        console.error('Error creando disciplina:', err);
+        this.newDiscError.set('Error al crear disciplina');
+        this.isLoading.set(false);
+        this.mostrarMensaje(`Error al crear "${nombre}"`, 'error');
+      }
+    });
+  }
+
+  // ── Detectar cambios en disciplinas ────────────────────────────────
+  detectarCambiosDisciplinas() {
+    const current = this.disciplinas();
+    if (current.length !== this.disciplinasOriginal.length) {
+      this.hasChangesDisciplinas.set(true);
+      return;
+    }
+    
+    let changed = false;
+    for (let i = 0; i < current.length; i++) {
+      if (current[i].activa !== this.disciplinasOriginal[i]?.activa) {
+        changed = true;
+        break;
+      }
+    }
+    this.hasChangesDisciplinas.set(changed);
+  }
 
 
-  markChanged() { this.hasChanges.set(true); }
+  // ── Método para usuarios y roles (placeholder) ───────────────────────
+  markChanged() {
+    // Este método es para la sección de Usuarios y roles
+    // La implementación real se realizará luego
+    console.log('Cambios en usuarios/roles detectados');
+  }
 
-  saveChanges() {
+
+  markDisciplinaChanged() {
+    this.detectarCambiosDisciplinas();
+  }
+
+  // Guardar solo disciplinas que cambiaron
+  saveDisciplinasChanges() {
+    if (!this.hasChangesDisciplinas()) {
+      this.mostrarMensaje('No hay cambios para guardar', 'success');
+      return;
+    }
+
     this.isLoading.set(true);
     const promesas: Promise<any>[] = [];
 
-    // Se recorren cada una de las disciplinas y se actualizan las que cambiaron
-    this.disciplinas().forEach(disciplina => {
-      promesas.push(
-        new Promise((resolve, reject) => {
-          this.adminDisciplinesService.updateDiscipline(disciplina.id_discipline, {
-            is_active: disciplina.activa
-          }).subscribe({
-            next: (res) => resolve(res),
-            error: (err) => reject(err)
-          });
-        })
-      );
+    // Se identifican disciplinas que cambiaron
+    this.disciplinas().forEach((disciplina, index) => {
+      const original = this.disciplinasOriginal[index];
+      if (original && disciplina.activa !== original.activa) {
+        promesas.push(
+          new Promise((resolve, reject) => {
+            this.adminDisciplinesService.updateDiscipline(disciplina.id_discipline, {
+              is_active: disciplina.activa
+            }).subscribe({
+              next: (res) => resolve(res),
+              error: (err) => reject(err)
+            });
+          })
+        );
+      }
     });
-
-    Promise.all(promesas)
-      .then(() => {
-        this.hasChanges.set(false);
-        this.saveSuccess.set(true);
-        this.mostrarMensaje('Cambios guardados correctamente', 'success');
-        setTimeout(() => this.saveSuccess.set(false), 3000);
-        this.isLoading.set(false);
-        // Se recargan las disciplinas para asegurar consistencia
-        this.cargarDisciplinas();
-      })
-      .catch((err) => {
-        console.error('Error guardando cambios:', err);
-        this.errorMessage.set('Error al guardar cambios');
-        this.mostrarMensaje('Error al guardar cambios', 'error');
-        this.isLoading.set(false);
-      });
+    
+    if (promesas.length === 0) {
+      this.isLoading.set(false);
+      this.mostrarMensaje('No hay cambios para guardar', 'success');
+      return;
     }
+    
+    Promise.all(promesas)
+    .then(() => {
+      this.hasChangesDisciplinas.set(false);
+      this.saveSuccess.set(true);
+      this.mostrarMensaje('Cambios guardados correctamente', 'success');
+      setTimeout(() => this.saveSuccess.set(false), 3000);
+      this.isLoading.set(false);
+      // Se recargan las disciplinas para asegurar consistencia
+      this.cargarDisciplinas();
+    })
+    .catch((err) => {
+      console.error('Error guardando cambios:', err);
+      this.errorMessage.set('Error al guardar cambios');
+      this.mostrarMensaje('Error al guardar cambios', 'error');
+      this.isLoading.set(false);
+    });
+  }
   
-
   ngOnInit() {
     const saved = localStorage.getItem('theme');
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -219,7 +280,7 @@ export class Administrar implements OnInit {
     // Cargar disciplinas reales desde Supabase
     this.cargarDisciplinas();
   }
-
+  
   toggleTheme() {
     const next = !this.isDark();
     this.isDark.set(next);
@@ -231,7 +292,7 @@ export class Administrar implements OnInit {
       localStorage.setItem('theme', 'light');
     }
   }
-
+  
   logout() {
     localStorage.removeItem('access_token');
     this.router.navigate(['/inicio-sesion']);

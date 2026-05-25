@@ -180,7 +180,7 @@
                     <div class="form-check form-switch mb-0 d-flex align-items-center gap-2">
                       <input class="form-check-input adm-switch" type="checkbox"
                              role="switch" [(ngModel)]="d.activa"
-                             (ngModelChange)="markChanged()"
+                             (ngModelChange)="markDisciplinaChanged()"
                              [id]="'disc-' + d.id_discipline">
                       <label class="form-check-label small" [for]="'disc-' + d.id_discipline"
                              style="color:var(--text-3)">
@@ -224,7 +224,7 @@
       </div>
 
       <!-- Floating save bar -->
-      @if (hasChanges()) {
+      @if (hasChangesDisciplinas()) {
         <div class="adm-save-bar">
           @if (saveSuccess()) {
             <span class="adm-save-ok">
@@ -233,7 +233,7 @@
             </span>
           }
           <span class="small" style="color:var(--text-3)">Hay cambios sin guardar</span>
-          <button class="btn btn-primary btn-sm px-4" (click)="saveChanges()">
+          <button class="btn btn-primary btn-sm px-4" (click)="saveDisciplinasChanges()">
             <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" class="me-1" viewBox="0 0 16 16"><path d="M2 1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H9.5a1 1 0 0 0-1 1v7.293l2.646-2.647a.5.5 0 0 1 .708.708l-3.5 3.5a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L7.5 9.293V2a2 2 0 0 1 2-2H14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h2.5a.5.5 0 0 1 0 1H2z"/></svg>
             Guardar cambios
           </button>
