@@ -883,6 +883,8 @@ CREATE INDEX idx_users_invitations_invited_by ON public.users_invitations(fk_inv
 -- =========================
 -- SECURITY: Revoke direct RPC access to internal trigger functions
 -- =========================
+GRANT SELECT ON public.audit_log TO authenticated, service_role;
+
 REVOKE EXECUTE ON FUNCTION public.handle_audit_user_registered() FROM PUBLIC;
 REVOKE EXECUTE ON FUNCTION public.handle_audit_invitation() FROM PUBLIC;
 REVOKE EXECUTE ON FUNCTION public.handle_audit_profile_updated() FROM PUBLIC;

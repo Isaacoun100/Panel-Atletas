@@ -604,6 +604,56 @@
           ]
         },
         {
+          "name": "Dashboard",
+          "description": "Single endpoint that returns all data needed to render the admin dashboard in one call.",
+          "item": [
+            {
+              "name": "Get Dashboard Stats",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_JWT}}", "type": "text" }
+                ],
+                "url": {
+                  "raw": "{{SUPABASE_URL}}/functions/v1/dashboard-stats?activity_limit=5&activity_offset=0&activity_order=desc&athletes_limit=5&athletes_offset=0",
+                  "host": ["{{SUPABASE_URL}}"],
+                  "path": ["functions", "v1", "dashboard-stats"],
+                  "query": [
+                    {
+                      "key": "activity_limit",
+                      "value": "5",
+                      "description": "Number of activity entries to return. Max 50. Default 5."
+                    },
+                    {
+                      "key": "activity_offset",
+                      "value": "0",
+                      "description": "Pagination offset for activity feed. Default 0."
+                    },
+                    {
+                      "key": "activity_order",
+                      "value": "desc",
+                      "description": "Sort order for activity feed. 'desc' = most recent first (default). 'asc' = oldest first."
+                    },
+                    {
+                      "key": "athletes_limit",
+                      "value": "5",
+                      "description": "Number of recent athletes to return. Max 50. Default 5."
+                    },
+                    {
+                      "key": "athletes_offset",
+                      "value": "0",
+                      "description": "Pagination offset for recent athletes list. Default 0."
+                    }
+                  ]
+                },
+                "body": { "mode": "none" },
+                "description": "Returns all dashboard data in a single call. Admin only.\n\n**Query params (all optional):**\n- `activity_limit` — integer 1–50, default `5`\n- `activity_offset` — integer ≥ 0, default `0`\n- `activity_order` — `desc` (newest first, default) or `asc` (oldest first)\n- `athletes_limit` — integer 1–50, default `5`\n- `athletes_offset` — integer ≥ 0, default `0`\n\n**Response shape:**\n```json\n{\n  \"stats\": {\n    \"totalAthletes\": 32,\n    \"thisMonthAthletes\": 8,\n    \"activeDisciplines\": 28,\n    \"pendingInvitations\": 4,\n    \"inactiveAthletes\": 2\n  },\n  \"recentAthletes\": {\n    \"data\": [\n      { \"id_user\": \"...\", \"name\": \"Javier\", \"first_last_name\": \"Ocampo\", \"is_active\": true, \"created_at\": \"...\" }\n    ],\n    \"total\": 32,\n    \"limit\": 5,\n    \"offset\": 0\n  },\n  \"activity\": {\n    \"data\": [\n      { \"id_audit_log\": \"...\", \"action\": \"user_registered\", \"actor_id\": \"...\", \"metadata\": { \"name\": \"...\", \"role\": \"...\" }, \"created_at\": \"...\" }\n    ],\n    \"total\": 25,\n    \"limit\": 5,\n    \"offset\": 0\n  }\n}\n```\n\n**Activity actions:** `user_registered`, `invite_sent`, `invite_accepted`, `profile_updated`, `user_deactivated`, `user_activated`, `discipline_created`\n\n**pendingInvitations** = invitations with `status IN ('sent', 'expired')`\n\n**Pagination examples:**\n- Activity page 2 → `activity_offset=5&activity_limit=5`\n- Athletes page 2 → `athletes_offset=5&athletes_limit=5`"
+              },
+              "response": []
+            }
+          ]
+        },
+        {
           "name": "Medals",
           "description": "Admin access to all medal records.",
           "item": [
