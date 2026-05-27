@@ -1,6 +1,6 @@
 -- =============================================
 -- SEED: Test data — Panel Atletas
--- 32 athletes, disciplines, medals, invitations (32 accepted + 5 test statuses)
+-- 32 athletes, disciplines, medals, invitations (32 accepted + 5 test statuses), audit_log
 -- Does NOT touch: disciplines table (managed by db_seed_disciplines.sql)
 -- Requires: db_schema.sql + db_seed_disciplines.sql already applied
 -- Email domain: @panelatletas.test (used by db_clean_test.sql for cleanup)
@@ -13,6 +13,10 @@ ALTER TABLE public.users_profiles    DISABLE TRIGGER set_profile_id_from_auth;
 ALTER TABLE public.users_profiles    DISABLE TRIGGER set_profile_role_from_invitation;
 ALTER TABLE public.athletes          DISABLE TRIGGER set_athlete_id_from_auth;
 ALTER TABLE public.users_disciplines DISABLE TRIGGER set_discipline_user_from_auth;
+ALTER TABLE public.users_profiles    DISABLE TRIGGER audit_user_registered;
+ALTER TABLE public.users_profiles    DISABLE TRIGGER audit_profile_updated;
+ALTER TABLE public.users_invitations DISABLE TRIGGER audit_invitation;
+ALTER TABLE public.disciplines       DISABLE TRIGGER audit_discipline_created;
 
 -- =============================================
 -- ACCEPTED INVITATIONS (one per athlete — mirrors real registration flow)
@@ -645,6 +649,52 @@ INSERT INTO public.users_invitations (
   ('test.cancelled1@panelatletas.test',      'cancelled', 'athlete', now() + INTERVAL '5 days',  1, '6eba7758-ce75-4695-8ea8-d728ff4e5d36', NULL);
 
 -- =============================================
+-- AUDIT LOG
+-- Manual seed — audit triggers disabled above (auth.uid() = NULL in seed context)
+-- actor_id = Brian Ramirez (6eba7758-ce75-4695-8ea8-d728ff4e5d36) for admin actions
+-- Timestamps spread across last 30 days for realistic dashboard feed
+-- =============================================
+
+INSERT INTO public.audit_log (action, actor_id, table_name, record_id, metadata, created_at) VALUES
+
+  -- user_registered (actor = the new user themselves)
+  ('user_registered', '10000000-0000-0000-0000-000000000033', 'users_profiles', '10000000-0000-0000-0000-000000000033', '{"name":"Javier","first_last_name":"Ocampo","role":"athlete"}',     now() - INTERVAL '1 hour'),
+  ('user_registered', '10000000-0000-0000-0000-000000000032', 'users_profiles', '10000000-0000-0000-0000-000000000032', '{"name":"Marcela","first_last_name":"Trejos","role":"athlete"}',   now() - INTERVAL '6 hours'),
+  ('user_registered', '10000000-0000-0000-0000-000000000031', 'users_profiles', '10000000-0000-0000-0000-000000000031', '{"name":"Héctor","first_last_name":"Picado","role":"athlete"}',    now() - INTERVAL '1 day'),
+  ('user_registered', '10000000-0000-0000-0000-000000000030', 'users_profiles', '10000000-0000-0000-0000-000000000030', '{"name":"Diana","first_last_name":"Mora","role":"athlete"}',       now() - INTERVAL '2 days'),
+  ('user_registered', '10000000-0000-0000-0000-000000000029', 'users_profiles', '10000000-0000-0000-0000-000000000029', '{"name":"Esteban","first_last_name":"Gutiérrez","role":"athlete"}',now() - INTERVAL '3 days'),
+  ('user_registered', '10000000-0000-0000-0000-000000000028', 'users_profiles', '10000000-0000-0000-0000-000000000028', '{"name":"Pamela","first_last_name":"Fonseca","role":"athlete"}',   now() - INTERVAL '4 days'),
+  ('user_registered', '10000000-0000-0000-0000-000000000027', 'users_profiles', '10000000-0000-0000-0000-000000000027', '{"name":"Cristian","first_last_name":"Arce","role":"athlete"}',   now() - INTERVAL '5 days'),
+  ('user_registered', '10000000-0000-0000-0000-000000000026', 'users_profiles', '10000000-0000-0000-0000-000000000026', '{"name":"Stephanie","first_last_name":"Quirós","role":"athlete"}',now() - INTERVAL '6 days'),
+
+  -- invite_sent (actor = Brian admin)
+  ('invite_sent', '6eba7758-ce75-4695-8ea8-d728ff4e5d36', 'users_invitations', NULL, '{"email":"test.pending.athlete@panelatletas.test","role":"athlete"}', now() - INTERVAL '2 hours'),
+  ('invite_sent', '6eba7758-ce75-4695-8ea8-d728ff4e5d36', 'users_invitations', NULL, '{"email":"test.pending.admin@panelatletas.test","role":"admin"}',     now() - INTERVAL '3 hours'),
+  ('invite_sent', '6eba7758-ce75-4695-8ea8-d728ff4e5d36', 'users_invitations', NULL, '{"email":"test.expired1@panelatletas.test","role":"athlete"}',        now() - INTERVAL '10 days'),
+  ('invite_sent', '6eba7758-ce75-4695-8ea8-d728ff4e5d36', 'users_invitations', NULL, '{"email":"test.expired2@panelatletas.test","role":"athlete"}',        now() - INTERVAL '17 days'),
+
+  -- invite_accepted (actor = NULL — triggered by email confirmation, no session)
+  ('invite_accepted', NULL, 'users_invitations', NULL, '{"email":"test.javier.ocampo@panelatletas.test","role":"athlete"}',      now() - INTERVAL '1 hour'),
+  ('invite_accepted', NULL, 'users_invitations', NULL, '{"email":"test.marcela.trejos@panelatletas.test","role":"athlete"}',     now() - INTERVAL '6 hours'),
+  ('invite_accepted', NULL, 'users_invitations', NULL, '{"email":"test.hector.picado@panelatletas.test","role":"athlete"}',      now() - INTERVAL '1 day'),
+  ('invite_accepted', NULL, 'users_invitations', NULL, '{"email":"test.diana.mora@panelatletas.test","role":"athlete"}',         now() - INTERVAL '2 days'),
+  ('invite_accepted', NULL, 'users_invitations', NULL, '{"email":"test.esteban.gutierrez@panelatletas.test","role":"athlete"}',  now() - INTERVAL '3 days'),
+
+  -- profile_updated (actor = Brian admin)
+  ('profile_updated', '6eba7758-ce75-4695-8ea8-d728ff4e5d36', 'users_profiles', '10000000-0000-0000-0000-000000000006', '{"name":"Carlos","first_last_name":"Mora","role":"athlete"}',     now() - INTERVAL '4 hours'),
+  ('profile_updated', '6eba7758-ce75-4695-8ea8-d728ff4e5d36', 'users_profiles', '10000000-0000-0000-0000-000000000014', '{"name":"Gabriela","first_last_name":"Chaves","role":"athlete"}', now() - INTERVAL '8 days'),
+  ('profile_updated', '6eba7758-ce75-4695-8ea8-d728ff4e5d36', 'users_profiles', '10000000-0000-0000-0000-000000000020', '{"name":"Melissa","first_last_name":"Campos","role":"athlete"}',  now() - INTERVAL '15 days'),
+
+  -- user_deactivated (actor = Brian admin)
+  ('user_deactivated', '6eba7758-ce75-4695-8ea8-d728ff4e5d36', 'users_profiles', '10000000-0000-0000-0000-000000000017', '{"name":"Miguel","first_last_name":"Vargas","role":"athlete"}',  now() - INTERVAL '7 days'),
+  ('user_deactivated', '6eba7758-ce75-4695-8ea8-d728ff4e5d36', 'users_profiles', '10000000-0000-0000-0000-000000000025', '{"name":"Pablo","first_last_name":"Acuña","role":"athlete"}',    now() - INTERVAL '20 days'),
+
+  -- discipline_created (actor = Brian admin)
+  ('discipline_created', '6eba7758-ce75-4695-8ea8-d728ff4e5d36', 'disciplines', NULL, '{"name":"Natación","discipline_type":"sport"}',       now() - INTERVAL '12 days'),
+  ('discipline_created', '6eba7758-ce75-4695-8ea8-d728ff4e5d36', 'disciplines', NULL, '{"name":"Ciclismo","discipline_type":"sport"}',       now() - INTERVAL '25 days'),
+  ('discipline_created', '6eba7758-ce75-4695-8ea8-d728ff4e5d36', 'disciplines', NULL, '{"name":"Pilates","discipline_type":"recreational"}', now() - INTERVAL '28 days');
+
+-- =============================================
 -- Re-enable triggers
 -- =============================================
 
@@ -652,5 +702,9 @@ ALTER TABLE public.users_profiles    ENABLE TRIGGER set_profile_id_from_auth;
 ALTER TABLE public.users_profiles    ENABLE TRIGGER set_profile_role_from_invitation;
 ALTER TABLE public.athletes          ENABLE TRIGGER set_athlete_id_from_auth;
 ALTER TABLE public.users_disciplines ENABLE TRIGGER set_discipline_user_from_auth;
+ALTER TABLE public.users_profiles    ENABLE TRIGGER audit_user_registered;
+ALTER TABLE public.users_profiles    ENABLE TRIGGER audit_profile_updated;
+ALTER TABLE public.users_invitations ENABLE TRIGGER audit_invitation;
+ALTER TABLE public.disciplines       ENABLE TRIGGER audit_discipline_created;
 
 COMMIT;

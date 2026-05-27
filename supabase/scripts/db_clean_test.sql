@@ -3,9 +3,16 @@
 -- Targets email domain @panelatletas.test only
 -- Cascade from auth.users → users_profiles → athletes, users_disciplines, medals
 -- users_invitations deleted explicitly (fk_invited_by is SET NULL on cascade, not deleted)
+-- audit_log deleted explicitly (actor_id SET NULL on cascade, record_id is text — no cascade)
 -- =============================================
 
 BEGIN;
+
+-- Delete test audit_log entries
+-- record_id matches test user UUIDs (10000000-...) or metadata email is @panelatletas.test
+DELETE FROM public.audit_log
+WHERE record_id LIKE '10000000-0000-0000-0000-%'
+   OR metadata->>'email' LIKE '%@panelatletas.test';
 
 -- Delete test invitations first (fk_invited_by SET NULL on parent delete, not cascaded)
 DELETE FROM public.users_invitations

@@ -152,3 +152,62 @@ Blocks enrollment in disciplines that are inactive (`is_active = FALSE`).
 **Error:** `Cannot enroll in an inactive discipline.`
 
 **Note:** Does not fire on UPDATE — existing enrollments are preserved as historical records even if the discipline is later deactivated.
+
+---
+
+## audit_user_registered
+
+**Table:** `public.users_profiles`
+**Event:** `AFTER INSERT`
+**Function:** `handle_audit_user_registered()`
+
+Logs a `user_registered` event to `audit_log` whenever a new profile is created.
+
+**Metadata:** `{ name, first_last_name, role }`
+
+**Note:** Fires after `set_profile_id_from_auth` and `set_profile_role_from_invitation`, so `id_user` and `role` are already resolved.
+
+---
+
+## audit_invitation
+
+**Table:** `public.users_invitations`
+**Event:** `AFTER INSERT OR UPDATE`
+**Function:** `handle_audit_invitation()`
+
+Logs invitation lifecycle events to `audit_log`.
+
+**Logic:**
+- On INSERT → logs `invite_sent` with `actor_id = fk_invited_by`
+- On UPDATE, only when `status` changes to `'accepted'` → logs `invite_accepted` with `actor_id = NULL` (triggered by email confirmation, no authenticated session)
+
+**Metadata:** `{ email, role }`
+
+---
+
+## audit_profile_updated
+
+**Table:** `public.users_profiles`
+**Event:** `AFTER UPDATE`
+**Function:** `handle_audit_profile_updated()`
+
+Logs profile change events to `audit_log`. Fires on two distinct conditions:
+
+**Logic:**
+- `is_active` changes `TRUE → FALSE` → logs `user_deactivated`
+- `name`, `first_last_name`, or `second_last_name` changes → logs `profile_updated`
+- Any other UPDATE (e.g. `role`, `profile_image_url`) → no log entry
+
+**Metadata:** `{ name, first_last_name, role }`
+
+---
+
+## audit_discipline_created
+
+**Table:** `public.disciplines`
+**Event:** `AFTER INSERT`
+**Function:** `handle_audit_discipline_created()`
+
+Logs a `discipline_created` event to `audit_log` whenever a new discipline is added.
+
+**Metadata:** `{ name, discipline_type }`

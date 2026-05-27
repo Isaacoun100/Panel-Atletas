@@ -254,6 +254,25 @@ CREATE TABLE public.users_invitations (
 
 DO $$
 BEGIN
+  RAISE NOTICE 'Creating audit_log table...';
+END $$;
+
+CREATE TABLE public.audit_log (
+  id_audit_log  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  action      TEXT NOT NULL,
+  actor_id    UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  table_name  TEXT,
+  record_id   TEXT,
+  metadata    JSONB
+);
+
+-- =========================
+-- TRIGGERS & FUNCTIONS
+-- =========================
+
+DO $$
+BEGIN
   RAISE NOTICE 'Creating triggers...';
 END $$;
 
@@ -473,6 +492,124 @@ BEFORE INSERT OR UPDATE ON public.athletes
 FOR EACH ROW
 EXECUTE FUNCTION public.handle_guardian_minor_check();
 
+-- Logs new user registrations to audit_log.
+CREATE OR REPLACE FUNCTION public.handle_audit_user_registered()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  INSERT INTO public.audit_log (action, actor_id, table_name, record_id, metadata)
+  VALUES (
+    'user_registered',
+    NEW.id_user,
+    'users_profiles',
+    NEW.id_user::TEXT,
+    jsonb_build_object('name', NEW.name, 'first_last_name', NEW.first_last_name, 'role', NEW.role)
+  );
+  RETURN NEW;
+END;
+$$;
+
+CREATE OR REPLACE TRIGGER audit_user_registered
+AFTER INSERT ON public.users_profiles
+FOR EACH ROW EXECUTE FUNCTION public.handle_audit_user_registered();
+
+-- Logs invitation sent and accepted events to audit_log.
+CREATE OR REPLACE FUNCTION public.handle_audit_invitation()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  IF TG_OP = 'INSERT' THEN
+    INSERT INTO public.audit_log (action, actor_id, table_name, record_id, metadata)
+    VALUES (
+      'invite_sent',
+      NEW.fk_invited_by,
+      'users_invitations',
+      NEW.id_invitation::TEXT,
+      jsonb_build_object('email', NEW.email, 'role', NEW.initial_role)
+    );
+  ELSIF TG_OP = 'UPDATE' AND OLD.status != 'accepted' AND NEW.status = 'accepted' THEN
+    INSERT INTO public.audit_log (action, actor_id, table_name, record_id, metadata)
+    VALUES (
+      'invite_accepted',
+      NULL,
+      'users_invitations',
+      NEW.id_invitation::TEXT,
+      jsonb_build_object('email', NEW.email, 'role', NEW.initial_role)
+    );
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+CREATE OR REPLACE TRIGGER audit_invitation
+AFTER INSERT OR UPDATE ON public.users_invitations
+FOR EACH ROW EXECUTE FUNCTION public.handle_audit_invitation();
+
+-- Logs profile updates and deactivations to audit_log.
+CREATE OR REPLACE FUNCTION public.handle_audit_profile_updated()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  IF OLD.is_active = TRUE AND NEW.is_active = FALSE THEN
+    INSERT INTO public.audit_log (action, actor_id, table_name, record_id, metadata)
+    VALUES (
+      'user_deactivated',
+      auth.uid(),
+      'users_profiles',
+      NEW.id_user::TEXT,
+      jsonb_build_object('name', NEW.name, 'first_last_name', NEW.first_last_name, 'role', NEW.role)
+    );
+  ELSIF (OLD.name != NEW.name OR OLD.first_last_name != NEW.first_last_name OR OLD.second_last_name != NEW.second_last_name) THEN
+    INSERT INTO public.audit_log (action, actor_id, table_name, record_id, metadata)
+    VALUES (
+      'profile_updated',
+      auth.uid(),
+      'users_profiles',
+      NEW.id_user::TEXT,
+      jsonb_build_object('name', NEW.name, 'first_last_name', NEW.first_last_name, 'role', NEW.role)
+    );
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+CREATE OR REPLACE TRIGGER audit_profile_updated
+AFTER UPDATE ON public.users_profiles
+FOR EACH ROW EXECUTE FUNCTION public.handle_audit_profile_updated();
+
+-- Logs new discipline creation to audit_log.
+CREATE OR REPLACE FUNCTION public.handle_audit_discipline_created()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  INSERT INTO public.audit_log (action, actor_id, table_name, record_id, metadata)
+  VALUES (
+    'discipline_created',
+    auth.uid(),
+    'disciplines',
+    NEW.id_discipline::TEXT,
+    jsonb_build_object('name', NEW.name, 'discipline_type', NEW.discipline_type)
+  );
+  RETURN NEW;
+END;
+$$;
+
+CREATE OR REPLACE TRIGGER audit_discipline_created
+AFTER INSERT ON public.disciplines
+FOR EACH ROW EXECUTE FUNCTION public.handle_audit_discipline_created();
+
 -- Prevents deleting or demoting the last active admin.
 CREATE OR REPLACE FUNCTION public.handle_last_admin_protection()
 RETURNS TRIGGER
@@ -575,6 +712,7 @@ BEGIN
   RAISE NOTICE 'Enabling RLS on application tables...';
 END $$;
 
+ALTER TABLE public.audit_log ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.users_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.disciplines ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.users_disciplines ENABLE ROW LEVEL SECURITY;
@@ -585,6 +723,10 @@ ALTER TABLE public.users_invitations ENABLE ROW LEVEL SECURITY;
 -- =========================
 -- RLS POLICIES
 -- =========================
+
+CREATE POLICY "audit_log_select"
+ON public.audit_log FOR SELECT TO authenticated
+USING (is_admin());
 
 DO $$
 BEGIN
@@ -719,6 +861,8 @@ BEGIN
   RAISE NOTICE 'Creating indexes...';
 END $$;
 
+CREATE INDEX idx_audit_log_created_at ON public.audit_log(created_at DESC);
+CREATE INDEX idx_audit_log_action ON public.audit_log(action);
 CREATE INDEX idx_users_profiles_role ON public.users_profiles(role);
 CREATE INDEX idx_users_disciplines_user ON public.users_disciplines(fk_user);
 CREATE INDEX idx_users_disciplines_discipline ON public.users_disciplines(fk_discipline);
@@ -730,6 +874,10 @@ CREATE INDEX idx_users_invitations_invited_by ON public.users_invitations(fk_inv
 -- =========================
 -- SECURITY: Revoke direct RPC access to internal trigger functions
 -- =========================
+REVOKE EXECUTE ON FUNCTION public.handle_audit_user_registered() FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.handle_audit_invitation() FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.handle_audit_profile_updated() FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.handle_audit_discipline_created() FROM PUBLIC;
 REVOKE EXECUTE ON FUNCTION public.handle_athlete_id_from_auth() FROM PUBLIC;
 REVOKE EXECUTE ON FUNCTION public.handle_delete_invitation_on_user_delete() FROM PUBLIC;
 REVOKE EXECUTE ON FUNCTION public.handle_discipline_user_from_auth() FROM PUBLIC;
