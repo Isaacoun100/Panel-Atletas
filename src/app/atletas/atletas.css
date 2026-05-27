@@ -314,3 +314,24 @@
 /* ── Empty state ────────────────────────────────────── */
 .at-empty-row { padding: 2.5rem 1rem !important; color: var(--text-3); font-size: 0.875rem; }
 .at-no-results { font-size: 0.78rem; color: var(--text-3); font-style: italic; }
+
+.at-athlete-initials {
+  width: 36px;
+  height: 36px;
+  background: var(--primary);
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Spinner de carga */
+.spinner-border {
+  width: 3rem;
+  height: 3rem;
+  border-width: 0.25rem;
+}

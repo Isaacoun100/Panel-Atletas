@@ -7,6 +7,7 @@ import { FormsModule } from '@angular/forms';
 import { AdminAthletesService } from '../core/services/admin-athletes.service';
 import { AdminDisciplinesService } from '../core/services/admin-disciplines.service';
 import { Discipline } from '../core/models/discipline.model';
+import { AdminProfilesService } from '../core/services/admin-profiles.service';
 
 interface Atleta {
   cedula: string;
@@ -19,6 +20,10 @@ interface Atleta {
   disciplinas: string[];
   estado: 'Activo' | 'Pendiente' | 'Inactivo';
   id_user?: string; // Para operaciones de actualización
+  telefono?: string;                    
+  esMenor?: boolean;                    
+  encargadoNombre?: string;             
+  encargadoTelefono?: string;
 }
 
 @Component({
@@ -33,6 +38,7 @@ export class Atletas implements OnInit {
   private adminAthletesService = inject(AdminAthletesService);
   private adminDisciplinesService = inject(AdminDisciplinesService);
   private router = inject(Router);
+  private adminProfilesService = inject(AdminProfilesService);
 
   isDark = signal(false);
 
@@ -41,20 +47,6 @@ export class Atletas implements OnInit {
   listaDisciplinasAPI = signal<Discipline[]>([]);
   isLoading = signal(false);
   errorMessage = signal('');
-
-  // ── Data ──────────────────────────────────────────
-  readonly atletasMock: Atleta[] = [
-    { cedula: '1-0234-0567', foto: 'https://i.pravatar.cc/40?img=11', initials: 'CM', nombre: 'Carlos Mora',      fechaNacimiento: '15/03/1997', edad: 28, sexo: 'M', disciplinas: ['Ajedrez'],                       estado: 'Activo'    },
-    { cedula: '1-0890-1234', foto: 'https://i.pravatar.cc/40?img=47', initials: 'LR', nombre: 'Laura Rodríguez', fechaNacimiento: '22/07/2002', edad: 23, sexo: 'F', disciplinas: ['Atletismo'],                      estado: 'Activo'    },
-    { cedula: '1-1234-5678', foto: 'https://i.pravatar.cc/40?img=12', initials: 'PG', nombre: 'Pedro González',  fechaNacimiento: '05/11/2006', edad: 19, sexo: 'M', disciplinas: ['Fútbol', 'Baloncesto'],           estado: 'Pendiente' },
-    { cedula: '1-0567-8901', foto: 'https://i.pravatar.cc/40?img=48', initials: 'AF', nombre: 'Andrea Flores',   fechaNacimiento: '30/01/2008', edad: 17, sexo: 'F', disciplinas: ['Tenis de Mesa'],                       estado: 'Activo'    },
-    { cedula: '1-0345-6789', foto: 'https://i.pravatar.cc/40?img=15', initials: 'MV', nombre: 'Marco Vargas',    fechaNacimiento: '18/06/1994', edad: 31, sexo: 'M', disciplinas: ['Baloncesto'],                     estado: 'Inactivo'  },
-    { cedula: '1-0678-9012', foto: 'https://i.pravatar.cc/40?img=44', initials: 'SJ', nombre: 'Sofía Jiménez',   fechaNacimiento: '09/09/2000', edad: 25, sexo: 'F', disciplinas: ['Yoga'],                       estado: 'Activo'    },
-    { cedula: '1-0901-2345', foto: 'https://i.pravatar.cc/40?img=14', initials: 'RC', nombre: 'Roberto Castro',  fechaNacimiento: '27/04/2003', edad: 22, sexo: 'M', disciplinas: ['Taekwondo', 'Atletismo'],          estado: 'Pendiente' },
-    { cedula: '1-0456-7890', foto: 'https://i.pravatar.cc/40?img=49', initials: 'VM', nombre: 'Valeria Mora',    fechaNacimiento: '14/12/2005', edad: 20, sexo: 'F', disciplinas: ['Voleibol'],                       estado: 'Activo'    },
-    { cedula: '1-0123-4567', foto: 'https://i.pravatar.cc/40?img=13', initials: 'DA', nombre: 'Diego Arias',     fechaNacimiento: '03/08/1998', edad: 27, sexo: 'M', disciplinas: ['Atletismo'],                      estado: 'Inactivo'  },
-    { cedula: '1-0789-0123', foto: 'https://i.pravatar.cc/40?img=45', initials: 'MP', nombre: 'María Pérez',     fechaNacimiento: '21/02/2010', edad: 15, sexo: 'F', disciplinas: ['Judo', 'Para Tenis de Mesa'], estado: 'Activo'    },
-  ];
 
   // ── Filters ───────────────────────────────────────
   searchQuery = signal('');
@@ -82,7 +74,7 @@ export class Atletas implements OnInit {
     const min = this.minAge();
     const max = this.maxAge();
 
-    const source = this.atletasReales().length > 0 ? this.atletasReales() : this.atletasMock;
+    const source = this.atletasReales();
 
     return source.filter(a => {
       if (query && !a.nombre.toLowerCase().includes(query) && !a.cedula.toLowerCase().includes(query)) return false;
@@ -212,8 +204,9 @@ export class Atletas implements OnInit {
     
   const token = localStorage.getItem('access_token');
   if (!token) {
-    console.warn('No hay token, usando datos mock');
+    console.warn('No hay token, no se pueden cargar atletas');
     this.isLoading.set(false);
+    this.errorMessage.set('No hay sesión activa. Por favor inicie sesión.');
     return;
   }
 
@@ -223,7 +216,7 @@ export class Atletas implements OnInit {
     },
     error: (err) => {
       console.error('Error cargando atletas:', err);
-      this.errorMessage.set('Error al cargar atletas. Usando datos de ejemplo.');
+      this.errorMessage.set('Error al cargar atletas.');
       this.isLoading.set(false);
       }
     });
@@ -252,48 +245,109 @@ procesarAtletasConDisciplinas(atletasData: any[]) {
     return;
   }
 
-  const promesas = atletasData.map(atleta => {
-    return new Promise<Atleta>((resolve) => {
-      this.adminDisciplinesService.getUserEnrollments(atleta.id_user).subscribe({
-        next: (enrollments: any) => {
-          const disciplinasNombres = enrollments
-            .map((e: any) => e.disciplines?.name)
-            .filter(Boolean);
-            
-          resolve({
-            id_user: atleta.id_user,
-            cedula: atleta.dni || 'N/A',
-            nombre: `${atleta.name || ''} ${atleta.first_last_name || ''} ${atleta.second_last_name || ''}`.trim(),
-            fechaNacimiento: atleta.birth_date ? new Date(atleta.birth_date).toLocaleDateString() : 'N/A',
-            edad: atleta.birth_date ? this.calcularEdad(atleta.birth_date) : 0,
-            sexo: this.mapearSexo(atleta.sex),
-            foto: atleta.profile_image_url || 'https://i.pravatar.cc/40',
-            estado: atleta.is_active ? 'Activo' : 'Inactivo',
-            disciplinas: disciplinasNombres,
-            initials: this.obtenerIniciales(atleta.name || '', atleta.first_last_name || '')
+  // Se obtiene todos los perfiles
+  this.adminProfilesService.getAllProfiles().subscribe({
+    next: (perfiles: any) => {
+      const promesas = atletasData.map(atleta => {
+        // Se buscar el perfil que coincide con el id_user del atleta
+        const perfil = perfiles.find((p: any) => p.id_user === atleta.id_user);
+        
+        return new Promise<Atleta>((resolve) => {
+          this.adminDisciplinesService.getUserEnrollments(atleta.id_user).subscribe({
+            next: (enrollments: any) => {
+              const disciplinasNombres = enrollments
+                .map((e: any) => e.disciplines?.name)
+                .filter(Boolean);
+              
+              // Se calcula la edad y se determina si es menor de edad
+              const edad = perfil?.birth_date ? this.calcularEdad(perfil.birth_date) : 0;
+              const esMenor = edad < 18;
+              
+              // Determina qué teléfono y contacto mostrar
+              let telefono = '';
+              let encargadoNombre = '';
+              let encargadoTelefono = '';
+              
+              if (esMenor && atleta.legal_guardian_name && atleta.legal_guardian_phone) {
+                // Para menores de edad se muestran los datos del encargado
+                encargadoNombre = atleta.legal_guardian_name;
+                encargadoTelefono = atleta.legal_guardian_phone;
+                telefono = atleta.legal_guardian_phone; // El teléfono que se muestra es el del encargado
+              } else {
+                // Para los adultos se muesra su propio teléfono
+                telefono = atleta.phone || 'No registrado';
+              }
+              
+              // Se generan iniciales para el avatar en caso de que no haya foto
+              const nombreCompleto = `${perfil?.name || ''} ${perfil?.first_last_name || ''} ${perfil?.second_last_name || ''}`.trim();
+              const iniciales = this.obtenerIniciales(perfil?.name || '', perfil?.first_last_name || '');
+              
+              resolve({
+                id_user: atleta.id_user,
+                cedula: perfil?.dni || 'N/A',
+                nombre: nombreCompleto || 'Sin nombre',
+                fechaNacimiento: perfil?.birth_date ? new Date(perfil.birth_date).toLocaleDateString() : 'N/A',
+                edad: edad,
+                sexo: this.mapearSexo(perfil?.sex),
+                // Si hay foto se usa, pero si no, usa un string vacío, que en HTML se manejará con iniciales
+                foto: perfil?.profile_image_url || '',
+                estado: perfil?.is_active ? 'Activo' : 'Inactivo',
+                disciplinas: disciplinasNombres,
+                initials: iniciales,
+                telefono: telefono,
+                esMenor: esMenor,
+                encargadoNombre: encargadoNombre,
+                encargadoTelefono: encargadoTelefono
+              });
+            },
+            error: () => {
+              const edad = perfil?.birth_date ? this.calcularEdad(perfil.birth_date) : 0;
+              const esMenor = edad < 18;
+              let telefono = '';
+              let encargadoNombre = '';
+              let encargadoTelefono = '';
+              
+              if (esMenor && atleta.legal_guardian_name && atleta.legal_guardian_phone) {
+                encargadoNombre = atleta.legal_guardian_name;
+                encargadoTelefono = atleta.legal_guardian_phone;
+                telefono = atleta.legal_guardian_phone;
+              } else {
+                telefono = atleta.phone || 'No registrado';
+              }
+              
+              const nombreCompleto = `${perfil?.name || ''} ${perfil?.first_last_name || ''} ${perfil?.second_last_name || ''}`.trim();
+              const iniciales = this.obtenerIniciales(perfil?.name || '', perfil?.first_last_name || '');
+              
+              resolve({
+                id_user: atleta.id_user,
+                cedula: perfil?.dni || 'N/A',
+                nombre: nombreCompleto || 'Sin nombre',
+                fechaNacimiento: perfil?.birth_date ? new Date(perfil.birth_date).toLocaleDateString() : 'N/A',
+                edad: edad,
+                sexo: this.mapearSexo(perfil?.sex),
+                foto: perfil?.profile_image_url || '',
+                estado: perfil?.is_active ? 'Activo' : 'Inactivo',
+                disciplinas: [],
+                initials: iniciales,
+                telefono: telefono,
+                esMenor: esMenor,
+                encargadoNombre: encargadoNombre,
+                encargadoTelefono: encargadoTelefono
+              });
+            }
           });
-        },
-        error: () => {
-          resolve({
-            id_user: atleta.id_user,
-            cedula: atleta.dni || 'N/A',
-            nombre: `${atleta.name || ''} ${atleta.first_last_name || ''} ${atleta.second_last_name || ''}`.trim(),
-            fechaNacimiento: atleta.birth_date ? new Date(atleta.birth_date).toLocaleDateString() : 'N/A',
-            edad: atleta.birth_date ? this.calcularEdad(atleta.birth_date) : 0,
-            sexo: this.mapearSexo(atleta.sex),
-            foto: atleta.profile_image_url || 'https://i.pravatar.cc/40',
-            estado: atleta.is_active ? 'Activo' : 'Inactivo',
-            disciplinas: [],
-            initials: this.obtenerIniciales(atleta.name || '', atleta.first_last_name || '')
-          });
-        }
+        });
       });
-    });
-  });
-
-  Promise.all(promesas).then((resultados) => {
-    this.atletasReales.set(resultados);
-    this.isLoading.set(false);
+      
+      Promise.all(promesas).then((resultados) => {
+        this.atletasReales.set(resultados);
+        this.isLoading.set(false);
+      });
+    },
+    error: (err) => {
+      console.error('Error cargando perfiles:', err);
+      this.isLoading.set(false);
+    }
   });
 }
 
@@ -343,8 +397,6 @@ calcularEdad(fechaNacimiento: string): number {
     }
     
   }
-
-  
 
   logout() {
     localStorage.removeItem('access_token');
