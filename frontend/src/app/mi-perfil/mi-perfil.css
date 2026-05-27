@@ -1,0 +1,70 @@
+/* Gradient hero banner — no Bootstrap equivalent */
+.mp-banner {
+  height: 80px;
+  background: linear-gradient(135deg, var(--primary-soft) 0%, var(--accent-soft) 100%);
+}
+
+/* ── Slide-in panels ─────────────────────────────────── */
+.mp-panel-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 1040;
+}
+
+.mp-panel {
+  position: fixed; top: 0; right: 0; bottom: 0; width: min(400px, 100vw);
+  background: var(--surface); border-left: 1px solid var(--border);
+  box-shadow: var(--shadow-lg); z-index: 1050;
+  display: flex; flex-direction: column;
+  animation: mpSlideIn 0.22s ease;
+}
+
+@keyframes mpSlideIn {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+
+.mp-panel-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1rem 1.25rem; border-bottom: 1px solid var(--border);
+  font-size: 0.9rem; color: var(--text);
+}
+
+.mp-panel-body { flex: 1; overflow-y: auto; padding: 1.25rem; }
+
+.mp-panel-footer {
+  display: flex; align-items: center; justify-content: flex-end; gap: 0.5rem;
+  padding: 0.85rem 1.25rem; border-top: 1px solid var(--border);
+}
+
+.mp-panel-label {
+  display: block; font-size: 0.82rem; font-weight: 600;
+  color: var(--text-2); margin-bottom: 0.35rem;
+}
+
+.mp-panel-input {
+  width: 100%; padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--surface-2); color: var(--text); font-size: 0.875rem;
+  outline: none; font-family: var(--font-ui);
+  transition: border-color 0.15s;
+}
+
+.mp-panel-input:focus { border-color: var(--primary); }
+
+.mp-panel-success {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.65rem 0.85rem; background: var(--success-soft);
+  color: var(--success); border: 1px solid var(--success);
+  border-radius: var(--radius); font-size: 0.82rem; font-weight: 600;
+}
+
+.mp-panel-error {
+  font-size: 0.8rem; color: var(--danger); margin: 0;
+}
+
+/* Online status dot on avatar */
+.mp-avatar-status {
+  width: 13px;
+  height: 13px;
+  background: var(--success);
+  border: 2px solid var(--surface);
+}

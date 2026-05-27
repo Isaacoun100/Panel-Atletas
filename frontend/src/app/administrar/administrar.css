@@ -1,0 +1,128 @@
+/* ── User avatar ─────────────────────────────────────── */
+.adm-avatar {
+  width: 36px;
+  height: 36px;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 2px solid var(--border);
+}
+
+/* ── Discipline toggle switch ────────────────────────── */
+.adm-switch {
+  cursor: pointer;
+}
+
+.adm-switch:checked {
+  background-color: var(--primary);
+  border-color: var(--primary);
+}
+
+/* ── Save bar ────────────────────────────────────────── */
+.adm-save-bar {
+  position: sticky; bottom: 1.25rem; margin-top: 1rem;
+  display: flex; align-items: center; justify-content: flex-end; gap: 0.75rem;
+  padding: 0.75rem 1.25rem;
+  background: var(--surface); border: 1px solid var(--primary);
+  border-radius: var(--radius-lg); box-shadow: var(--shadow-md);
+  flex-wrap: wrap;
+}
+
+.adm-save-ok {
+  display: flex; align-items: center; gap: 0.35rem;
+  font-size: 0.8rem; font-weight: 600; color: var(--success); margin-right: auto;
+}
+
+/* ── Add discipline row ──────────────────────────────── */
+.adm-add-row td { background: var(--surface-2); vertical-align: middle; }
+
+.adm-add-input {
+  width: 100%;
+  padding: 0.38rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.adm-add-input:focus { border-color: var(--primary); }
+
+.adm-add-error {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--danger);
+  margin-top: 0.2rem;
+}
+
+.adm-tipo-group {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  width: fit-content;
+}
+
+.adm-tipo-btn {
+  padding: 0.35rem 0.65rem;
+  border: none;
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  border-right: 1px solid var(--border);
+  transition: background 0.12s, color 0.12s;
+  white-space: nowrap;
+}
+
+.adm-tipo-btn:last-child { border-right: none; }
+.adm-tipo-btn:hover { background: var(--surface); color: var(--text); }
+.adm-tipo-btn--active { background: var(--primary-soft); color: var(--primary); font-weight: 600; }
+
+/* ── Role selector ───────────────────────────────────── */
+.adm-rol-select {
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-size: 0.8rem;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.12s;
+}
+
+.adm-rol-select:focus { border-color: var(--primary); }
+
+/* ── Toast notification ───────────────────────────────────────────── */
+.adm-toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 10000;
+  animation: fadeInOut 3s ease-in-out;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+
+.adm-toast--success {
+  background: #4CAF50;
+  color: white;
+}
+
+.adm-toast--error {
+  background: #f44336;
+  color: white;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translateY(20px); }
+  15% { opacity: 1; transform: translateY(0); }
+  85% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(20px); }
+}
