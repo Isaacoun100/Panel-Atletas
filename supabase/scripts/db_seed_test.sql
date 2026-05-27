@@ -689,6 +689,9 @@ INSERT INTO public.audit_log (action, actor_id, table_name, record_id, metadata,
   ('user_deactivated', '6eba7758-ce75-4695-8ea8-d728ff4e5d36', 'users_profiles', '10000000-0000-0000-0000-000000000017', '{"name":"Miguel","first_last_name":"Vargas","role":"athlete"}',  now() - INTERVAL '7 days'),
   ('user_deactivated', '6eba7758-ce75-4695-8ea8-d728ff4e5d36', 'users_profiles', '10000000-0000-0000-0000-000000000025', '{"name":"Pablo","first_last_name":"Acuña","role":"athlete"}',    now() - INTERVAL '20 days'),
 
+  -- user_activated (actor = Brian admin — re-activated after review)
+  ('user_activated', '6eba7758-ce75-4695-8ea8-d728ff4e5d36', 'users_profiles', '10000000-0000-0000-0000-000000000010', '{"name":"Fernando","first_last_name":"Alvarado","role":"athlete"}', now() - INTERVAL '3 days'),
+
   -- discipline_created (actor = Brian admin)
   ('discipline_created', '6eba7758-ce75-4695-8ea8-d728ff4e5d36', 'disciplines', NULL, '{"name":"Natación","discipline_type":"sport"}',       now() - INTERVAL '12 days'),
   ('discipline_created', '6eba7758-ce75-4695-8ea8-d728ff4e5d36', 'disciplines', NULL, '{"name":"Ciclismo","discipline_type":"sport"}',       now() - INTERVAL '25 days'),

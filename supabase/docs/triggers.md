@@ -191,10 +191,11 @@ Logs invitation lifecycle events to `audit_log`.
 **Event:** `AFTER UPDATE`
 **Function:** `handle_audit_profile_updated()`
 
-Logs profile change events to `audit_log`. Fires on two distinct conditions:
+Logs profile change events to `audit_log`. Fires on three distinct conditions:
 
 **Logic:**
 - `is_active` changes `TRUE → FALSE` → logs `user_deactivated`
+- `is_active` changes `FALSE → TRUE` → logs `user_activated`
 - `name`, `first_last_name`, or `second_last_name` changes → logs `profile_updated`
 - Any other UPDATE (e.g. `role`, `profile_image_url`) → no log entry
 

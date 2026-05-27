@@ -551,7 +551,7 @@ CREATE OR REPLACE TRIGGER audit_invitation
 AFTER INSERT OR UPDATE ON public.users_invitations
 FOR EACH ROW EXECUTE FUNCTION public.handle_audit_invitation();
 
--- Logs profile updates and deactivations to audit_log.
+-- Logs profile updates, activations, and deactivations to audit_log.
 CREATE OR REPLACE FUNCTION public.handle_audit_profile_updated()
 RETURNS TRIGGER
 LANGUAGE plpgsql
@@ -563,6 +563,15 @@ BEGIN
     INSERT INTO public.audit_log (action, actor_id, table_name, record_id, metadata)
     VALUES (
       'user_deactivated',
+      auth.uid(),
+      'users_profiles',
+      NEW.id_user::TEXT,
+      jsonb_build_object('name', NEW.name, 'first_last_name', NEW.first_last_name, 'role', NEW.role)
+    );
+  ELSIF OLD.is_active = FALSE AND NEW.is_active = TRUE THEN
+    INSERT INTO public.audit_log (action, actor_id, table_name, record_id, metadata)
+    VALUES (
+      'user_activated',
       auth.uid(),
       'users_profiles',
       NEW.id_user::TEXT,

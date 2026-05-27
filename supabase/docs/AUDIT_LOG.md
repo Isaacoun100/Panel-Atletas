@@ -35,6 +35,7 @@ CREATE TABLE public.audit_log (
 | `invite_accepted` | UPDATE on `users_invitations` (`status → accepted`) | green |
 | `profile_updated` | UPDATE on `users_profiles` (name fields changed) | blue |
 | `user_deactivated` | UPDATE on `users_profiles` (`is_active TRUE → FALSE`) | red |
+| `user_activated` | UPDATE on `users_profiles` (`is_active FALSE → TRUE`) | green |
 | `discipline_created` | INSERT on `disciplines` | green |
 
 ## Metadata per Action
@@ -46,6 +47,7 @@ CREATE TABLE public.audit_log (
 | `invite_accepted` | `email`, `role` |
 | `profile_updated` | `name`, `first_last_name`, `role` |
 | `user_deactivated` | `name`, `first_last_name`, `role` |
+| `user_activated` | `name`, `first_last_name`, `role` |
 | `discipline_created` | `name`, `discipline_type` |
 
 ## Access
