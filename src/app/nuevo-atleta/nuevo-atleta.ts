@@ -1,8 +1,9 @@
-import { Component, OnInit, HostListener, signal, computed } from '@angular/core';
+import { Component, OnInit, HostListener, signal, computed, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TitleCasePipe } from '@angular/common';
+import { AdminInvitationsService } from '../core/services/admin-invitations.service';
 
 interface Medalla { prueba: string; tipo: string; anio: string; }
 
@@ -13,6 +14,8 @@ interface Medalla { prueba: string; tipo: string; anio: string; }
   styleUrl: './nuevo-atleta.css',
 })
 export class NuevoAtleta implements OnInit {
+  private adminInvitationsService = inject(AdminInvitationsService);
+
   isDark = signal(false);
   activeTab = signal<'email' | 'manual'>('email');
 
@@ -21,6 +24,8 @@ export class NuevoAtleta implements OnInit {
   emailList = signal<string[]>([]);
   emailError = signal('');
   invitacionesEnviadas = signal(false);
+  enviandoInvitaciones = signal(false);
+  invitacionesError = signal('');
 
   // ── 1. Datos personales ───────────────────────────
   nombre = '';
@@ -222,11 +227,51 @@ export class NuevoAtleta implements OnInit {
   }
 
   sendInvitations() {
-    // TODO: connect to backend
-    this.invitacionesEnviadas.set(true);
-    this.emailList.set([]);
-    this.emailInput = '';
-    setTimeout(() => this.invitacionesEnviadas.set(false), 4000);
+    const pendingEmail = this.emailInput.trim();
+    if (pendingEmail) {
+      this.addEmail();
+    }
+
+    const emails = this.emailList();
+    if (this.emailError() || emails.length === 0 || this.enviandoInvitaciones()) return;
+
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      this.invitacionesError.set('No hay sesión activa. Inicie sesión nuevamente.');
+      return;
+    }
+
+    this.enviandoInvitaciones.set(true);
+    this.invitacionesError.set('');
+    this.invitacionesEnviadas.set(false);
+
+    this.adminInvitationsService.inviteUsers(emails, 'athlete').subscribe({
+      next: () => {
+        this.invitacionesEnviadas.set(true);
+        this.emailList.set([]);
+        this.emailInput = '';
+        this.enviandoInvitaciones.set(false);
+        setTimeout(() => this.invitacionesEnviadas.set(false), 4000);
+      },
+      error: (err) => {
+        console.error('Error enviando invitaciones:', err);
+        this.invitacionesError.set(this.getInvitationErrorMessage(err));
+        this.enviandoInvitaciones.set(false);
+      }
+    });
+  }
+
+  private getInvitationErrorMessage(err: unknown): string {
+    if (typeof err === 'object' && err !== null && 'error' in err) {
+      const errorBody = (err as { error?: unknown }).error;
+      if (typeof errorBody === 'string') return errorBody;
+      if (typeof errorBody === 'object' && errorBody !== null && 'message' in errorBody) {
+        const message = (errorBody as { message?: unknown }).message;
+        if (typeof message === 'string') return message;
+      }
+    }
+
+    return 'No se pudieron enviar las invitaciones. Intente nuevamente.';
   }
 
   // ── Theme & auth ──────────────────────────────────

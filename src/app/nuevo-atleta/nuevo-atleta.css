@@ -7,6 +7,14 @@
   font-size: 0.875rem; font-weight: 600;
 }
 
+.na-invite-error {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.75rem 1rem; margin-bottom: 0.75rem;
+  background: var(--danger-soft); color: var(--danger);
+  border: 1px solid var(--danger); border-radius: var(--radius);
+  font-size: 0.875rem; font-weight: 600;
+}
+
 /* ── Method selector ────────────────────────────────── */
 .na-method-grid {
   display: grid;
