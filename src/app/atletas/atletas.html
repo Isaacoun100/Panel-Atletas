@@ -345,7 +345,12 @@
                     @if (a.esMenor && a.encargadoNombre) {
                       <div>
                         <span class="fw-medium">Encargado:</span> {{ a.encargadoNombre }}<br>
-                        <span class="fw-medium">Tel:</span> {{ a.encargadoTelefono || a.telefono }}
+                        <span class="fw-medium">Tel:</span> {{ a.encargadoTelefono || 'No registrado' }}
+                      </div>
+                    } @else if (a.esMenor && !a.encargadoNombre) {
+                      <div>
+                        <span class="fw-medium">Encargado:</span> No registrado<br>
+                        <span class="fw-medium">Tel:</span> {{ a.encargadoTelefono || 'No registrado' }}
                       </div>
                     } @else {
                       <span class="fw-medium">Tel:</span> {{ a.telefono || 'No registrado' }}
@@ -421,6 +426,13 @@
               <div class="at-panel-row"><span>Fecha nac.</span><span>{{ panelAtleta()!.fechaNacimiento }}</span></div>
               <div class="at-panel-row"><span>Edad</span><span>{{ panelAtleta()!.edad }} años</span></div>
               <div class="at-panel-row"><span>Sexo</span><span>{{ panelAtleta()!.sexo === 'M' ? 'Masculino' : 'Femenino' }}</span></div>
+              <!-- Teléfono de contacto para atletas mayores de edad -->
+              @if (!panelAtleta()!.esMenor) {
+                <div class="at-panel-row">
+                  <span>Teléfono</span>
+                  <span>{{ panelAtleta()!.telefono || 'No registrado' }}</span>
+                </div>
+              }
               <div class="at-panel-row">
                 <span>Disciplinas</span>
                 <div class="d-flex flex-wrap gap-1 justify-content-end">
@@ -449,7 +461,10 @@
               </div>
               <div>
                 <label class="at-panel-label">Fecha de nacimiento</label>
-                <input type="text" class="at-panel-input" [(ngModel)]="editForm.fechaNacimiento" placeholder="DD/MM/YYYY">
+                <input type="text" class="at-panel-input" 
+                      [(ngModel)]="editForm.fechaNacimiento" 
+                      (change)="onFechaNacimientoChange()"
+                      placeholder="DD/MM/YYYY">
               </div>
               <div>
                 <label class="at-panel-label">Sexo</label>
