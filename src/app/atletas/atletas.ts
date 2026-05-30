@@ -24,6 +24,9 @@ interface Atleta {
   esMenor?: boolean;                    
   encargadoNombre?: string;             
   encargadoTelefono?: string;
+  name?: string;
+  first_last_name?: string;
+  second_last_name?: string;
 }
 
 @Component({
@@ -47,6 +50,7 @@ export class Atletas implements OnInit {
   listaDisciplinasAPI = signal<Discipline[]>([]);
   isLoading = signal(false);
   errorMessage = signal('');
+
 
   // ── Filters ───────────────────────────────────────
   searchQuery = signal('');
@@ -115,6 +119,7 @@ export class Atletas implements OnInit {
     this.selectedIds.set(next);
   }
 
+
   clearSelection() { this.selectedIds.set(new Set()); }
 
   // ── View / Edit panel ─────────────────────────────
@@ -122,26 +127,137 @@ export class Atletas implements OnInit {
   panelMode = signal<'view' | 'edit'>('view');
   editForm: Atleta = {} as Atleta;
   panelSaved = signal(false);
-
+  
   openPanel(a: Atleta, mode: 'view' | 'edit') {
-    this.editForm = { ...a, disciplinas: [...a.disciplinas] };
-    this.panelMode.set(mode);
-    this.panelAtleta.set(a);
-    this.panelSaved.set(false);
+  const partesNombre = a.nombre.split(' ');
+  
+  // Asegurar que la fecha esté en formato DD/MM/YYYY para mostrar
+  let fechaMostrar = a.fechaNacimiento;
+  if (fechaMostrar && fechaMostrar !== 'N/A' && fechaMostrar.includes('-')) {
+    const partes = fechaMostrar.split('-');
+    if (partes.length === 3) {
+      fechaMostrar = `${partes[2]}/${partes[1]}/${partes[0]}`;
+    }
   }
+  
+  this.editForm = { 
+    ...a, 
+    fechaNacimiento: fechaMostrar,
+    disciplinas: [...a.disciplinas],
+    name: partesNombre[0] || '',
+    first_last_name: partesNombre[1] || '',
+    second_last_name: partesNombre[2] || ''
+  };
+  this.panelMode.set(mode);
+  this.panelAtleta.set(a);
+  this.panelSaved.set(false);
+}
 
   closePanel() { this.panelAtleta.set(null); }
 
-  savePanel() {
-    const idx = this.atletasReales().findIndex(a => a.cedula === this.editForm.cedula);
-    if (idx !== -1) {
-      const current = this.atletasReales();
-      current[idx] = { ...this.editForm };
-      this.atletasReales.set([...current]);
+// ── Guardar cambios del atleta (HU-10) ───────────────────────────────
+async savePanel() {
+  const atletaActual = this.panelAtleta();
+  if (!atletaActual || !atletaActual.id_user) return;
+
+  this.panelSaved.set(true);
+  
+  try {
+    // Se actualiza el perfil
+    const partesNombre = this.editForm.nombre.trim().split(' ');
+    const profileData: any = {
+      name: partesNombre[0] || '',
+      first_last_name: partesNombre[1] || '',
+      second_last_name: partesNombre[2] || '',
+      dni: this.editForm.cedula,
+      sex: this.editForm.sexo === 'M' ? 'male' : 'female'
+    };
+    
+    // Se agrega la fecha de nacimiento solo si cambió y es válida
+    if (this.editForm.fechaNacimiento && this.editForm.fechaNacimiento !== 'N/A') {
+      const fechaFormateada = this.formatFechaParaAPI(this.editForm.fechaNacimiento);
+      if (fechaFormateada) {
+        profileData.birth_date = fechaFormateada;
+      }
     }
+    
+    await this.adminProfilesService.updateAnyProfile(atletaActual.id_user, profileData).toPromise();
+    
+    // Se actualizan los datos del atleta
+    const athleteData: any = {
+      phone: this.editForm.telefono
+    };
+    
+    if (this.editForm.esMenor) {
+      athleteData.legal_guardian_name = this.editForm.encargadoNombre;
+      athleteData.legal_guardian_phone = this.editForm.encargadoTelefono;
+    }
+    
+    await this.adminAthletesService.updateAthleteRecord(atletaActual.id_user, athleteData).toPromise();
+    
+    // Se actualiza el estado (Activo/Inactivo)
+    const isActive = this.editForm.estado === 'Activo';
+    await this.adminProfilesService.blockUnblockUser(atletaActual.id_user, isActive).toPromise();
+    
+    // Recalcular la edad correctamente
+    let nuevaEdad = this.editForm.edad;
+    if (this.editForm.fechaNacimiento && this.editForm.fechaNacimiento !== 'N/A') {
+      const fechaFormateada = this.formatFechaParaAPI(this.editForm.fechaNacimiento);
+      if (fechaFormateada) {
+        nuevaEdad = this.calcularEdad(fechaFormateada);
+      }
+    }
+    
+    // Se actualiza el atleta en la lista local
+    const currentList = this.atletasReales();
+    const index = currentList.findIndex(a => a.id_user === atletaActual.id_user);
+    
+    const atletaActualizado = {
+      ...this.editForm,
+      edad: nuevaEdad,
+      esMenor: nuevaEdad < 18
+    };
+    
+    if (index !== -1) {
+      currentList[index] = atletaActualizado;
+      this.atletasReales.set([...currentList]);
+    }
+    
+    // Actualizar el panel con los nuevos datos
+    this.panelAtleta.set(atletaActualizado);
+    
     this.panelSaved.set(true);
-    setTimeout(() => this.panelSaved.set(false), 2500);
+    setTimeout(() => this.panelSaved.set(false), 2000);
+    
+  } catch (error) {
+    console.error('Error guardando cambios:', error);
+    this.errorMessage.set('Error al guardar los cambios');
+    this.panelSaved.set(false);
   }
+}
+
+
+// Formatear fecha DD/MM/YYYY a YYYY-MM-DD para la API
+formatFechaParaAPI(fecha: string): string {
+  if (!fecha || fecha === 'N/A') return '';
+  
+  // Si ya está en formato YYYY-MM-DD, devolverla
+  if (fecha.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    return fecha;
+  }
+  
+  // Convertir de DD/MM/YYYY a YYYY-MM-DD
+  const partes = fecha.split('/');
+  if (partes.length === 3) {
+    const dia = partes[0].padStart(2, '0');
+    const mes = partes[1].padStart(2, '0');
+    const anio = partes[2];
+    return `${anio}-${mes}-${dia}`;
+  }
+  
+  return '';
+}
+
 
   // ── Export ────────────────────────────────────────
   exportSelection(format: 'csv' | 'pdf' | 'word') {
