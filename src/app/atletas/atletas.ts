@@ -2,6 +2,7 @@ import { Component, OnInit, HostListener, signal, computed, inject } from '@angu
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { firstValueFrom } from 'rxjs'
 
 // Servicios y modelos
 import { AdminAthletesService } from '../core/services/admin-athletes.service';
@@ -131,7 +132,7 @@ export class Atletas implements OnInit {
   openPanel(a: Atleta, mode: 'view' | 'edit') {
   const partesNombre = a.nombre.split(' ');
   
-  // Asegurar que la fecha esté en formato DD/MM/YYYY para mostrar
+  // Se formatea la fecha para mostrar en DD/MM/YYYY
   let fechaMostrar = a.fechaNacimiento;
   if (fechaMostrar && fechaMostrar !== 'N/A' && fechaMostrar.includes('-')) {
     const partes = fechaMostrar.split('-');
@@ -143,10 +144,13 @@ export class Atletas implements OnInit {
   this.editForm = { 
     ...a, 
     fechaNacimiento: fechaMostrar,
-    disciplinas: [...a.disciplinas],
+    disciplinas: [...(a.disciplinas || [])],
     name: partesNombre[0] || '',
     first_last_name: partesNombre[1] || '',
-    second_last_name: partesNombre[2] || ''
+    second_last_name: partesNombre[2] || '',
+    telefono: a.telefono || '',
+    encargadoNombre: a.encargadoNombre || '',
+    encargadoTelefono: a.encargadoTelefono || ''
   };
   this.panelMode.set(mode);
   this.panelAtleta.set(a);
@@ -163,68 +167,93 @@ async savePanel() {
   this.panelSaved.set(true);
   
   try {
+    // Recalcular edad y esMenor antes de guardar
+    let nuevaEdad = this.editForm.edad;
+    let esMenor = this.editForm.esMenor;
+    let fechaFormateada = '';
+    
+    if (this.editForm.fechaNacimiento && this.editForm.fechaNacimiento !== 'N/A') {
+      fechaFormateada = this.formatFechaParaAPI(this.editForm.fechaNacimiento);
+      if (fechaFormateada) {
+        nuevaEdad = this.calcularEdad(fechaFormateada);
+        esMenor = nuevaEdad < 18;
+      }
+    }
+    
     // Se actualiza el perfil
     const partesNombre = this.editForm.nombre.trim().split(' ');
+    const nuevoNombre = partesNombre[0] || '';
+    const nuevoPrimerApellido = partesNombre[1] || '';
+    const nuevoSegundoApellido = partesNombre[2] || '';
+    
     const profileData: any = {
-      name: partesNombre[0] || '',
-      first_last_name: partesNombre[1] || '',
-      second_last_name: partesNombre[2] || '',
+      name: nuevoNombre,
+      first_last_name: nuevoPrimerApellido,
+      second_last_name: nuevoSegundoApellido,
       dni: this.editForm.cedula,
       sex: this.editForm.sexo === 'M' ? 'male' : 'female'
     };
     
-    // Se agrega la fecha de nacimiento solo si cambió y es válida
-    if (this.editForm.fechaNacimiento && this.editForm.fechaNacimiento !== 'N/A') {
-      const fechaFormateada = this.formatFechaParaAPI(this.editForm.fechaNacimiento);
-      if (fechaFormateada) {
-        profileData.birth_date = fechaFormateada;
-      }
+    if (fechaFormateada) {
+      profileData.birth_date = fechaFormateada;
     }
     
-    await this.adminProfilesService.updateAnyProfile(atletaActual.id_user, profileData).toPromise();
+    await firstValueFrom(this.adminProfilesService.updateAnyProfile(atletaActual.id_user, profileData));
     
-    // Se actualizan los datos del atleta
+    // Se actualizan los datos de atleta
     const athleteData: any = {
-      phone: this.editForm.telefono
+      phone: esMenor ? '' : (this.editForm.telefono || '') // Si es menor, no guardar teléfono propio
     };
     
-    if (this.editForm.esMenor) {
-      athleteData.legal_guardian_name = this.editForm.encargadoNombre;
-      athleteData.legal_guardian_phone = this.editForm.encargadoTelefono;
+    if (esMenor) {
+      athleteData.legal_guardian_name = this.editForm.encargadoNombre || '';
+      athleteData.legal_guardian_phone = this.editForm.encargadoTelefono || '';
+    } else {
+      // Si es adulto, se limpian los campos de encargado en la BD
+      athleteData.legal_guardian_name = null;
+      athleteData.legal_guardian_phone = null;
     }
     
-    await this.adminAthletesService.updateAthleteRecord(atletaActual.id_user, athleteData).toPromise();
+    await firstValueFrom(this.adminAthletesService.updateAthleteRecord(atletaActual.id_user, athleteData));
     
     // Se actualiza el estado (Activo/Inactivo)
     const isActive = this.editForm.estado === 'Activo';
-    await this.adminProfilesService.blockUnblockUser(atletaActual.id_user, isActive).toPromise();
+    await firstValueFrom(this.adminProfilesService.blockUnblockUser(atletaActual.id_user, isActive));
     
-    // Recalcular la edad correctamente
-    let nuevaEdad = this.editForm.edad;
-    if (this.editForm.fechaNacimiento && this.editForm.fechaNacimiento !== 'N/A') {
-      const fechaFormateada = this.formatFechaParaAPI(this.editForm.fechaNacimiento);
-      if (fechaFormateada) {
-        nuevaEdad = this.calcularEdad(fechaFormateada);
-      }
-    }
+    // Se calculan las nuevas iniciales
+    const nuevasIniciales = this.obtenerIniciales(nuevoNombre, nuevoPrimerApellido);
+    const nombreCompleto = `${nuevoNombre} ${nuevoPrimerApellido} ${nuevoSegundoApellido}`.trim();
+    
+    // Se construiye el atleta actualizado completo
+    const atletaActualizado: Atleta = {
+      id_user: atletaActual.id_user,
+      cedula: this.editForm.cedula,
+      nombre: nombreCompleto,
+      fechaNacimiento: fechaFormateada ? new Date(fechaFormateada).toLocaleDateString() : this.editForm.fechaNacimiento,
+      edad: nuevaEdad,
+      sexo: this.editForm.sexo,
+      disciplinas: this.editForm.disciplinas || [],
+      estado: this.editForm.estado,
+      telefono: esMenor ? '' : (this.editForm.telefono || ''),
+      esMenor: esMenor,
+      encargadoNombre: esMenor ? (this.editForm.encargadoNombre || '') : '',
+      encargadoTelefono: esMenor ? (this.editForm.encargadoTelefono || '') : '',
+      foto: this.editForm.foto || '',
+      initials: nuevasIniciales
+    };
     
     // Se actualiza el atleta en la lista local
     const currentList = this.atletasReales();
     const index = currentList.findIndex(a => a.id_user === atletaActual.id_user);
-    
-    const atletaActualizado = {
-      ...this.editForm,
-      edad: nuevaEdad,
-      esMenor: nuevaEdad < 18
-    };
     
     if (index !== -1) {
       currentList[index] = atletaActualizado;
       this.atletasReales.set([...currentList]);
     }
     
-    // Actualizar el panel con los nuevos datos
-    this.panelAtleta.set(atletaActualizado);
+    // Se cierra el panel y se abre de nuevo con los datos actualizados
+    this.closePanel();
+    this.openPanel(atletaActualizado, 'view');
     
     this.panelSaved.set(true);
     setTimeout(() => this.panelSaved.set(false), 2000);
@@ -482,6 +511,24 @@ calcularEdad(fechaNacimiento: string): number {
     edad--;
   }
   return edad;
+}
+
+// ── Recalcular la edad y el estado del menor de edad cuando cambia la fecha ─────────
+onFechaNacimientoChange() {
+  if (this.editForm.fechaNacimiento && this.editForm.fechaNacimiento !== 'N/A') {
+    const fechaFormateada = this.formatFechaParaAPI(this.editForm.fechaNacimiento);
+    if (fechaFormateada) {
+      const nuevaEdad = this.calcularEdad(fechaFormateada);
+      this.editForm.edad = nuevaEdad;
+      this.editForm.esMenor = nuevaEdad < 18;
+      
+      // Si es mayor de edad, se limpian los campos de encargado
+      if (!this.editForm.esMenor) {
+        this.editForm.encargadoNombre = '';
+        this.editForm.encargadoTelefono = '';
+      }
+    }
+  }
 }
 
   obtenerIniciales(nombre: string, apellido: string): string {
