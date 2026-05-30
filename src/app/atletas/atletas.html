@@ -449,7 +449,7 @@
               </div>
               <div>
                 <label class="at-panel-label">Fecha de nacimiento</label>
-                <input type="text" class="at-panel-input" [(ngModel)]="editForm.fechaNacimiento">
+                <input type="text" class="at-panel-input" [(ngModel)]="editForm.fechaNacimiento" placeholder="DD/MM/YYYY">
               </div>
               <div>
                 <label class="at-panel-label">Sexo</label>
@@ -458,6 +458,12 @@
                   <option value="F">Femenino</option>
                 </select>
               </div>
+              @if (!editForm.esMenor) {
+              <div>
+                <label class="at-panel-label">Teléfono de contacto</label>
+                <input type="text" class="at-panel-input" [(ngModel)]="editForm.telefono" placeholder="Ej: 8800-0001">
+              </div>
+            }
               <div>
                 <label class="at-panel-label">Estado</label>
                 <select class="at-panel-input" [(ngModel)]="editForm.estado">
@@ -466,6 +472,21 @@
                   <option value="Inactivo">Inactivo</option>
                 </select>
               </div>
+
+              <!-- Campos para menores de edad -->
+              @if (editForm.esMenor) {
+                <div class="border-top pt-2 mt-2">
+                  <p class="fw-bold mb-2" style="color:var(--primary)">Datos del encargado legal</p>
+                  <div class="mb-2">
+                    <label class="at-panel-label">Nombre del encargado</label>
+                    <input type="text" class="at-panel-input" [(ngModel)]="editForm.encargadoNombre">
+                  </div>
+                  <div>
+                    <label class="at-panel-label">Teléfono del encargado</label>
+                    <input type="text" class="at-panel-input" [(ngModel)]="editForm.encargadoTelefono">
+                  </div>
+                </div>
+              }
             </div>
           }
         </div>
