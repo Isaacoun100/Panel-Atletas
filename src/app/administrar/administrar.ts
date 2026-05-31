@@ -114,6 +114,7 @@ export class Administrar implements OnInit {
         // Guardar copia original para detectar cambios
         this.disciplinasOriginal = JSON.parse(JSON.stringify(disciplinasReales));
         this.hasChangesDisciplinas.set(false);
+        this.cargarConteoAtletasPorDisciplina();
         this.isLoading.set(false);
       },
       error: (err) => {
@@ -123,6 +124,25 @@ export class Administrar implements OnInit {
       }
     });
   }
+
+// ── Contar atletas por disciplina ───────────────────────────────────
+cargarConteoAtletasPorDisciplina() {
+  const disciplinasActuales = this.disciplinas();
+  
+  disciplinasActuales.forEach((disciplina, index) => {
+    this.adminDisciplinesService.getAthletesCountByDiscipline(disciplina.id_discipline).subscribe({
+      next: (count: number) => {
+        const currentList = this.disciplinas();
+        currentList[index].totalAtletas = count;
+        this.disciplinas.set([...currentList]);
+      },
+      error: (err) => {
+        console.error(`Error contando atletas para ${disciplina.nombre}:`, err);
+      }
+    });
+  });
+}
+  
 
   // Crear nueva disciplina
   addDisciplina() {
@@ -261,6 +281,10 @@ export class Administrar implements OnInit {
       this.isLoading.set(false);
       // Se recargan las disciplinas para asegurar consistencia
       this.cargarDisciplinas();
+
+      setTimeout(() => {
+        this.cargarConteoAtletasPorDisciplina();
+      }, 500);
     })
     .catch((err) => {
       console.error('Error guardando cambios:', err);
