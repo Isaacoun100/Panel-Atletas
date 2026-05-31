@@ -288,6 +288,56 @@ formatFechaParaAPI(fecha: string): string {
 }
 
 
+// ── Mostrar mensaje temporal ─────────────────────────────────────────
+mostrarMensaje(texto: string, tipo: 'success' | 'error') {
+  const msgDiv = document.createElement('div');
+  msgDiv.textContent = texto;
+  msgDiv.className = `adm-toast adm-toast--${tipo}`;
+  document.body.appendChild(msgDiv);
+  setTimeout(() => msgDiv.remove(), 3000);
+}
+
+
+// ── Eliminar atleta (con confirmación) ───────────────────────────────
+async deleteAthlete(atleta: Atleta) {
+  if (!atleta.id_user) {
+    this.errorMessage.set('No se puede eliminar: falta identificación');
+    return;
+  }
+
+  // Confirmación con mensaje personalizado
+  const confirmado = confirm(`¿Está seguro/a de que se quiere eliminar a ${atleta.nombre}?\n\nEsta acción no se puede deshacer.`);
+  
+  if (!confirmado) return;
+
+  this.isLoading.set(true);
+  
+  try {
+    // Se elimina el perfil de usuario
+    await firstValueFrom(this.adminProfilesService.deleteUser(atleta.id_user));
+    
+    // Se elimina de la lista local
+    const currentList = this.atletasReales();
+    const nuevaLista = currentList.filter(a => a.id_user !== atleta.id_user);
+    this.atletasReales.set(nuevaLista);
+    
+    // Si el panel estaba abierto con el atleta seleccionado, se cierra
+    if (this.panelAtleta()?.id_user === atleta.id_user) {
+      this.closePanel();
+    }
+    
+    this.mostrarMensaje(`${atleta.nombre} ha sido eliminado correctamente`, 'success');
+    
+  } catch (error) {
+    console.error('Error eliminando atleta:', error);
+    this.errorMessage.set('Error al eliminar el atleta');
+    this.mostrarMensaje(`Error al eliminar a ${atleta.nombre}`, 'error');
+  } finally {
+    this.isLoading.set(false);
+  }
+}
+
+
   // ── Export ────────────────────────────────────────
   exportSelection(format: 'csv' | 'pdf' | 'word') {
     // TODO: connect to backend export endpoint
