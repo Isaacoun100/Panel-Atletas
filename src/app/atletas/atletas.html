@@ -241,10 +241,9 @@
               </button>
 
               <ul class="dropdown-menu">
-
-                <li><a class="dropdown-item">PDF</a></li>
-                <li><a class="dropdown-item">Excel</a></li>
-                <li><a class="dropdown-item">Word</a></li>
+                <li><button type="button" class="dropdown-item" (click)="exportSelection('pdf')">PDF</button></li>
+                <li><button type="button" class="dropdown-item" (click)="exportSelection('csv')">Excel</button></li>
+                <li><button type="button" class="dropdown-item" (click)="exportSelection('word')">Word</button></li>
               </ul>
 
             </div>

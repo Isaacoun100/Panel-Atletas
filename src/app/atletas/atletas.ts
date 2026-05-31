@@ -3,12 +3,16 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs'
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 // Servicios y modelos
 import { AdminAthletesService } from '../core/services/admin-athletes.service';
 import { AdminDisciplinesService } from '../core/services/admin-disciplines.service';
 import { Discipline } from '../core/models/discipline.model';
 import { AdminProfilesService } from '../core/services/admin-profiles.service';
+
 
 interface Atleta {
   cedula: string;
@@ -19,6 +23,7 @@ interface Atleta {
   edad: number;
   sexo: 'M' | 'F';
   disciplinas: string[];
+  disciplinasInfo?: { nombre: string; tipo: string }[];
   estado: 'Activo' | 'Pendiente' | 'Inactivo';
   id_user?: string; // Para operaciones de actualización
   telefono?: string;                    
@@ -338,11 +343,359 @@ async deleteAthlete(atleta: Atleta) {
 }
 
 
-  // ── Export ────────────────────────────────────────
-  exportSelection(format: 'csv' | 'pdf' | 'word') {
-    // TODO: connect to backend export endpoint
-    alert(`Exportando ${this.selectedCount()} atleta(s) en formato ${format.toUpperCase()}...`);
+// ── Exportar atletas seleccionados ─────────────────────────────────────
+exportarSeleccionados(formato: 'pdf' | 'excel' | 'word') {
+  const atletasSeleccionados = this.atletasReales().filter(a => 
+    this.selectedIds().has(a.cedula)
+  );
+  
+  if (atletasSeleccionados.length === 0) {
+    this.mostrarMensaje('No hay atletas seleccionados', 'error');
+    return;
   }
+
+  if (formato === 'excel') {
+    this.exportarExcel(atletasSeleccionados);
+  } else if (formato === 'pdf') {
+    this.exportarPDF(atletasSeleccionados);
+  } else if (formato === 'word') {
+    this.exportarWord(atletasSeleccionados);
+  }
+}
+
+
+private exportarExcel(atletas: Atleta[]) {
+  const hayMenores = atletas.some(a => a.esMenor);
+  
+  const datos = atletas.map(a => {
+    const telefono = a.esMenor ? (a.encargadoTelefono || 'No registrado') : (a.telefono || 'No registrado');
+    
+    const disciplinasTexto = a.disciplinasInfo && a.disciplinasInfo.length > 0
+      ? a.disciplinasInfo.map(d => `${d.nombre} (${d.tipo === 'sport' ? 'Deportiva' : 'Recreativa'})`).join(', ')
+      : 'Ninguna';
+    
+    const row: any = {
+      'Nombre': a.nombre,
+      'Cédula': a.cedula,
+      'Fecha nacimiento': a.fechaNacimiento,
+      'Edad': a.edad,
+      'Sexo': a.sexo === 'M' ? 'Masculino' : 'Femenino',
+      'Disciplina(s)': disciplinasTexto,
+      'Teléfono de contacto': telefono,
+      'Estado': a.estado
+    };
+    
+    if (hayMenores) {
+      row['Encargado legal'] = a.esMenor ? (a.encargadoNombre || 'No registrado') : '';
+    }
+    
+    return row;
+  });
+
+  const ws = XLSX.utils.json_to_sheet(datos);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Atletas');
+  
+  const timestamp = new Date().toISOString().replace(/[:T]/g, '-').slice(0, 19);
+  XLSX.writeFile(wb, `atletas_exportados_${timestamp}.xlsx`);
+  this.mostrarMensaje(`${atletas.length} atleta(s) exportados a Excel`, 'success');
+}
+
+private async exportarPDF(atletas: Atleta[]) {
+  if (!atletas || atletas.length === 0) {
+    this.mostrarMensaje('No hay atletas seleccionados', 'error');
+    return;
+  }
+  
+  this.mostrarMensaje('Generando PDF, por favor espere...', 'success');
+  
+  const ATHLETES_PER_PAGE = 25;
+  const totalPages = Math.ceil(atletas.length / ATHLETES_PER_PAGE);
+  
+  const pagesAtletas: Atleta[][] = [];
+  for (let i = 0; i < totalPages; i++) {
+    const start = i * ATHLETES_PER_PAGE;
+    const end = start + ATHLETES_PER_PAGE;
+    pagesAtletas.push(atletas.slice(start, end));
+  }
+  
+  // Se crea el PDF
+  const pdf = new jsPDF({
+    unit: 'mm',
+    format: 'a4',
+    orientation: 'landscape'
+  });
+  
+  // Se procesa cada página por separado
+  for (let i = 0; i < pagesAtletas.length; i++) {
+    const pageAtletas = pagesAtletas[i];
+    const html = this.generarPaginaHTML(pageAtletas, i + 1, totalPages);
+    
+    // Se crea el iframe temporal para esta página
+    const iframe = document.createElement('iframe');
+    iframe.setAttribute('sandbox', 'allow-same-origin');
+    iframe.style.position = 'absolute';
+    iframe.style.top = '-9999px';
+    iframe.style.left = '-9999px';
+    iframe.style.width = '1200px';
+    iframe.style.height = '800px';
+    iframe.style.border = 'none';
+    document.body.appendChild(iframe);
+    
+    // Se espera a que el iframe cargue y procese
+    await new Promise<void>((resolve) => {
+      iframe.onload = async () => {
+        const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+        if (iframeDoc) {
+          iframeDoc.open();
+          iframeDoc.write(html);
+          iframeDoc.close();
+          
+          // Esperar a que el contenido se renderice
+          setTimeout(async () => {
+            try {
+              const canvas = await html2canvas(iframeDoc.body, {
+                scale: 2,
+                backgroundColor: '#ffffff',
+                logging: false,
+                useCORS: false,
+                windowWidth: iframeDoc.body.scrollWidth,
+                windowHeight: iframeDoc.body.scrollHeight
+              });
+              
+              const imgData = canvas.toDataURL('image/jpeg', 1.0);
+              const pdfWidth = pdf.internal.pageSize.getWidth();
+              const imgWidth = pdfWidth - 20;
+              const imgHeight = (canvas.height * imgWidth) / canvas.width;
+              
+              // Si no es la primera página, se agrega la página nueva en el PDF
+              if (i > 0) {
+                pdf.addPage();
+              }
+              
+              pdf.addImage(imgData, 'JPEG', 10, 10, imgWidth, imgHeight);
+              
+              document.body.removeChild(iframe);
+              resolve();
+            } catch (err) {
+              console.error('Error en página', i + 1, err);
+              document.body.removeChild(iframe);
+              resolve();
+            }
+          }, 300);
+        } else {
+          document.body.removeChild(iframe);
+          resolve();
+        }
+      };
+      iframe.src = 'about:blank';
+    });
+  }
+  
+  const timestamp = new Date().toISOString().replace(/[:T]/g, '-').slice(0, 19);
+  pdf.save(`atletas_exportados_${timestamp}.pdf`);
+  this.mostrarMensaje(`${atletas.length} atleta(s) exportados a PDF (${totalPages} página(s))`, 'success');
+}
+
+private exportarWord(atletas: Atleta[]) {
+  const contenido = this.generarHTMLParaExportar(atletas);
+  
+  const blob = new Blob([contenido], { type: 'application/msword' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  link.href = url;
+  const timestamp = new Date().toISOString().replace(/[:T]/g, '-').slice(0, 19);
+  link.download = `atletas_exportados_${timestamp}.doc`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+  this.mostrarMensaje(`${atletas.length} atleta(s) exportados a Word`, 'success');
+}
+
+private generarPaginaHTML(atletas: Atleta[], paginaNumero: number, totalPaginas: number): string {
+  const hayMenores = atletas.some(a => a.esMenor);
+  
+  const filas = atletas.map(a => {
+    const telefono = a.esMenor ? (a.encargadoTelefono || 'No registrado') : (a.telefono || 'No registrado');
+    
+    const disciplinasTexto = a.disciplinasInfo && a.disciplinasInfo.length > 0
+      ? a.disciplinasInfo.map(d => `${d.nombre} (${d.tipo === 'sport' ? 'Deportiva' : 'Recreativa'})`).join(', ')
+      : 'Ninguna';
+    
+    return `
+      <tr>
+        <td>${a.nombre}</td>
+        <td>${a.cedula}</td>
+        <td>${a.fechaNacimiento}</td>
+        <td>${a.edad}</td>
+        <td>${a.sexo === 'M' ? 'Masculino' : 'Femenino'}</td>
+        <td>${disciplinasTexto}</td>
+        <td>${telefono}</td>
+        ${hayMenores ? `<td>${a.esMenor ? (a.encargadoNombre || 'No registrado') : ''}</td>` : ''}
+        <td>${a.estado}</td>
+      </tr>
+    `;
+  }).join('');
+
+  const encargadoHeader = hayMenores ? '<th>Encargado legal</th>' : '';
+
+  return `<!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Reporte de Atletas - Página ${paginaNumero}</title>
+      <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+          margin: 0 !important;
+          padding: 20px !important;
+          background: white;
+          font-family: Arial, sans-serif;
+        }
+        h1 { 
+          color: #1e3a8a; 
+          text-align: center; 
+          margin: 0 0 10px 0;
+          font-size: 16px;
+        }
+        .info {
+          margin: 5px 0;
+          font-size: 10px;
+          text-align: center;
+        }
+        table { 
+          width: 100%;
+          border-collapse: collapse;
+          margin: 10px 0;
+        }
+        th, td { 
+          border: 1px solid #999;
+          padding: 5px 6px;
+          text-align: left;
+          vertical-align: top;
+          font-size: 10px;
+        }
+        th { 
+          background-color: #1e3a8a; 
+          color: white;
+          font-weight: bold;
+        }
+        tr:nth-child(even) { 
+          background-color: #f2f2f2; 
+        }
+        .footer { 
+          margin-top: 10px; 
+          text-align: center; 
+          font-size: 9px; 
+          color: #666;
+        }
+        .page-break {
+          page-break-after: always;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="reporte-container">
+        <h1>Listado de Atletas</h1>
+        <div class="info">Página ${paginaNumero} de ${totalPaginas} | Fecha: ${new Date().toLocaleString()} | Total en esta página: ${atletas.length} atletas</div>
+        <table cellspacing="0">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Cédula</th>
+              <th>Fecha nac.</th>
+              <th>Edad</th>
+              <th>Sexo</th>
+              <th>Disciplina(s)</th>
+              <th>Teléfono</th>
+              ${encargadoHeader}
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>${filas}</tbody>
+        </table>
+        <div class="footer">Reporte generado desde el Sistema de Gestión de Atletas del Comité Cantonal de Deportes y Recreación Montes de Oca</div>
+      </div>
+    </body>
+    </html>
+  `;
+}
+
+private generarHTMLParaExportar(atletas: Atleta[]): string {
+  const hayMenores = atletas.some(a => a.esMenor);
+  
+  const filas = atletas.map(a => {
+    const telefono = a.esMenor ? (a.encargadoTelefono || 'No registrado') : (a.telefono || 'No registrado');
+    
+    const disciplinasTexto = a.disciplinasInfo && a.disciplinasInfo.length > 0
+      ? a.disciplinasInfo.map(d => `${d.nombre} (${d.tipo === 'sport' ? 'Deportiva' : 'Recreativa'})`).join(', ')
+      : 'Ninguna';
+    
+    return `
+      <tr>
+        <td>${a.nombre}</td>
+        <td>${a.cedula}</td>
+        <td>${a.fechaNacimiento}</td>
+        <td>${a.edad}</td>
+        <td>${a.sexo === 'M' ? 'Masculino' : 'Femenino'}</td>
+        <td>${disciplinasTexto}</td>
+        <td>${telefono}</td>
+        ${hayMenores ? `<td>${a.esMenor ? (a.encargadoNombre || 'No registrado') : ''}</td>` : ''}
+        <td>${a.estado}</td>
+      </tr>
+    `;
+  }).join('');
+
+  const encargadoHeader = hayMenores ? '<th>Encargado legal</th>' : '';
+
+  return `<!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Reporte de Atletas</title>
+      <style>
+        body { 
+          font-family: Arial, sans-serif; 
+          margin: 20px; 
+          background: white;
+        }
+        h1 { color: #1e3a8a; text-align: center; font-size: 18px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #999; padding: 8px; text-align: left; font-size: 12px; }
+        th { background-color: #1e3a8a; color: white; }
+        tr:nth-child(even) { background-color: #f2f2f2; }
+        .footer { margin-top: 20px; text-align: center; font-size: 11px; color: #666; }
+      </style>
+    </head>
+    <body>
+      <h1>Listado de Atletas</h1>
+      <p>Fecha: ${new Date().toLocaleString()} | Total: ${atletas.length} atletas</p>
+      <table cellspacing="0">
+        <thead>
+          <tr><th>Nombre</th><th>Cédula</th><th>Fecha nac.</th><th>Edad</th>
+            <th>Sexo</th><th>Disciplina(s)</th><th>Teléfono</th>
+            ${encargadoHeader}<th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>${filas}</tbody>
+      </table>
+      <div class="footer">Reporte generado desde el Sistema de Gestión de Atletas</div>
+    </body>
+    </html>
+  `;
+}
+
+
+// ── Export ────────────────────────────────────────
+exportSelection(format: 'csv' | 'pdf' | 'word') {
+  const formatMap = {
+    'pdf': 'pdf',
+    'word': 'word',
+    'csv': 'excel' // CSV convertido a Excel
+  };
+  this.exportarSeleccionados(formatMap[format] as 'pdf' | 'excel' | 'word');
+}
 
   // ── Dropdown close on outside click ───────────────
   // ── Métodos para el menú de disciplinas (HU-11) ────────────────────
@@ -450,9 +803,14 @@ procesarAtletasConDisciplinas(atletasData: any[]) {
         return new Promise<Atleta>((resolve) => {
           this.adminDisciplinesService.getUserEnrollments(atleta.id_user).subscribe({
             next: (enrollments: any) => {
-              const disciplinasNombres = enrollments
-                .map((e: any) => e.disciplines?.name)
-                .filter(Boolean);
+              const disciplinasInfo = enrollments
+              .map((e: any) => ({
+                  nombre: e.disciplines?.name,
+                  tipo: e.disciplines?.discipline_type
+                }))
+                .filter((d: any) => d.nombre);
+
+              const disciplinasNombres = disciplinasInfo.map((d: any) => d.nombre);
               
               // Se calcula la edad y se determina si es menor de edad
               const edad = perfil?.birth_date ? this.calcularEdad(perfil.birth_date) : 0;
@@ -488,6 +846,7 @@ procesarAtletasConDisciplinas(atletasData: any[]) {
                 foto: perfil?.profile_image_url || '',
                 estado: perfil?.is_active ? 'Activo' : 'Inactivo',
                 disciplinas: disciplinasNombres,
+                disciplinasInfo: disciplinasInfo,
                 initials: iniciales,
                 telefono: telefono,
                 esMenor: esMenor,
@@ -523,6 +882,7 @@ procesarAtletasConDisciplinas(atletasData: any[]) {
                 foto: perfil?.profile_image_url || '',
                 estado: perfil?.is_active ? 'Activo' : 'Inactivo',
                 disciplinas: [],
+                disciplinasInfo: [],
                 initials: iniciales,
                 telefono: telefono,
                 esMenor: esMenor,
