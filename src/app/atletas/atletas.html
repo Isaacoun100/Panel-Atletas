@@ -242,9 +242,9 @@
 
               <ul class="dropdown-menu">
 
-                <li><a class="dropdown-item">PDF</a></li>
-                <li><a class="dropdown-item">Excel</a></li>
-                <li><a class="dropdown-item">Word</a></li>
+                <li><a class="dropdown-item" (click)="exportSelection('pdf')">PDF</a></li>
+                <li><a class="dropdown-item" (click)="exportSelection('csv')">Excel</a></li>
+                <li><a class="dropdown-item" (click)="exportSelection('word')">Word</a></li>
               </ul>
 
             </div>
