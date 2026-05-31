@@ -18,6 +18,10 @@ WHERE record_id LIKE '10000000-0000-0000-0000-%'
 DELETE FROM public.users_invitations
 WHERE email LIKE '%@panelatletas.test';
 
+-- Delete test auth identities (no cascade from auth.users in all Supabase versions)
+DELETE FROM auth.identities
+WHERE provider_id LIKE '%@panelatletas.test';
+
 -- Delete test auth users — cascades to:
 --   users_profiles → athletes, users_disciplines, medals
 DELETE FROM auth.users

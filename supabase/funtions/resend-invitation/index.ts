@@ -65,7 +65,7 @@ Deno.serve(async (req) => {
       })
     }
 
-    const { error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+    const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
       data: { initial_role: invitation.initial_role },
     })
 
@@ -75,6 +75,10 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
+
+    await supabaseAdmin.auth.admin.updateUserById(inviteData.user.id, {
+      app_metadata: { role: invitation.initial_role, is_active: true },
+    })
 
     const now = new Date().toISOString()
 

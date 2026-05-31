@@ -7,7 +7,8 @@ Edge Function that resends an existing invitation to a user who has not yet acce
 1. Validates the caller has an active admin role.
 2. Looks up the most recent non-accepted invitation for the given email.
 3. Resends the invite email via Supabase Auth (`inviteUserByEmail`).
-4. Updates the invitation record: increments `attempts`, refreshes `last_sent_at`, resets `expires_at` to 7 days from now, and sets `status` back to `sent`.
+4. Re-sets `app_metadata.role` and `app_metadata.is_active = true` on the auth user to ensure JWT claims are current.
+5. Updates the invitation record: increments `attempts`, refreshes `last_sent_at`, resets `expires_at` to 7 days from now, and sets `status` back to `sent`.
 
 ## Endpoint
 

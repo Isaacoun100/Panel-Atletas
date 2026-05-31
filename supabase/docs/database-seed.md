@@ -124,3 +124,5 @@ Elimina todo lo que tiene email `%@panelatletas.test`:
 - Los triggers `set_profile_id_from_auth`, `set_profile_role_from_invitation`, `set_athlete_id_from_auth`, `set_discipline_user_from_auth` se deshabilitan durante el seed y se rehabilitan al final — dependen de `auth.uid()` que retorna NULL fuera de contexto JWT.
 - Los triggers `check_guardian_minor`, `set_representative_from_discipline`, `discipline_active_check` permanecen **activos** durante el seed para validar integridad de los datos.
 - `email_confirmed_at = now()` en `auth.users` — el trigger `handle_invitation_accepted` solo dispara en UPDATE, no en INSERT, por eso las invitaciones se insertan como `accepted` manualmente.
+- `confirmation_token`, `recovery_token`, `email_change_token_new`, `email_change` se insertan como `''` (string vacío) — Supabase Auth falla con NULL en esas columnas al intentar autenticar.
+- `encrypted_password` usa bcrypt hash de `Test1234!` — todos los usuarios de prueba comparten la misma contraseña.

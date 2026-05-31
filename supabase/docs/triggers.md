@@ -50,15 +50,14 @@ Injects `id_user` from the authenticated session. Client does not send `id_user`
 **Event:** `BEFORE INSERT`
 **Function:** `handle_profile_role_from_invitation()`
 
-Overrides the `role` field with the value from the user's accepted invitation. Prevents clients from self-assigning roles.
+Overrides the `role` field with the value from `auth.users.raw_app_meta_data`. Prevents clients from self-assigning roles.
 
 **Logic:**
-1. Looks up the user's email from `auth.users` using `NEW.id_user`
-2. Finds the most recent `accepted` invitation for that email
-3. Sets `NEW.role` to `initial_role` from the invitation
-4. Defaults to `athlete` if no accepted invitation is found
+1. Reads `raw_app_meta_data->>'role'` from `auth.users` for `NEW.id_user`
+2. Sets `NEW.role` to that value cast to `user_role`
+3. Defaults to `athlete` if `raw_app_meta_data` has no `role` key
 
-**Note:** Fires after `set_profile_id_from_auth`, so `NEW.id_user` is already set when the role lookup runs.
+**Note:** Fires after `set_profile_id_from_auth`, so `NEW.id_user` is already set. Role originates from the `invite-user` edge function which sets `app_metadata.role` at invitation time via `updateUserById`.
 
 **Role change after insert:** Admins can update `role` via the `"Admins can update all profiles"` RLS policy. Regular users cannot change their own role — the UPDATE policy enforces it.
 
@@ -212,3 +211,21 @@ Logs profile change events to `audit_log`. Fires on three distinct conditions:
 Logs a `discipline_created` event to `audit_log` whenever a new discipline is added.
 
 **Metadata:** `{ name, discipline_type }`
+
+---
+
+## sync_profile_metadata
+
+**Table:** `public.users_profiles`
+**Event:** `AFTER INSERT OR UPDATE OF role, is_active`
+**Function:** `sync_profile_to_auth_metadata()`
+
+Syncs `role` and `is_active` into `auth.users.raw_app_meta_data` so the JWT carries business-level claims without a second API call.
+
+**Logic:**
+- Merges (`||`) into existing `raw_app_meta_data` — does not overwrite provider/providers keys
+- Only fires on INSERT or when `role` or `is_active` changes
+
+**JWT result:** `app_metadata.role` + `app_metadata.is_active` available on next login or token refresh.
+
+**Note:** `is_active` in the JWT is UI-only (routing, hiding buttons). Actual access control is enforced by RLS via `get_user_is_active()` on every query, regardless of token content.

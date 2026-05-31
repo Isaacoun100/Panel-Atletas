@@ -7,8 +7,9 @@ Edge Function that creates and sends invitations to one or more users. Restricte
 1. Validates the caller has an active admin role.
 2. For each email: rejects if an active invitation already exists.
 3. Sends an invite email via Supabase Auth (`inviteUserByEmail`), delivering a magic link.
-4. Inserts a record in `users_invitations` with status `sent`, expiring in 7 days.
-5. Returns per-email results — partial success is possible.
+4. Sets `app_metadata.role = initial_role` and `app_metadata.is_active = true` on the auth user — role is available in the JWT from the very first login.
+5. Inserts a record in `users_invitations` with status `sent`, expiring in 7 days.
+6. Returns per-email results — partial success is possible.
 
 ## Endpoint
 

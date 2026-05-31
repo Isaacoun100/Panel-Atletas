@@ -345,17 +345,12 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 DECLARE
-  v_email TEXT;
-  v_role  public.user_role;
+  v_role public.user_role;
 BEGIN
-  SELECT email INTO v_email FROM auth.users WHERE id = NEW.id_user;
-
-  SELECT initial_role INTO v_role
-  FROM public.users_invitations
-  WHERE email = v_email
-    AND status = 'accepted'
-  ORDER BY created_at DESC
-  LIMIT 1;
+  SELECT (raw_app_meta_data->>'role')::public.user_role
+  INTO v_role
+  FROM auth.users
+  WHERE id = NEW.id_user;
 
   NEW.role := COALESCE(v_role, 'athlete');
   RETURN NEW;
@@ -366,6 +361,29 @@ CREATE OR REPLACE TRIGGER set_profile_role_from_invitation
 BEFORE INSERT ON public.users_profiles
 FOR EACH ROW
 EXECUTE FUNCTION public.handle_profile_role_from_invitation();
+
+-- Syncs role and is_active back to auth.users.raw_app_meta_data on every profile change.
+CREATE OR REPLACE FUNCTION public.sync_profile_to_auth_metadata()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = 'public'
+AS $$
+BEGIN
+  UPDATE auth.users
+  SET raw_app_meta_data = raw_app_meta_data || jsonb_build_object(
+    'role',      NEW.role::text,
+    'is_active', NEW.is_active
+  )
+  WHERE id = NEW.id_user;
+  RETURN NEW;
+END;
+$$;
+
+CREATE OR REPLACE TRIGGER sync_profile_metadata
+AFTER INSERT OR UPDATE OF role, is_active ON public.users_profiles
+FOR EACH ROW
+EXECUTE FUNCTION public.sync_profile_to_auth_metadata();
 
 -- Injects id_user from JWT — client does not send id_user in body.
 CREATE OR REPLACE FUNCTION public.handle_athlete_id_from_auth()
@@ -695,6 +713,20 @@ AS $$
   );
 $$;
 
+CREATE OR REPLACE FUNCTION public.is_active_user()
+RETURNS BOOLEAN
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM public.users_profiles
+    WHERE id_user = auth.uid()
+      AND is_active = TRUE
+  );
+$$;
+
 -- =========================
 -- PRIVATE SCHEMA (not exposed via PostgREST)
 -- =========================
@@ -744,7 +776,7 @@ END $$;
 
 CREATE POLICY "profiles_select"
 ON public.users_profiles FOR SELECT TO authenticated
-USING (id_user = (SELECT auth.uid()) OR is_admin());
+USING ((is_active_user() AND id_user = (SELECT auth.uid())) OR is_admin());
 
 CREATE POLICY "profiles_insert"
 ON public.users_profiles FOR INSERT TO authenticated
@@ -752,7 +784,7 @@ WITH CHECK (id_user = (SELECT auth.uid()));
 
 CREATE POLICY "profiles_update"
 ON public.users_profiles FOR UPDATE TO authenticated
-USING (id_user = (SELECT auth.uid()) OR is_admin())
+USING ((is_active_user() AND id_user = (SELECT auth.uid())) OR is_admin())
 WITH CHECK (
   -- Admin updating another user: role only, is_active locked via private function
   (is_admin() AND id_user != (SELECT auth.uid()) AND is_active = private.get_any_is_active(id_user))
@@ -793,20 +825,20 @@ END $$;
 
 CREATE POLICY "user_disciplines_select"
 ON public.users_disciplines FOR SELECT TO authenticated
-USING (fk_user = (SELECT auth.uid()) OR is_admin());
+USING ((is_active_user() AND fk_user = (SELECT auth.uid())) OR is_admin());
 
 CREATE POLICY "user_disciplines_insert"
 ON public.users_disciplines FOR INSERT TO authenticated
-WITH CHECK (fk_user = (SELECT auth.uid()) OR is_admin());
+WITH CHECK ((is_active_user() AND fk_user = (SELECT auth.uid())) OR is_admin());
 
 CREATE POLICY "user_disciplines_update"
 ON public.users_disciplines FOR UPDATE TO authenticated
-USING (fk_user = (SELECT auth.uid()) OR is_admin())
-WITH CHECK (fk_user = (SELECT auth.uid()) OR is_admin());
+USING ((is_active_user() AND fk_user = (SELECT auth.uid())) OR is_admin())
+WITH CHECK ((is_active_user() AND fk_user = (SELECT auth.uid())) OR is_admin());
 
 CREATE POLICY "user_disciplines_delete"
 ON public.users_disciplines FOR DELETE TO authenticated
-USING (fk_user = (SELECT auth.uid()) OR is_admin());
+USING ((is_active_user() AND fk_user = (SELECT auth.uid())) OR is_admin());
 
 DO $$
 BEGIN
@@ -815,16 +847,16 @@ END $$;
 
 CREATE POLICY "athletes_select"
 ON public.athletes FOR SELECT TO authenticated
-USING (id_user = (SELECT auth.uid()) OR is_admin());
+USING ((is_active_user() AND id_user = (SELECT auth.uid())) OR is_admin());
 
 CREATE POLICY "athletes_insert"
 ON public.athletes FOR INSERT TO authenticated
-WITH CHECK (id_user = (SELECT auth.uid()) OR is_admin());
+WITH CHECK ((is_active_user() AND id_user = (SELECT auth.uid())) OR is_admin());
 
 CREATE POLICY "athletes_update"
 ON public.athletes FOR UPDATE TO authenticated
-USING (id_user = (SELECT auth.uid()) OR is_admin())
-WITH CHECK (id_user = (SELECT auth.uid()) OR is_admin());
+USING ((is_active_user() AND id_user = (SELECT auth.uid())) OR is_admin())
+WITH CHECK ((is_active_user() AND id_user = (SELECT auth.uid())) OR is_admin());
 
 CREATE POLICY "athletes_delete"
 ON public.athletes FOR DELETE TO authenticated
@@ -837,20 +869,20 @@ END $$;
 
 CREATE POLICY "medals_select"
 ON public.medals FOR SELECT TO authenticated
-USING (id_user = (SELECT auth.uid()) OR is_admin());
+USING ((is_active_user() AND id_user = (SELECT auth.uid())) OR is_admin());
 
 CREATE POLICY "medals_insert"
 ON public.medals FOR INSERT TO authenticated
-WITH CHECK (id_user = (SELECT auth.uid()) OR is_admin());
+WITH CHECK ((is_active_user() AND id_user = (SELECT auth.uid())) OR is_admin());
 
 CREATE POLICY "medals_update"
 ON public.medals FOR UPDATE TO authenticated
-USING (id_user = (SELECT auth.uid()) OR is_admin())
-WITH CHECK (id_user = (SELECT auth.uid()) OR is_admin());
+USING ((is_active_user() AND id_user = (SELECT auth.uid())) OR is_admin())
+WITH CHECK ((is_active_user() AND id_user = (SELECT auth.uid())) OR is_admin());
 
 CREATE POLICY "medals_delete"
 ON public.medals FOR DELETE TO authenticated
-USING (id_user = (SELECT auth.uid()) OR is_admin());
+USING ((is_active_user() AND id_user = (SELECT auth.uid())) OR is_admin());
 
 DO $$
 BEGIN
@@ -896,6 +928,8 @@ REVOKE EXECUTE ON FUNCTION public.handle_guardian_minor_check() FROM PUBLIC;
 REVOKE EXECUTE ON FUNCTION public.handle_invitation_accepted() FROM PUBLIC;
 REVOKE EXECUTE ON FUNCTION public.handle_last_admin_protection() FROM PUBLIC;
 REVOKE EXECUTE ON FUNCTION public.handle_profile_id_from_auth() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.is_active_user() TO authenticated;
+REVOKE EXECUTE ON FUNCTION public.is_active_user() FROM PUBLIC;
 REVOKE EXECUTE ON FUNCTION public.handle_profile_role_from_invitation() FROM PUBLIC;
 REVOKE EXECUTE ON FUNCTION public.rls_auto_enable() FROM PUBLIC;
 REVOKE EXECUTE ON FUNCTION public.get_my_is_active() FROM PUBLIC;
