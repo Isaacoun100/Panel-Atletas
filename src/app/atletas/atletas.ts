@@ -396,7 +396,8 @@ private exportarExcel(atletas: Atleta[]) {
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Atletas');
   
-  XLSX.writeFile(wb, `atletas_exportados_${new Date().toISOString().slice(0,19)}.xlsx`);
+  const timestamp = new Date().toISOString().replace(/[:T]/g, '-').slice(0, 19);
+  XLSX.writeFile(wb, `atletas_exportados_${timestamp}.xlsx`);
   this.mostrarMensaje(`${atletas.length} atleta(s) exportados a Excel`, 'success');
 }
 
@@ -432,6 +433,7 @@ private async exportarPDF(atletas: Atleta[]) {
     
     // Se crea el iframe temporal para esta página
     const iframe = document.createElement('iframe');
+    iframe.setAttribute('sandbox', 'allow-same-origin');
     iframe.style.position = 'absolute';
     iframe.style.top = '-9999px';
     iframe.style.left = '-9999px';
@@ -490,7 +492,8 @@ private async exportarPDF(atletas: Atleta[]) {
     });
   }
   
-  pdf.save(`atletas_exportados_${new Date().toISOString().slice(0,19)}.pdf`);
+  const timestamp = new Date().toISOString().replace(/[:T]/g, '-').slice(0, 19);
+  pdf.save(`atletas_exportados_${timestamp}.pdf`);
   this.mostrarMensaje(`${atletas.length} atleta(s) exportados a PDF (${totalPages} página(s))`, 'success');
 }
 
@@ -501,7 +504,8 @@ private exportarWord(atletas: Atleta[]) {
   const link = document.createElement('a');
   const url = URL.createObjectURL(blob);
   link.href = url;
-  link.download = `atletas_exportados_${new Date().toISOString().slice(0,19)}.doc`;
+  const timestamp = new Date().toISOString().replace(/[:T]/g, '-').slice(0, 19);
+  link.download = `atletas_exportados_${timestamp}.doc`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
@@ -536,8 +540,7 @@ private generarPaginaHTML(atletas: Atleta[], paginaNumero: number, totalPaginas:
 
   const encargadoHeader = hayMenores ? '<th>Encargado legal</th>' : '';
 
-  return `
-    <!DOCTYPE html>
+  return `<!DOCTYPE html>
     <html>
     <head>
       <meta charset="UTF-8">
@@ -646,8 +649,7 @@ private generarHTMLParaExportar(atletas: Atleta[]): string {
 
   const encargadoHeader = hayMenores ? '<th>Encargado legal</th>' : '';
 
-  return `
-    <!DOCTYPE html>
+  return `<!DOCTYPE html>
     <html>
     <head>
       <meta charset="UTF-8">
