@@ -80,14 +80,14 @@ export class AdminDisciplinesService {
 
   // Método para contar atletas inscritos en una disciplina
   getAthletesCountByDiscipline(disciplineId: number) {
-    return this.http.get(`${this.base}/rest/v1/users_disciplines`, {
+    return this.http.get<{ id_user_discipline: number }[]>(`${this.base}/rest/v1/users_disciplines`, {
       params: {
         select: 'id_user_discipline',
         fk_discipline: `eq.${disciplineId}`
       },
       headers: this.getHeaders()
     }).pipe(
-      map((response: any) => Array.isArray(response) ? response.length : 0)
+      map((response) => response.length)
     );
   }
 }
