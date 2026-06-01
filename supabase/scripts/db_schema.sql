@@ -728,6 +728,131 @@ AS $$
 $$;
 
 -- =========================
+-- ADMIN TRANSACTION FUNCTIONS
+-- =========================
+CREATE OR REPLACE FUNCTION public.admin_register_athlete_transaction(
+  p_user_id uuid,
+  p_admin_id uuid,
+  p_email text,
+  p_name text,
+  p_first_last_name text,
+  p_second_last_name text,
+  p_dni_type text,
+  p_dni text,
+  p_birth_date date,
+  p_sex text,
+  p_phone text,
+  p_district_of_residence text,
+  p_legal_guardian_name text,
+  p_legal_guardian_phone text,
+  p_nacional_games_participation boolean,
+  p_international_games_participation boolean,
+  p_weekly_exercise integer,
+  p_has_family_support boolean,
+  p_satisfaction_level text,
+  p_has_family_in_committee boolean,
+  p_has_previous_committee boolean,
+  p_previous_committee_name text,
+  p_is_club_member boolean,
+  p_club_name text,
+  p_facility_satisfaction_level text,
+  p_has_disability boolean,
+  p_disability_type text,
+  p_disability_description text,
+  p_has_functional_classification boolean,
+  p_classification_category text,
+  p_classification_document_url text,
+  p_accepts_data_usage boolean,
+  p_accepts_info_accuracy boolean,
+  p_disciplines jsonb,
+  p_medals jsonb
+)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  -- Override auth.uid() so ID-injection triggers work for the new user, not the calling admin
+  PERFORM set_config('request.jwt.claim.sub', p_user_id::text, true);
+
+  -- Insert accepted invitation
+  INSERT INTO public.users_invitations (
+    email, status, initial_role, expires_at, attempts, fk_invited_by
+  ) VALUES (
+    p_email, 'accepted', 'athlete', now(), 1, p_admin_id
+  );
+
+  -- Insert profile — id_user injected by set_profile_id_from_auth trigger (auth.uid() = p_user_id)
+  --                   role injected by set_profile_role_from_invitation trigger (reads app_metadata)
+  INSERT INTO public.users_profiles (
+    name, first_last_name, second_last_name,
+    dni_type, dni, birth_date, sex, is_active
+  ) VALUES (
+    p_name, p_first_last_name, p_second_last_name,
+    p_dni_type::public.dni_type, p_dni, p_birth_date,
+    p_sex::public.sex, true
+  );
+
+  -- Insert athlete — id_user injected by set_athlete_id_from_auth trigger
+  -- Provide id_user explicitly too so check_guardian_minor trigger (fires alphabetically first) can read it
+  INSERT INTO public.athletes (
+    id_user,
+    phone, district_of_residence,
+    legal_guardian_name, legal_guardian_phone,
+    nacional_games_participation, international_games_participation,
+    weekly_exercise, has_family_support, satisfaction_level,
+    has_family_in_committee, has_previous_committee, previous_committee_name,
+    is_club_member, club_name,
+    facility_satisfaction_level,
+    has_disability, disability_type, disability_description,
+    has_functional_classification, classification_category, classification_document_url,
+    accepts_data_usage, accepts_info_accuracy
+  ) VALUES (
+    p_user_id,
+    p_phone, p_district_of_residence::public.district,
+    p_legal_guardian_name, p_legal_guardian_phone,
+    p_nacional_games_participation, p_international_games_participation,
+    p_weekly_exercise, p_has_family_support, p_satisfaction_level::public.satisfaction_level,
+    p_has_family_in_committee, p_has_previous_committee, p_previous_committee_name,
+    p_is_club_member, p_club_name,
+    p_facility_satisfaction_level::public.facility_condition,
+    p_has_disability, p_disability_type::public.disability_type, p_disability_description,
+    p_has_functional_classification, p_classification_category::public.classification_category, p_classification_document_url,
+    p_accepts_data_usage, p_accepts_info_accuracy
+  );
+
+  -- Insert discipline enrollments — fk_user injected by set_discipline_user_from_auth trigger
+  -- is_representative forced false for recreational disciplines regardless of input
+  IF jsonb_array_length(p_disciplines) > 0 THEN
+    INSERT INTO public.users_disciplines (fk_discipline, is_representative)
+    SELECT
+      (e->>'id')::integer,
+      (e->>'is_representative')::boolean
+    FROM jsonb_array_elements(p_disciplines) AS e;
+  END IF;
+
+  -- Insert medals — no trigger, must provide id_user explicitly
+  IF jsonb_array_length(p_medals) > 0 THEN
+    INSERT INTO public.medals (id_user, competition_name, year, medal_type)
+    SELECT
+      p_user_id,
+      m->>'competition_name',
+      (m->>'year')::integer,
+      (m->>'medal_type')::public.medal_type
+    FROM jsonb_array_elements(p_medals) AS m;
+  END IF;
+
+EXCEPTION
+  WHEN OTHERS THEN
+    RAISE EXCEPTION 'admin_register_athlete_transaction failed: %', SQLERRM;
+END;
+$$;
+
+REVOKE EXECUTE ON FUNCTION public.admin_register_athlete_transaction(uuid,uuid,text,text,text,text,text,text,date,text,text,text,text,text,boolean,boolean,integer,boolean,text,boolean,boolean,text,boolean,text,text,boolean,text,text,boolean,text,text,boolean,boolean,jsonb,jsonb) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.admin_register_athlete_transaction(uuid,uuid,text,text,text,text,text,text,date,text,text,text,text,text,boolean,boolean,integer,boolean,text,boolean,boolean,text,boolean,text,text,boolean,text,text,boolean,text,text,boolean,boolean,jsonb,jsonb) TO service_role;
+
+-- =========================
 -- PRIVATE SCHEMA (not exposed via PostgREST)
 -- =========================
 CREATE SCHEMA IF NOT EXISTS private;

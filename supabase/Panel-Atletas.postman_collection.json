@@ -34,6 +34,12 @@
       "value": "",
       "description": "UUID of the target user. Used as a filter in PATCH requests.",
       "type": "string"
+    },
+    {
+      "key": "MEDAL_ID",
+      "value": "",
+      "description": "Integer ID of a medal row. Used as a filter in PATCH/DELETE medal requests.",
+      "type": "string"
     }
   ],
   "item": [
@@ -543,6 +549,28 @@
           "name": "Athletes",
           "description": "Admin access to all athlete records.",
           "item": [
+            {
+              "name": "Register Athlete (Full)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_JWT}}", "type": "text" },
+                  { "key": "Content-Type", "value": "application/json", "type": "text" }
+                ],
+                "url": {
+                  "raw": "{{SUPABASE_URL}}/functions/v1/admin-register-athlete",
+                  "host": ["{{SUPABASE_URL}}"],
+                  "path": ["functions", "v1", "admin-register-athlete"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"athlete@example.com\",\n  \"password\": \"SecurePassword123!\",\n\n  \"name\": \"Javier\",\n  \"first_last_name\": \"Ocampo\",\n  \"second_last_name\": \"Morales\",\n  \"dni_type\": \"cedula\",\n  \"dni\": \"123456789\",\n  \"birth_date\": \"2000-06-15\",\n  \"sex\": \"male\",\n\n  \"phone\": \"+50688887777\",\n  \"district_of_residence\": \"san_pedro\",\n  \"legal_guardian_name\": null,\n  \"legal_guardian_phone\": null,\n\n  \"nacional_games_participation\": true,\n  \"international_games_participation\": true,\n  \"weekly_exercise\": 5,\n  \"has_family_support\": true,\n  \"satisfaction_level\": \"very_satisfied\",\n  \"has_family_in_committee\": true,\n  \"has_previous_committee\": true,\n  \"previous_committee_name\": \"Comité Cantonal de Deporte\",\n  \"is_club_member\": true,\n  \"club_name\": \"Club Natación San Pedro\",\n  \"facility_satisfaction_level\": \"yes\",\n\n  \"has_disability\": true,\n  \"disability_type\": \"physical\",\n  \"disability_description\": \"Parálisis parcial miembro inferior derecho\",\n  \"has_functional_classification\": true,\n  \"classification_category\": \"b1\",\n  \"classification_document_url\": \"https://example.com/docs/clasificacion.pdf\",\n\n  \"accepts_data_usage\": true,\n  \"accepts_info_accuracy\": true,\n\n  \"disciplines\": [\n    { \"id\": 3, \"is_representative\": true },\n    { \"id\": 26, \"is_representative\": false }\n  ],\n\n  \"medals\": [\n    { \"competition_name\": \"Juegos Nacionales 2024\", \"year\": 2024, \"medal_type\": \"gold\" },\n    { \"competition_name\": \"Juegos Nacionales 2023\", \"year\": 2023, \"medal_type\": \"silver\" },\n    { \"competition_name\": \"Torneo Regional 2022\", \"year\": 2022, \"medal_type\": \"bronze\" }\n  ]\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "description": "Creates a fully registered athlete in a single atomic transaction. Admin only.\n\nInternally: creates `auth.users` → sets `app_metadata` → runs `admin_register_athlete_transaction` RPC (inserts users_invitations, users_profiles, athletes, users_disciplines, medals). On any failure, deletes the auth user to avoid orphans.\n\n**Required fields:**\n- `email` — unique email address\n- `password` — min 6 chars\n- `name`, `first_last_name` — VARCHAR(64)\n- `dni_type` — `cedula` | `dimex` | `pasaporte`\n- `dni` — VARCHAR(32), must be unique\n- `birth_date` — DATE (YYYY-MM-DD)\n- `sex` — `male` | `female`\n- `phone` — VARCHAR(64)\n- `district_of_residence` — `san_pedro` | `sabanilla` | `mercedes` | `san_rafael` | `other`\n- `weekly_exercise` — integer 1–7\n- `satisfaction_level` — `very_satisfied` | `satisfied` | `neutral` | `dissatisfied`\n- `facility_satisfaction_level` — `yes` | `no` | `partial`\n- `accepts_data_usage` — must be `true`\n- `accepts_info_accuracy` — must be `true`\n- `discipline_names` — non-empty array of existing discipline names\n\n**Optional:**\n- `second_last_name` — VARCHAR(64)\n- `legal_guardian_name` + `legal_guardian_phone` — required if athlete is under 18 (trigger enforces)\n- `nacional_games_participation`, `international_games_participation` — boolean, default `false`\n- `has_family_support`, `has_family_in_committee` — boolean, default `false`\n- `has_previous_committee` + `previous_committee_name` — boolean + VARCHAR\n- `is_club_member` + `club_name` — boolean + VARCHAR\n- `has_disability` + `disability_type` (`physical` | `cognitive`) + `disability_description`\n- `has_functional_classification` + `classification_category` (`a1`|`a2`|`b1`|`b2`|`c1`|`c2`)\n- `is_representative` — boolean, default `false`. Only valid for sport disciplines.\n- `medals` — array of `{ competition_name, year, medal_type }`. `medal_type`: `gold` | `silver` | `bronze`.\n\n**Response (201):** `{ success: true, user_id, email }`"
+              },
+              "response": []
+            },
             {
               "name": "Get All Athletes",
               "request": {
