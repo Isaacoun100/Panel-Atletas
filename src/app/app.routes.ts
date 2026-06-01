@@ -6,6 +6,7 @@ import { MiPerfil } from './mi-perfil/mi-perfil';
 import { NuevoAtleta } from './nuevo-atleta/nuevo-atleta';
 import { Administrar } from './administrar/administrar';
 import { RegistrarAtleta } from './registrar-atleta/registrar-atleta';
+import { InicioAtleta } from './inicio-atleta/inicio-atleta';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'inicio-sesion', pathMatch: 'full' },
@@ -16,4 +17,5 @@ export const routes: Routes = [
   { path: 'nuevo-atleta', component: NuevoAtleta },
   { path: 'administrar', component: Administrar },
   { path: 'registrar-atleta', component: RegistrarAtleta },
+  { path: 'inicio-atleta', component:InicioAtleta}
 ];
