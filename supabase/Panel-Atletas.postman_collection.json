@@ -452,6 +452,34 @@
           ]
         },
         {
+          "name": "Register Admin",
+          "description": "Create a fully registered admin user in one call. Admin only.",
+          "item": [
+            {
+              "name": "Register Admin (Full)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_JWT}}", "type": "text" },
+                  { "key": "Content-Type", "value": "application/json", "type": "text" }
+                ],
+                "url": {
+                  "raw": "{{SUPABASE_URL}}/functions/v1/admin-register-admin",
+                  "host": ["{{SUPABASE_URL}}"],
+                  "path": ["functions", "v1", "admin-register-admin"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"SecurePassword123!\",\n  \"name\": \"Laura\",\n  \"first_last_name\": \"Vargas\",\n  \"second_last_name\": \"Mora\",\n  \"dni_type\": \"cedula\",\n  \"dni\": \"987654321\",\n  \"birth_date\": \"1990-03-20\",\n  \"sex\": \"female\"\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "description": "Creates a fully registered admin in one atomic call. Admin only.\n\nInternally: creates `auth.users` → sets `app_metadata.role = admin` → runs `admin_register_admin_transaction` RPC (inserts users_invitations + users_profiles). On failure, deletes auth user.\n\n**Required fields:**\n- `email` — unique email address\n- `password` — min 6 chars\n- `name`, `first_last_name` — VARCHAR(64)\n- `dni_type` — `cedula` | `dimex` | `pasaporte`\n- `dni` — VARCHAR(32), must be unique\n- `birth_date` — DATE (YYYY-MM-DD)\n- `sex` — `male` | `female`\n\n**Optional:**\n- `second_last_name` — VARCHAR(64)\n\n**Response (201):** `{ success: true, user_id, email }`"
+              },
+              "response": []
+            }
+          ]
+        },
+        {
           "name": "Profiles",
           "description": "Admin access to all user profiles. RLS allows admins to read and update any profile.",
           "item": [

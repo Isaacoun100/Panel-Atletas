@@ -1061,6 +1061,41 @@ REVOKE EXECUTE ON FUNCTION public.get_my_is_active() FROM PUBLIC;
 REVOKE EXECUTE ON FUNCTION public.get_my_role() FROM PUBLIC;
 REVOKE EXECUTE ON FUNCTION public.is_admin() FROM PUBLIC;
 
+CREATE OR REPLACE FUNCTION public.admin_register_admin_transaction(
+  p_user_id uuid,
+  p_admin_id uuid,
+  p_email text,
+  p_name text,
+  p_first_last_name text,
+  p_second_last_name text,
+  p_dni_type text,
+  p_dni text,
+  p_birth_date date,
+  p_sex text
+)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  PERFORM set_config('request.jwt.claim.sub', p_user_id::text, true);
+
+  INSERT INTO public.users_invitations (email, status, initial_role, expires_at, attempts, fk_invited_by)
+  VALUES (p_email, 'accepted', 'admin', now(), 1, p_admin_id);
+
+  INSERT INTO public.users_profiles (name, first_last_name, second_last_name, dni_type, dni, birth_date, sex, is_active)
+  VALUES (p_name, p_first_last_name, p_second_last_name, p_dni_type::public.dni_type, p_dni, p_birth_date, p_sex::public.sex, true);
+
+EXCEPTION
+  WHEN OTHERS THEN
+    RAISE EXCEPTION 'admin_register_admin_transaction failed: %', SQLERRM;
+END;
+$$;
+
+REVOKE EXECUTE ON FUNCTION public.admin_register_admin_transaction(uuid,uuid,text,text,text,text,text,text,date,text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.admin_register_admin_transaction(uuid,uuid,text,text,text,text,text,text,date,text) TO service_role;
+
 -- =========================
 -- CRON JOBS
 -- =========================
