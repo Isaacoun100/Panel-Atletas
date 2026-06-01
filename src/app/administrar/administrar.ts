@@ -125,23 +125,27 @@ export class Administrar implements OnInit {
     });
   }
 
-// ── Contar atletas por disciplina ───────────────────────────────────
-cargarConteoAtletasPorDisciplina() {
-  const disciplinasActuales = this.disciplinas();
-  
-  disciplinasActuales.forEach((disciplina, index) => {
-    this.adminDisciplinesService.getAthletesCountByDiscipline(disciplina.id_discipline).subscribe({
-      next: (count: number) => {
-        const currentList = this.disciplinas();
-        currentList[index].totalAtletas = count;
-        this.disciplinas.set([...currentList]);
-      },
-      error: (err) => {
-        console.error(`Error contando atletas para ${disciplina.nombre}:`, err);
-      }
+  // ── Contar atletas por disciplina ───────────────────────────────────
+  cargarConteoAtletasPorDisciplina() {
+    const disciplinasActuales = this.disciplinas();
+    
+    disciplinasActuales.forEach((disciplina) => {
+      this.adminDisciplinesService.getAthletesCountByDiscipline(disciplina.id_discipline).subscribe({
+        next: (count: number) => {
+          this.disciplinas.update(currentList =>
+            currentList.map(d =>
+              d.id_discipline === disciplina.id_discipline
+              ? { ...d, totalAtletas: count }
+              : d
+            )
+          );
+        },
+        error: (err) => {
+          console.error(`Error contando atletas para ${disciplina.nombre}:`, err);
+        }
+      });
     });
-  });
-}
+  }
   
 
   // Crear nueva disciplina
@@ -281,10 +285,6 @@ cargarConteoAtletasPorDisciplina() {
       this.isLoading.set(false);
       // Se recargan las disciplinas para asegurar consistencia
       this.cargarDisciplinas();
-
-      setTimeout(() => {
-        this.cargarConteoAtletasPorDisciplina();
-      }, 500);
     })
     .catch((err) => {
       console.error('Error guardando cambios:', err);
