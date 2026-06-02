@@ -27,20 +27,30 @@ export class IncioSesion implements OnInit {
   forgotEmail = '';
   forgotSent = signal(false);
   forgotError = signal('');
+  isSendingReset = signal(false);
 
   // For the login
   isLoading = signal(false);
   errorMessage = signal('');
 
   openForgot() { this.showForgot.set(true); this.forgotSent.set(false); this.forgotError.set(''); }
-  closeForgot() { this.showForgot.set(false); this.forgotEmail = ''; }
+  closeForgot() { this.showForgot.set(false); this.forgotEmail = ''; this.isSendingReset.set(false); }
 
   submitForgot() {
     const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.forgotEmail.trim());
     if (!valid) { this.forgotError.set('Ingresá un correo válido.'); return; }
     this.forgotError.set('');
-    this.forgotSent.set(true);
-    // TODO: call backend password reset API
+    this.isSendingReset.set(true);
+    this.authService.passwordRecovery(this.forgotEmail.trim()).subscribe({
+      next: () => {
+        this.forgotSent.set(true);
+        this.isSendingReset.set(false);
+      },
+      error: () => {
+        this.forgotError.set('No se pudo enviar el correo. Intente nuevamente.');
+        this.isSendingReset.set(false);
+      },
+    });
   }
 
   ngOnInit() {
@@ -64,9 +74,22 @@ export class IncioSesion implements OnInit {
 
     this.authService.signIn(this.email, this.password).subscribe({
       next: (response) => {
+
         localStorage.setItem('access_token', response.access_token)
-        this.router.navigate(['/dashboard']);
+        
+        if(response.user.app_metadata.role==="admin")
+          this.router.navigate(['/dashboard']);
+
+        else if (response.user.app_metadata.role==="athlete")
+          this.router.navigate(['/inicio-atleta']);
+        
+        else
+          this.errorMessage.set('Hay un problema con tu usuario, por favor ponte en contacto con el comité');  
+          
+        
         this.isLoading.set(false);
+
+
       },
       error: () => {
         this.errorMessage.set('Usuario o contraseña no válido')
