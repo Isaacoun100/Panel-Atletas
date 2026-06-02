@@ -7,10 +7,11 @@ import { DashboardParams, DashboardResponse } from '../models/dashboard.model';
 export class DashboardService {
   private http = inject(HttpClient);
   private base = `${environment.apiUrl}/functions/v1/dashboard-stats`;
+  private apiKey = environment.supabaseKey;
 
   private getHeaders(): Record<string, string> {
     const token = localStorage.getItem('access_token');
-    const headers: Record<string, string> = {};
+    const headers: Record<string, string> = { apikey: this.apiKey };
     if (token) headers['Authorization'] = `Bearer ${token}`;
     return headers;
   }
