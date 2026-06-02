@@ -21,11 +21,11 @@ export class AdminStorageService {
 
   uploadClassificationDocumentForUser(userId: string, file: File) {
     return this.http.post<StorageUploadResponse>(
-      `${this.base}/object/${this.bucket}/files/${userId}/clasificacion.pdf`,
+      `${this.base}/object/${this.bucket}/files/${userId}/clasificacion`,
       file,
       {
         headers: this.getHeaders({
-          'Content-Type': file.type || 'application/pdf',
+          'Content-Type': file.type,
           'x-upsert': 'true',
         }),
       }
@@ -34,7 +34,7 @@ export class AdminStorageService {
 
   getClassificationDocSignedUrl(userId: string, expiresIn = 3600) {
     return this.http.post<SignedUrlResponse>(
-      `${this.base}/object/sign/${this.bucket}/files/${userId}/clasificacion.pdf`,
+      `${this.base}/object/sign/${this.bucket}/files/${userId}/clasificacion`,
       { expiresIn },
       { headers: this.getHeaders({ 'Content-Type': 'application/json' }) }
     );
@@ -45,7 +45,7 @@ export class AdminStorageService {
       `${this.base}/object/${this.bucket}`,
       {
         headers: this.getHeaders({ 'Content-Type': 'application/json' }),
-        body: { prefixes: [`files/${userId}/clasificacion.pdf`] },
+        body: { prefixes: [`files/${userId}/clasificacion`] },
       }
     );
   }
