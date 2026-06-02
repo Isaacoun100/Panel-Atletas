@@ -144,6 +144,88 @@ export class RegistrarAtleta implements OnInit {
 
   submitted = false;
 
+  // ── Wizard steps ──────────────────────────────────
+  currentStep = signal(1);
+  stepError = signal('');
+  readonly TOTAL_STEPS = 5;
+  readonly stepLabels = ['Cuenta', 'Datos', 'Contacto', 'Actividad', 'Finalizar'];
+  readonly stepNumbers = [1, 2, 3, 4, 5];
+
+  nextStep() {
+    const err = this.validateCurrentStep();
+    if (err) {
+      this.stepError.set(err);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    this.stepError.set('');
+    if (this.currentStep() < this.TOTAL_STEPS) {
+      this.currentStep.update(s => s + 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+
+  prevStep() {
+    this.stepError.set('');
+    if (this.currentStep() > 1) {
+      this.currentStep.update(s => s - 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+
+  private validateCurrentStep(): string | null {
+    switch (this.currentStep()) {
+      case 1: return this.validateStep1();
+      case 2: return this.validateStep2();
+      case 3: return this.validateStep3();
+      case 4: return this.validateStep4();
+      default: return null;
+    }
+  }
+
+  private validateStep1(): string | null {
+    if (!this.correoManual.trim()) return 'El correo electrónico es requerido.';
+    if (!this.correoManual.includes('@')) return 'Ingrese un correo electrónico válido.';
+    if (!this.contrasena.trim()) return 'La contraseña es requerida.';
+    if (this.contrasena.length < 6) return 'La contraseña debe tener al menos 6 caracteres.';
+    return null;
+  }
+
+  private validateStep2(): string | null {
+    if (!this.nombre.trim()) return 'El nombre es requerido.';
+    if (!this.primerApellido.trim()) return 'El primer apellido es requerido.';
+    if (!this.segundoApellido.trim()) return 'El segundo apellido es requerido.';
+    if (!this.numeroId.trim()) return 'El número de identificación es requerido.';
+    if (!this.fechaNacimiento) return 'La fecha de nacimiento es requerida.';
+    if (!this.sexo) return 'El sexo es requerido.';
+    if (this.esMinor) {
+      if (!this.nombreEncargado.trim()) return 'El nombre del encargado es requerido.';
+      if (!this.telefonoEncargado.trim()) return 'El teléfono del encargado es requerido.';
+    }
+    return null;
+  }
+
+  private validateStep3(): string | null {
+    if (!this.telefono.trim()) return 'El teléfono es requerido.';
+    if (!this.distrito) return 'El distrito de residencia es requerido.';
+    return null;
+  }
+
+  private validateStep4(): string | null {
+    if (!this.recRecreativa && !this.recDeportiva) return 'Seleccione al menos un tipo de actividad.';
+    if (this.selectedDisciplines().length === 0) return 'Seleccione al menos una disciplina.';
+    if (this.showDeportiva) {
+      if (!this.esRepresentacion) return '¿Representa al comité competitivamente? es requerido.';
+      if (!this.participoJDN) return '¿Ha participado en Juegos Deportivos Nacionales? es requerido.';
+      if (!this.participoInternacional) return '¿Ha participado en competencias internacionales? es requerido.';
+      if (!this.obtuvoPremio) return '¿Ha obtenido medallas? es requerido.';
+    }
+    if (!this.frecuenciaSemanal) return 'La frecuencia semanal es requerida.';
+    if (this.showDeportiva && !this.apoyoFamiliar) return '¿Cuenta con apoyo familiar? es requerido.';
+    if (!this.nivelSatisfaccion) return 'El nivel de satisfacción es requerido.';
+    return null;
+  }
+
   // ── Dropdown handlers ─────────────────────────────
   @HostListener('document:click', ['$event'])
   onDocumentClick(e: MouseEvent) {
@@ -192,8 +274,24 @@ export class RegistrarAtleta implements OnInit {
     return n === 0 ? 'Categoría funcional' : `${n} categoría${n > 1 ? 's' : ''}`;
   }
 
+  isDark = signal(false);
+
   constructor(private router: Router) {}
-  ngOnInit() {}
+
+  ngOnInit() {
+    const saved = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const dark = saved ? saved === 'dark' : prefersDark;
+    this.isDark.set(dark);
+    document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+  }
+
+  toggleTheme() {
+    const next = !this.isDark();
+    this.isDark.set(next);
+    document.documentElement.setAttribute('data-theme', next ? 'dark' : 'light');
+    localStorage.setItem('theme', next ? 'dark' : 'light');
+  }
 
   onSubmit() {
     if (this.canSubmit) {
