@@ -1089,6 +1089,219 @@
           ]
         }
       ]
+    },
+    {
+      "name": "Storage",
+      "description": "Supabase Storage REST API for the panel_files bucket.\n\nBucket is private — all requests require a valid JWT.\nFolders:\n- avatars/{user_id}/ — profile photos\n- files/{user_id}/  — medical/classification documents (owner upload, admin-delete only)",
+      "item": [
+        {
+          "name": "User",
+          "description": "Storage actions available to any authenticated active user.",
+          "item": [
+            {
+              "name": "Upload Avatar",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "apikey", "value": "{{SUPABASE_KEY}}", "type": "text" },
+                  { "key": "Authorization", "value": "Bearer {{USER_JWT}}", "type": "text" },
+                  { "key": "Content-Type", "value": "image/jpeg", "type": "text" }
+                ],
+                "url": {
+                  "raw": "{{SUPABASE_URL}}/storage/v1/object/panel_files/avatars/{{USER_ID}}/avatar.jpg",
+                  "host": ["{{SUPABASE_URL}}"],
+                  "path": ["storage", "v1", "object", "panel_files", "avatars", "{{USER_ID}}", "avatar.jpg"]
+                },
+                "body": {
+                  "mode": "file",
+                  "file": {}
+                },
+                "description": "Uploads a profile photo. Path must match the authenticated user's own USER_ID — RLS blocks uploading to other users' paths.\n\nSet body to 'binary' and select a .jpg/.png file.\nContent-Type must match the file type."
+              }
+            },
+            {
+              "name": "Upload Classification Document",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "apikey", "value": "{{SUPABASE_KEY}}", "type": "text" },
+                  { "key": "Authorization", "value": "Bearer {{USER_JWT}}", "type": "text" },
+                  { "key": "Content-Type", "value": "application/pdf", "type": "text" }
+                ],
+                "url": {
+                  "raw": "{{SUPABASE_URL}}/storage/v1/object/panel_files/files/{{USER_ID}}/clasificacion.pdf",
+                  "host": ["{{SUPABASE_URL}}"],
+                  "path": ["storage", "v1", "object", "panel_files", "files", "{{USER_ID}}", "clasificacion.pdf"]
+                },
+                "body": {
+                  "mode": "file",
+                  "file": {}
+                },
+                "description": "Athlete uploads their own functional classification document during self-registration (invitation flow). Path must match their own USER_ID.\n\nAfter upload, save the path 'files/{{USER_ID}}/clasificacion.pdf' as classification_document_url in the athletes table."
+              }
+            },
+            {
+              "name": "Get Avatar Signed URL",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "apikey", "value": "{{SUPABASE_KEY}}", "type": "text" },
+                  { "key": "Authorization", "value": "Bearer {{USER_JWT}}", "type": "text" },
+                  { "key": "Content-Type", "value": "application/json", "type": "text" }
+                ],
+                "url": {
+                  "raw": "{{SUPABASE_URL}}/storage/v1/object/sign/panel_files/avatars/{{USER_ID}}/avatar.jpg",
+                  "host": ["{{SUPABASE_URL}}"],
+                  "path": ["storage", "v1", "object", "sign", "panel_files", "avatars", "{{USER_ID}}", "avatar.jpg"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"expiresIn\": 3600\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "description": "Returns a signed URL valid for 3600 seconds (1 hour). Use the returned signedURL to serve the image in <img src=\"...\">.\n\nIncrease expiresIn for longer-lived URLs."
+              }
+            },
+            {
+              "name": "Get Classification Doc Signed URL",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "apikey", "value": "{{SUPABASE_KEY}}", "type": "text" },
+                  { "key": "Authorization", "value": "Bearer {{USER_JWT}}", "type": "text" },
+                  { "key": "Content-Type", "value": "application/json", "type": "text" }
+                ],
+                "url": {
+                  "raw": "{{SUPABASE_URL}}/storage/v1/object/sign/panel_files/files/{{USER_ID}}/clasificacion.pdf",
+                  "host": ["{{SUPABASE_URL}}"],
+                  "path": ["storage", "v1", "object", "sign", "panel_files", "files", "{{USER_ID}}", "clasificacion.pdf"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"expiresIn\": 3600\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "description": "Returns a signed URL for the athlete's classification document. User can only access their own file — RLS blocks access to other users' documents."
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin",
+          "description": "Storage actions restricted to active admins (ADMIN_JWT required).",
+          "item": [
+            {
+              "name": "Upload Classification Doc (on behalf of user)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "apikey", "value": "{{SUPABASE_KEY}}", "type": "text" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_JWT}}", "type": "text" },
+                  { "key": "Content-Type", "value": "application/pdf", "type": "text" }
+                ],
+                "url": {
+                  "raw": "{{SUPABASE_URL}}/storage/v1/object/panel_files/files/{{USER_ID}}/clasificacion.pdf",
+                  "host": ["{{SUPABASE_URL}}"],
+                  "path": ["storage", "v1", "object", "panel_files", "files", "{{USER_ID}}", "clasificacion.pdf"]
+                },
+                "body": {
+                  "mode": "file",
+                  "file": {}
+                },
+                "description": "Admin uploads the classification document on behalf of an athlete (e.g. during direct registration via admin-register-athlete).\n\nThe resulting path should be saved as classification_document_url in the athletes table."
+              }
+            },
+            {
+              "name": "Get Any User Avatar Signed URL",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "apikey", "value": "{{SUPABASE_KEY}}", "type": "text" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_JWT}}", "type": "text" },
+                  { "key": "Content-Type", "value": "application/json", "type": "text" }
+                ],
+                "url": {
+                  "raw": "{{SUPABASE_URL}}/storage/v1/object/sign/panel_files/avatars/{{USER_ID}}/avatar.jpg",
+                  "host": ["{{SUPABASE_URL}}"],
+                  "path": ["storage", "v1", "object", "sign", "panel_files", "avatars", "{{USER_ID}}", "avatar.jpg"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"expiresIn\": 3600\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "description": "Admin can get a signed URL for any user's avatar. Set USER_ID to the target athlete's UUID."
+              }
+            },
+            {
+              "name": "Get Any User Classification Doc Signed URL",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "apikey", "value": "{{SUPABASE_KEY}}", "type": "text" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_JWT}}", "type": "text" },
+                  { "key": "Content-Type", "value": "application/json", "type": "text" }
+                ],
+                "url": {
+                  "raw": "{{SUPABASE_URL}}/storage/v1/object/sign/panel_files/files/{{USER_ID}}/clasificacion.pdf",
+                  "host": ["{{SUPABASE_URL}}"],
+                  "path": ["storage", "v1", "object", "sign", "panel_files", "files", "{{USER_ID}}", "clasificacion.pdf"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"expiresIn\": 3600\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "description": "Admin can get a signed URL for any athlete's classification document."
+              }
+            },
+            {
+              "name": "Delete Classification Doc",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  { "key": "apikey", "value": "{{SUPABASE_KEY}}", "type": "text" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_JWT}}", "type": "text" },
+                  { "key": "Content-Type", "value": "application/json", "type": "text" }
+                ],
+                "url": {
+                  "raw": "{{SUPABASE_URL}}/storage/v1/object/panel_files",
+                  "host": ["{{SUPABASE_URL}}"],
+                  "path": ["storage", "v1", "object", "panel_files"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"prefixes\": [\"files/{{USER_ID}}/clasificacion.pdf\"]\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "description": "Deletes a classification document. Admin-only — RLS blocks athletes from deleting their own medical documents.\n\nUpdate prefixes array to match the actual file path."
+              }
+            },
+            {
+              "name": "Delete Avatar",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  { "key": "apikey", "value": "{{SUPABASE_KEY}}", "type": "text" },
+                  { "key": "Authorization", "value": "Bearer {{ADMIN_JWT}}", "type": "text" },
+                  { "key": "Content-Type", "value": "application/json", "type": "text" }
+                ],
+                "url": {
+                  "raw": "{{SUPABASE_URL}}/storage/v1/object/panel_files",
+                  "host": ["{{SUPABASE_URL}}"],
+                  "path": ["storage", "v1", "object", "panel_files"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"prefixes\": [\"avatars/{{USER_ID}}/avatar.jpg\"]\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "description": "Deletes a user's avatar. Admin can delete any user's avatar."
+              }
+            }
+          ]
+        }
+      ]
     }
   ]
 }

@@ -55,7 +55,7 @@ A caller is **admin** when `users_profiles` has `role = 'admin' AND is_active = 
 | UPDATE | owner (active) or admin |
 | DELETE | admin only |
 
-\* Admin INSERT allowed because `admin-register-athlete` uploads the document on behalf of the new athlete during registration.
+\* Owner INSERT: athlete uploads their own document during self-registration (invitation flow). Admin INSERT: used by `admin-register-athlete` to upload on behalf of a new athlete.
 
 ---
 
