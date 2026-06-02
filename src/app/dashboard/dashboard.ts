@@ -59,11 +59,11 @@ export class Dashboard implements OnInit {
       case 'user_registered':
       case 'invite_accepted':
       case 'user_activated':
-      case 'discipline_created': return 'db-activity-dot--success';
-      case 'user_deactivated':   return 'db-activity-dot--danger';
+      case 'discipline_created': return 'db-activity-dot db-activity-dot--success';
+      case 'user_deactivated':   return 'db-activity-dot db-activity-dot--danger';
       case 'invite_sent':
       case 'profile_updated':
-      default:                   return 'db-activity-dot--primary';
+      default:                   return 'db-activity-dot db-activity-dot--primary';
     }
   }
 

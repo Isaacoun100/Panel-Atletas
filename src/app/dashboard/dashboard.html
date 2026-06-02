@@ -290,7 +290,7 @@
               } @else {
                 @for (e of activity(); track e.id_audit_log) {
                   <div class="db-activity-item">
-                    <div class="db-activity-dot" [class]="activityDotClass(e.action)"></div>
+                    <div [class]="activityDotClass(e.action)"></div>
                     <div>
                       <p class="db-activity-text">
                         {{ activityLabel(e).text }} <strong>{{ activityLabel(e).bold }}</strong>
