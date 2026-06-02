@@ -504,7 +504,7 @@ export class InicioAtleta implements OnInit {
     input.value = '';
     if (!file) return;
 
-    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
     if (!validTypes.includes(file.type)) {
       this.avatarUploadError.set('Solo se aceptan imágenes (JPG, PNG, WebP).');
       return;
