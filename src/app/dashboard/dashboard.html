@@ -126,6 +126,16 @@
       </div>
     </header>
 
+    <!-- Load error -->
+    @if (loadError()) {
+      <section class="db-section pb-0">
+        <div class="alert alert-danger d-flex align-items-center gap-2 py-2" role="alert">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg>
+          {{ loadError() }}
+        </div>
+      </section>
+    }
+
     <!-- Stat cards -->
     <section class="db-section">
       <div class="row g-3">
@@ -139,10 +149,16 @@
               </svg>
             </div>
             <div class="db-stat-body">
-              <span class="db-stat-value">148</span>
+              <span class="db-stat-value">
+                @if (isLoading()) { <span class="spinner-border spinner-border-sm" role="status"></span> }
+                @else { {{ stats()?.totalAthletes ?? '—' }} }
+              </span>
               <span class="db-stat-label">Total Atletas</span>
             </div>
-            <span class="db-stat-badge db-stat-badge--success">+12 este mes</span>
+            <span class="db-stat-badge db-stat-badge--success">
+              @if (!isLoading() && stats()) { +{{ stats()!.thisMonthAthletes }} este mes }
+              @else { — }
+            </span>
           </div>
         </div>
         <div class="col-6 col-xl-3">
@@ -153,7 +169,10 @@
               </svg>
             </div>
             <div class="db-stat-body">
-              <span class="db-stat-value">34</span>
+              <span class="db-stat-value">
+                @if (isLoading()) { <span class="spinner-border spinner-border-sm" role="status"></span> }
+                @else { {{ stats()?.activeDisciplines ?? '—' }} }
+              </span>
               <span class="db-stat-label">Disciplinas</span>
             </div>
             <span class="db-stat-badge db-stat-badge--accent">Activas</span>
@@ -168,7 +187,10 @@
               </svg>
             </div>
             <div class="db-stat-body">
-              <span class="db-stat-value">7</span>
+              <span class="db-stat-value">
+                @if (isLoading()) { <span class="spinner-border spinner-border-sm" role="status"></span> }
+                @else { {{ stats()?.pendingInvitations ?? '—' }} }
+              </span>
               <span class="db-stat-label">Pendientes</span>
             </div>
             <span class="db-stat-badge db-stat-badge--warning">Por revisar</span>
@@ -183,7 +205,10 @@
               </svg>
             </div>
             <div class="db-stat-body">
-              <span class="db-stat-value">3</span>
+              <span class="db-stat-value">
+                @if (isLoading()) { <span class="spinner-border spinner-border-sm" role="status"></span> }
+                @else { {{ stats()?.inactiveAthletes ?? '—' }} }
+              </span>
               <span class="db-stat-label">Inactivos</span>
             </div>
             <span class="db-stat-badge db-stat-badge--danger">Requieren acción</span>
@@ -208,67 +233,41 @@
                 <thead>
                   <tr>
                     <th>Atleta</th>
-                    <th>Disciplina</th>
                     <th>Estado</th>
                     <th>Registro</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <td>
-                      <div class="db-table-user">
-                        <div class="db-table-avatar">CM</div>
-                        <span>Carlos Mora</span>
-                      </div>
-                    </td>
-                    <td>Natación</td>
-                    <td><span class="db-badge db-badge--success">Activo</span></td>
-                    <td>24 Abr 2025</td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <div class="db-table-user">
-                        <div class="db-table-avatar">LR</div>
-                        <span>Laura Rodríguez</span>
-                      </div>
-                    </td>
-                    <td>Atletismo</td>
-                    <td><span class="db-badge db-badge--success">Activo</span></td>
-                    <td>22 Abr 2025</td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <div class="db-table-user">
-                        <div class="db-table-avatar">PG</div>
-                        <span>Pedro González</span>
-                      </div>
-                    </td>
-                    <td>Fútbol</td>
-                    <td><span class="db-badge db-badge--warning">Pendiente</span></td>
-                    <td>20 Abr 2025</td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <div class="db-table-user">
-                        <div class="db-table-avatar">AF</div>
-                        <span>Andrea Flores</span>
-                      </div>
-                    </td>
-                    <td>Gimnasia</td>
-                    <td><span class="db-badge db-badge--success">Activo</span></td>
-                    <td>18 Abr 2025</td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <div class="db-table-user">
-                        <div class="db-table-avatar">MV</div>
-                        <span>Marco Vargas</span>
-                      </div>
-                    </td>
-                    <td>Baloncesto</td>
-                    <td><span class="db-badge db-badge--danger">Inactivo</span></td>
-                    <td>15 Abr 2025</td>
-                  </tr>
+                  @if (isLoading()) {
+                    <tr>
+                      <td colspan="3" class="text-center py-4">
+                        <div class="spinner-border spinner-border-sm" style="color:var(--primary)" role="status"></div>
+                      </td>
+                    </tr>
+                  } @else if (recentAthletes().length === 0) {
+                    <tr>
+                      <td colspan="3" class="text-center py-4" style="color:var(--text-3)">Sin atletas registrados</td>
+                    </tr>
+                  } @else {
+                    @for (a of recentAthletes(); track a.id_user) {
+                      <tr>
+                        <td>
+                          <div class="db-table-user">
+                            <div class="db-table-avatar">{{ initials(a) }}</div>
+                            <span>{{ a.name }} {{ a.first_last_name }}</span>
+                          </div>
+                        </td>
+                        <td>
+                          @if (a.is_active) {
+                            <span class="db-badge db-badge--success">Activo</span>
+                          } @else {
+                            <span class="db-badge db-badge--danger">Inactivo</span>
+                          }
+                        </td>
+                        <td>{{ formatDate(a.created_at) }}</td>
+                      </tr>
+                    }
+                  }
                 </tbody>
               </table>
             </div>
@@ -282,41 +281,25 @@
               <span class="db-card-title">Actividad Reciente</span>
             </div>
             <div class="db-activity">
-              <div class="db-activity-item">
-                <div class="db-activity-dot db-activity-dot--success"></div>
-                <div>
-                  <p class="db-activity-text">Nuevo atleta registrado: <strong>Carlos Mora</strong></p>
-                  <span class="db-activity-time">Hace 2 horas</span>
+              @if (isLoading()) {
+                <div class="d-flex justify-content-center py-4">
+                  <div class="spinner-border spinner-border-sm" style="color:var(--primary)" role="status"></div>
                 </div>
-              </div>
-              <div class="db-activity-item">
-                <div class="db-activity-dot db-activity-dot--primary"></div>
-                <div>
-                  <p class="db-activity-text">Perfil actualizado: <strong>Laura Rodríguez</strong></p>
-                  <span class="db-activity-time">Hace 5 horas</span>
-                </div>
-              </div>
-              <div class="db-activity-item">
-                <div class="db-activity-dot db-activity-dot--warning"></div>
-                <div>
-                  <p class="db-activity-text">Solicitud pendiente de <strong>Pedro González</strong></p>
-                  <span class="db-activity-time">Ayer</span>
-                </div>
-              </div>
-              <div class="db-activity-item">
-                <div class="db-activity-dot db-activity-dot--success"></div>
-                <div>
-                  <p class="db-activity-text">Nueva disciplina añadida: <strong>Gimnasia</strong></p>
-                  <span class="db-activity-time">Hace 2 días</span>
-                </div>
-              </div>
-              <div class="db-activity-item">
-                <div class="db-activity-dot db-activity-dot--danger"></div>
-                <div>
-                  <p class="db-activity-text">Atleta inactivo: <strong>Marco Vargas</strong></p>
-                  <span class="db-activity-time">Hace 3 días</span>
-                </div>
-              </div>
+              } @else if (activity().length === 0) {
+                <p class="text-center py-4 mb-0 small" style="color:var(--text-3)">Sin actividad reciente</p>
+              } @else {
+                @for (e of activity(); track e.id_audit_log) {
+                  <div class="db-activity-item">
+                    <div class="db-activity-dot" [class]="activityDotClass(e.action)"></div>
+                    <div>
+                      <p class="db-activity-text">
+                        {{ activityLabel(e).text }} <strong>{{ activityLabel(e).bold }}</strong>
+                      </p>
+                      <span class="db-activity-time">{{ timeAgo(e.created_at) }}</span>
+                    </div>
+                  </div>
+                }
+              }
             </div>
           </div>
         </div>
