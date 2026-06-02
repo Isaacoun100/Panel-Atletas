@@ -1105,7 +1105,8 @@
                 "header": [
                   { "key": "apikey", "value": "{{SUPABASE_KEY}}", "type": "text" },
                   { "key": "Authorization", "value": "Bearer {{USER_JWT}}", "type": "text" },
-                  { "key": "Content-Type", "value": "image/jpeg", "type": "text" }
+                  { "key": "Content-Type", "value": "image/jpeg", "type": "text" },
+                  { "key": "x-upsert", "value": "true", "type": "text", "description": "Overwrites existing file. Remove this header on first upload if you want to error on duplicate." }
                 ],
                 "url": {
                   "raw": "{{SUPABASE_URL}}/storage/v1/object/panel_files/avatars/{{USER_ID}}/avatar.jpg",
@@ -1116,28 +1117,29 @@
                   "mode": "file",
                   "file": {}
                 },
-                "description": "Uploads a profile photo. Path must match the authenticated user's own USER_ID — RLS blocks uploading to other users' paths.\n\nSet body to 'binary' and select a .jpg/.png file.\nContent-Type must match the file type."
+                "description": "Uploads or replaces the user's profile photo.\n\nPath pattern: avatars/{USER_ID}/avatar.jpg\nRLS: user can only upload to their own USER_ID path.\n\nSteps:\n1. Set body mode to 'binary', select image file\n2. Change Content-Type to match file (image/jpeg, image/png, image/webp)\n3. x-upsert: true allows overwrite — always include it for avatar updates\n\nAfter upload, save the path 'avatars/{{USER_ID}}/avatar.jpg' in users_profiles.profile_image_url.\nDo NOT save the full URL — just the path. Generate a signed URL on demand when displaying."
               }
             },
             {
-              "name": "Upload Classification Document",
+              "name": "Update Avatar (Overwrite)",
               "request": {
                 "method": "POST",
                 "header": [
                   { "key": "apikey", "value": "{{SUPABASE_KEY}}", "type": "text" },
                   { "key": "Authorization", "value": "Bearer {{USER_JWT}}", "type": "text" },
-                  { "key": "Content-Type", "value": "application/pdf", "type": "text" }
+                  { "key": "Content-Type", "value": "image/jpeg", "type": "text" },
+                  { "key": "x-upsert", "value": "true", "type": "text" }
                 ],
                 "url": {
-                  "raw": "{{SUPABASE_URL}}/storage/v1/object/panel_files/files/{{USER_ID}}/clasificacion.pdf",
+                  "raw": "{{SUPABASE_URL}}/storage/v1/object/panel_files/avatars/{{USER_ID}}/avatar.jpg",
                   "host": ["{{SUPABASE_URL}}"],
-                  "path": ["storage", "v1", "object", "panel_files", "files", "{{USER_ID}}", "clasificacion.pdf"]
+                  "path": ["storage", "v1", "object", "panel_files", "avatars", "{{USER_ID}}", "avatar.jpg"]
                 },
                 "body": {
                   "mode": "file",
                   "file": {}
                 },
-                "description": "Athlete uploads their own functional classification document during self-registration (invitation flow). Path must match their own USER_ID.\n\nAfter upload, save the path 'files/{{USER_ID}}/clasificacion.pdf' as classification_document_url in the athletes table."
+                "description": "Same as Upload Avatar — x-upsert: true handles both create and update. Use this when the user is changing their existing avatar."
               }
             },
             {
@@ -1159,7 +1161,61 @@
                   "raw": "{\n  \"expiresIn\": 3600\n}",
                   "options": { "raw": { "language": "json" } }
                 },
-                "description": "Returns a signed URL valid for 3600 seconds (1 hour). Use the returned signedURL to serve the image in <img src=\"...\">.\n\nIncrease expiresIn for longer-lived URLs."
+                "description": "Returns a temporary signed URL to display the avatar.\n\nResponse: { \"signedURL\": \"/storage/v1/object/sign/...?token=...\" }\n\nTo use in browser/app: prefix with base URL:\nhttps://oduejasasklthjttssze.supabase.co + signedURL\n\nexpiresIn: seconds the URL stays valid (3600 = 1 hour).\n\nIMPORTANT: Never save the signed URL in DB — it expires. Save only the path, request a new signed URL each time you need to display it."
+              }
+            },
+            {
+              "name": "Check If Avatar Exists",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "apikey", "value": "{{SUPABASE_KEY}}", "type": "text" },
+                  { "key": "Authorization", "value": "Bearer {{USER_JWT}}", "type": "text" }
+                ],
+                "url": {
+                  "raw": "{{SUPABASE_URL}}/storage/v1/object/panel_files/avatars/{{USER_ID}}/avatar.jpg",
+                  "host": ["{{SUPABASE_URL}}"],
+                  "path": ["storage", "v1", "object", "panel_files", "avatars", "{{USER_ID}}", "avatar.jpg"]
+                },
+                "description": "Returns 200 with the file binary if it exists, 400 if not found.\n\nUse this to check whether a user has an avatar before trying to display it."
+              }
+            },
+            {
+              "name": "Upload Classification Document",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "apikey", "value": "{{SUPABASE_KEY}}", "type": "text" },
+                  { "key": "Authorization", "value": "Bearer {{USER_JWT}}", "type": "text" },
+                  { "key": "Content-Type", "value": "application/pdf", "type": "text" },
+                  { "key": "x-upsert", "value": "true", "type": "text" }
+                ],
+                "url": {
+                  "raw": "{{SUPABASE_URL}}/storage/v1/object/panel_files/files/{{USER_ID}}/clasificacion.pdf",
+                  "host": ["{{SUPABASE_URL}}"],
+                  "path": ["storage", "v1", "object", "panel_files", "files", "{{USER_ID}}", "clasificacion.pdf"]
+                },
+                "body": {
+                  "mode": "file",
+                  "file": {}
+                },
+                "description": "Athlete uploads their functional classification document during self-registration (invitation flow).\n\nPath pattern: files/{USER_ID}/clasificacion.pdf\nRLS: user can only upload to their own USER_ID path.\n\nAfter upload, save the path 'files/{{USER_ID}}/clasificacion.pdf' as athletes.classification_document_url in the DB."
+              }
+            },
+            {
+              "name": "Check If Classification Document Exists",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "apikey", "value": "{{SUPABASE_KEY}}", "type": "text" },
+                  { "key": "Authorization", "value": "Bearer {{USER_JWT}}", "type": "text" }
+                ],
+                "url": {
+                  "raw": "{{SUPABASE_URL}}/storage/v1/object/panel_files/files/{{USER_ID}}/clasificacion.pdf",
+                  "host": ["{{SUPABASE_URL}}"],
+                  "path": ["storage", "v1", "object", "panel_files", "files", "{{USER_ID}}", "clasificacion.pdf"]
+                },
+                "description": "Returns 200 with file binary if document exists, 400 if not found.\n\nUse this to check whether the athlete has already uploaded their classification document before showing upload UI or a download button."
               }
             },
             {
@@ -1181,7 +1237,7 @@
                   "raw": "{\n  \"expiresIn\": 3600\n}",
                   "options": { "raw": { "language": "json" } }
                 },
-                "description": "Returns a signed URL for the athlete's classification document. User can only access their own file — RLS blocks access to other users' documents."
+                "description": "Returns a signed URL to download/view the classification document.\n\nTo open: prefix signedURL with https://oduejasasklthjttssze.supabase.co\nPaste full URL in browser to download the PDF.\n\nRLS: user can only access their own document."
               }
             }
           ]
@@ -1191,13 +1247,14 @@
           "description": "Storage actions restricted to active admins (ADMIN_JWT required).",
           "item": [
             {
-              "name": "Upload Classification Doc (on behalf of user)",
+              "name": "Upload Classification Doc (on behalf of athlete)",
               "request": {
                 "method": "POST",
                 "header": [
                   { "key": "apikey", "value": "{{SUPABASE_KEY}}", "type": "text" },
                   { "key": "Authorization", "value": "Bearer {{ADMIN_JWT}}", "type": "text" },
-                  { "key": "Content-Type", "value": "application/pdf", "type": "text" }
+                  { "key": "Content-Type", "value": "application/pdf", "type": "text" },
+                  { "key": "x-upsert", "value": "true", "type": "text" }
                 ],
                 "url": {
                   "raw": "{{SUPABASE_URL}}/storage/v1/object/panel_files/files/{{USER_ID}}/clasificacion.pdf",
@@ -1208,7 +1265,7 @@
                   "mode": "file",
                   "file": {}
                 },
-                "description": "Admin uploads the classification document on behalf of an athlete (e.g. during direct registration via admin-register-athlete).\n\nThe resulting path should be saved as classification_document_url in the athletes table."
+                "description": "Admin uploads the classification document during direct athlete registration (admin-register-athlete flow).\n\nUSER_ID must be the newly created athlete's UUID.\nAfter upload, save the path 'files/{{USER_ID}}/clasificacion.pdf' as athletes.classification_document_url."
               }
             },
             {
@@ -1230,7 +1287,7 @@
                   "raw": "{\n  \"expiresIn\": 3600\n}",
                   "options": { "raw": { "language": "json" } }
                 },
-                "description": "Admin can get a signed URL for any user's avatar. Set USER_ID to the target athlete's UUID."
+                "description": "Admin can get a signed URL for any user's avatar. Set USER_ID to the target athlete's UUID.\n\nTo display: https://oduejasasklthjttssze.supabase.co + signedURL"
               }
             },
             {
@@ -1252,7 +1309,7 @@
                   "raw": "{\n  \"expiresIn\": 3600\n}",
                   "options": { "raw": { "language": "json" } }
                 },
-                "description": "Admin can get a signed URL for any athlete's classification document."
+                "description": "Admin can get a signed URL for any athlete's classification document.\n\nTo open: https://oduejasasklthjttssze.supabase.co + signedURL"
               }
             },
             {
@@ -1274,7 +1331,7 @@
                   "raw": "{\n  \"prefixes\": [\"files/{{USER_ID}}/clasificacion.pdf\"]\n}",
                   "options": { "raw": { "language": "json" } }
                 },
-                "description": "Deletes a classification document. Admin-only — RLS blocks athletes from deleting their own medical documents.\n\nUpdate prefixes array to match the actual file path."
+                "description": "Permanently deletes a classification document. Admin-only — athletes cannot delete their own medical documents.\n\nUpdate USER_ID in the prefixes array to target the correct file."
               }
             },
             {
