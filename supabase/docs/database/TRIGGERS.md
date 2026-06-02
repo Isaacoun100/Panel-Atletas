@@ -214,6 +214,20 @@ Logs a `discipline_created` event to `audit_log` whenever a new discipline is ad
 
 ---
 
+## set_updated_at_users_profiles / set_updated_at_athletes / set_updated_at_users_invitations / set_updated_at_medals / set_updated_at_users_disciplines
+
+**Tables:** `users_profiles`, `athletes`, `users_invitations`, `medals`, `users_disciplines`
+**Event:** `BEFORE UPDATE`
+**Function:** `set_updated_at()`
+
+Auto-sets `updated_at = now()` on every UPDATE so callers never need to pass the timestamp manually.
+
+**Logic:** `NEW.updated_at = now(); RETURN NEW;`
+
+**Migration:** `updated_at_triggers` (profiles/athletes/invitations), `updated_at_medals_disciplines` (medals/users_disciplines)
+
+---
+
 ## sync_profile_metadata
 
 **Table:** `public.users_profiles`
