@@ -1,5 +1,26 @@
+/* ── Theme toggle ────────────────────────────────────── */
+.ra-theme-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px; height: 36px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-2);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  z-index: 10;
+}
+
+.ra-theme-btn:hover { background: var(--surface-2); color: var(--text); }
+
 /* ── Page wrapper ────────────────────────────────────── */
 .ra-page {
+  position: relative;
   background: var(--bg);
   min-height: 100vh;
   padding-bottom: 3rem;
@@ -341,6 +362,66 @@
 
 .ra-success h2 { color: var(--text); font-size: 1.4rem; font-weight: 700; margin: 1rem 0 0.5rem; }
 .ra-success p  { color: var(--text-2); font-size: 0.9rem; margin: 0; }
+
+/* ── Wizard stepper ─────────────────────────────────── */
+.ra-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0 1.5rem;
+}
+
+.ra-step-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  flex-shrink: 0;
+}
+
+.ra-step-circle {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.8rem; font-weight: 700;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.ra-step-item--active .ra-step-circle {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: #fff;
+}
+
+.ra-step-item--done .ra-step-circle {
+  border-color: var(--success);
+  background: var(--success);
+  color: #fff;
+}
+
+.ra-step-label {
+  font-size: 0.68rem;
+  color: var(--text-3);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.ra-step-item--active .ra-step-label { color: var(--primary); font-weight: 600; }
+.ra-step-item--done .ra-step-label   { color: var(--success); }
+
+.ra-step-line {
+  flex: 1;
+  height: 2px;
+  background: var(--border);
+  margin-bottom: 1.25rem;
+  min-width: 16px; max-width: 56px;
+  transition: background 0.2s;
+}
+
+.ra-step-line--done { background: var(--success); }
 
 /* ── Footer ──────────────────────────────────────────── */
 .ra-footer {

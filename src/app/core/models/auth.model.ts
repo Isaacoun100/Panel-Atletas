@@ -7,5 +7,8 @@ export interface SignInResponse {
     id: string;
     email: string;
     role: string;
+    app_metadata: {
+      role: string;
+    };
   };
 }
