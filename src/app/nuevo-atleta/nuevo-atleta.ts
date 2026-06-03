@@ -1,8 +1,15 @@
-import { Component, OnInit, HostListener, signal, computed } from '@angular/core';
+import { Component, OnInit, HostListener, signal, computed, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TitleCasePipe } from '@angular/common';
+import { firstValueFrom } from 'rxjs';
+import { AuthService } from '../core/services/auth.service';
+import { DisciplinesService } from '../core/services/disciplines.service';
+import { DistrictOfResidence, FunctionalClassificationCategory, SatisfactionLevel } from '../core/models/athlete.model';
+import { Discipline } from '../core/models/discipline.model';
+import { MedalType } from '../core/models/medal.model';
+import { RegisterUserDniType, RegisterUserSex } from '../core/models/auth.model';
 
 interface Medalla { prueba: string; tipo: string; anio: string; }
 
@@ -13,8 +20,16 @@ interface Medalla { prueba: string; tipo: string; anio: string; }
   styleUrl: './nuevo-atleta.css',
 })
 export class NuevoAtleta implements OnInit {
+  private authService = inject(AuthService);
+  private disciplinesService = inject(DisciplinesService);
+  private router = inject(Router);
+
   isDark = signal(false);
   activeTab = signal<'email' | 'manual'>('email');
+  isSubmitting = signal(false);
+  isLoadingDisciplines = signal(false);
+  manualError = signal('');
+  manualSuccess = signal('');
 
   // ── Email invitation ──────────────────────────────
   emailInput = '';
@@ -42,7 +57,7 @@ export class NuevoAtleta implements OnInit {
     return age > 0 ? age : 0;
   }
 
-  get esMinor(): boolean { return this.edad > 0 && this.edad < 18; }
+  get esMinor(): boolean { return Boolean(this.fechaNacimiento) && this.edad < 18; }
 
   // ── 2. Encargado (if < 18) ────────────────────────
   nombreEncargado = '';
@@ -60,20 +75,15 @@ export class NuevoAtleta implements OnInit {
   // Computed: show deportiva-only sections
   get showDeportiva(): boolean { return this.recDeportiva; }
 
-  readonly disciplinasRecreativas = [
-    'Aeróbicos', 'Yoga', 'Caminata', 'Baile', 'Zumba', 'Pilates', 'Natación recreativa',
-  ];
-
-  readonly disciplinasDeportivas = [
-    'Natación', 'Atletismo', 'Fútbol', 'Gimnasia', 'Baloncesto',
-    'Ciclismo', 'Voleibol', 'Para Tenis de Mesa', 'Tenis', 'Judo', 'Taekwondo',
-  ];
+  disciplinas = signal<Discipline[]>([]);
 
   get disciplineOptions(): string[] {
-    const opts: string[] = [];
-    if (this.recRecreativa) opts.push(...this.disciplinasRecreativas);
-    if (this.recDeportiva) opts.push(...this.disciplinasDeportivas);
-    return opts;
+    return this.disciplinas()
+      .filter(d =>
+        (this.recRecreativa && d.discipline_type === 'recreational') ||
+        (this.recDeportiva && d.discipline_type === 'sport')
+      )
+      .map(d => d.name);
   }
 
   onTipoChange() {
@@ -144,13 +154,183 @@ export class NuevoAtleta implements OnInit {
   descripcionDiscapacidad = '';
   clasificacionFuncional = '';
   categoriaFuncionalSel = '';
+  classificationDocumentUrl = '';
 
   // ── 10. Descargo ──────────────────────────────────
   autorizaDatos = '';
   aceptaVeracidad = '';
 
   get canSubmit(): boolean {
-    return this.autorizaDatos === 'si' && this.aceptaVeracidad === 'si';
+    return this.autorizaDatos === 'si' && this.aceptaVeracidad === 'si' && !this.isSubmitting();
+  }
+
+  private required(value: string): boolean {
+    return Boolean(value.trim());
+  }
+
+  private validateManualForm(): string {
+    const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.correoManual.trim());
+    const birthDate = new Date(`${this.fechaNacimiento}T00:00:00`);
+
+    if (!this.required(this.nombre) || !this.required(this.primerApellido) || !this.required(this.segundoApellido)) return 'Complete el nombre y los apellidos.';
+    if (!this.required(this.numeroId)) return 'Ingrese el numero de identificacion.';
+    if (this.contrasena.length < 6) return 'La contrasena debe tener al menos 6 caracteres.';
+    if (!this.fechaNacimiento || Number.isNaN(birthDate.getTime()) || birthDate > new Date()) return 'Ingrese una fecha de nacimiento valida.';
+    if (!this.sexo) return 'Seleccione el sexo.';
+    if (this.esMinor && (!this.required(this.nombreEncargado) || !this.required(this.telefonoEncargado))) return 'Complete la informacion del encargado para el atleta menor de edad.';
+    if (!this.required(this.telefono)) return 'Ingrese el telefono del atleta.';
+    if (!emailValid) return 'Ingrese un correo electronico valido.';
+    if (!this.distrito) return 'Seleccione el distrito de residencia.';
+    if (!this.recRecreativa && !this.recDeportiva) return 'Seleccione al menos un tipo de actividad.';
+    if (this.selectedDisciplines().length === 0) return 'Seleccione al menos una disciplina.';
+    if (this.recDeportiva && !this.esRepresentacion) return 'Indique si el atleta representa al comite competitivamente.';
+    if (this.recDeportiva && (!this.participoJDN || !this.participoInternacional || !this.obtuvoPremio)) return 'Complete la informacion de participacion deportiva.';
+    if (this.recDeportiva && this.obtuvoPremio === 'si' && this.medallas().length === 0) return 'Agregue al menos una medalla.';
+    if (!this.frecuenciaSemanal || !this.nivelSatisfaccion) return 'Complete la frecuencia semanal y el nivel de satisfaccion.';
+    if (this.recDeportiva && !this.apoyoFamiliar) return 'Indique si cuenta con apoyo familiar.';
+    if (!this.otraComite) return 'Indique si pertenecio a otro comite.';
+    if (this.otraComite === 'si' && !this.required(this.nombreOtraComite)) return 'Ingrese el nombre del comite anterior.';
+    if (this.recDeportiva && !this.familiarComite) return 'Indique si tiene familiares en el comite.';
+    if (this.recDeportiva && !this.perteneceClub) return 'Indique si pertenece a algun club.';
+    if (this.perteneceClub === 'si' && !this.required(this.nombreClub)) return 'Ingrese el nombre del club.';
+    if (!this.instalacionesAdecuadas) return 'Indique si las instalaciones son adecuadas.';
+    if (this.recDeportiva && !this.tieneDiscapacidad) return 'Indique si tiene alguna discapacidad.';
+    if (this.tieneDiscapacidad === 'si' && (!this.tipoDiscapacidad || !this.required(this.descripcionDiscapacidad))) return 'Complete el tipo y la descripcion de la discapacidad.';
+    if (this.recDeportiva && !this.clasificacionFuncional) return 'Indique si tiene clasificacion funcional.';
+    if (this.clasificacionFuncional === 'si' && !this.categoriaFuncionalSel) return 'Seleccione la categoria de clasificacion funcional.';
+    if (this.autorizaDatos !== 'si' || this.aceptaVeracidad !== 'si') return 'Debe aceptar el uso de datos y la veracidad de la informacion.';
+    return '';
+  }
+
+  private toBoolean(value: string): boolean {
+    return value === 'si';
+  }
+
+  private toFacilitySatisfactionLevel(): 'yes' | 'no' | 'partial' {
+    if (this.instalacionesAdecuadas === 'si') return 'yes';
+    if (this.instalacionesAdecuadas === 'parcialmente') return 'partial';
+    return 'no';
+  }
+
+  private toFunctionalClassificationCategory(): FunctionalClassificationCategory | null {
+    if (!this.recDeportiva || this.clasificacionFuncional !== 'si') return null;
+    return this.categoriaFuncionalSel.toLowerCase() as FunctionalClassificationCategory;
+  }
+
+  private getApiError(error: unknown): string {
+    const apiError = error as {
+      error?: string | { msg?: string; message?: string; error?: string; error_description?: string; details?: string };
+      message?: string;
+      status?: number;
+      statusText?: string;
+    };
+
+    if (typeof apiError.error === 'string') return apiError.error;
+
+    const message =
+      apiError.error?.msg ||
+      apiError.error?.message ||
+      apiError.error?.error ||
+      apiError.error?.error_description ||
+      apiError.error?.details ||
+      apiError.message;
+
+    if (message) return message;
+    if (apiError.status) return `Error ${apiError.status}${apiError.statusText ? `: ${apiError.statusText}` : ''}`;
+
+    return 'No fue posible registrar el atleta.';
+  }
+
+  async registerAthlete() {
+    this.manualError.set('');
+    this.manualSuccess.set('');
+
+    if (!localStorage.getItem('access_token')) {
+      this.manualError.set('No hay una sesion administrativa activa.');
+      return;
+    }
+
+    const validationError = this.validateManualForm();
+    if (validationError) {
+      this.manualError.set(validationError);
+      return;
+    }
+
+    this.isSubmitting.set(true);
+    try {
+      const selectedDisciplines = this.disciplinas().filter(d => this.selectedDisciplines().includes(d.name));
+      const medalTypes: Record<string, MedalType> = { oro: 'gold', plata: 'silver', bronce: 'bronze' };
+      const payload = {
+        email: this.correoManual.trim().toLowerCase(),
+        password: this.contrasena,
+        name: this.nombre.trim(),
+        first_last_name: this.primerApellido.trim(),
+        dni_type: this.tipoId as RegisterUserDniType,
+        dni: this.numeroId.trim(),
+        birth_date: this.fechaNacimiento,
+        sex: (this.sexo === 'M' ? 'male' : 'female') as RegisterUserSex,
+        ...(this.segundoApellido.trim() ? { second_last_name: this.segundoApellido.trim() } : {}),
+        phone: this.telefono.trim(),
+        district_of_residence: this.distrito as DistrictOfResidence,
+        legal_guardian_name: this.esMinor ? this.nombreEncargado.trim() : null,
+        legal_guardian_phone: this.esMinor ? this.telefonoEncargado.trim() : null,
+        nacional_games_participation: this.recDeportiva && this.toBoolean(this.participoJDN),
+        international_games_participation: this.recDeportiva && this.toBoolean(this.participoInternacional),
+        weekly_exercise: Number(this.frecuenciaSemanal),
+        has_family_support: this.recDeportiva && this.toBoolean(this.apoyoFamiliar),
+        satisfaction_level: this.nivelSatisfaccion as SatisfactionLevel,
+        has_family_in_committee: this.recDeportiva && this.toBoolean(this.familiarComite),
+        has_previous_committee: this.toBoolean(this.otraComite),
+        previous_committee_name: this.otraComite === 'si' ? this.nombreOtraComite.trim() : null,
+        is_club_member: this.recDeportiva && this.toBoolean(this.perteneceClub),
+        club_name: this.recDeportiva && this.perteneceClub === 'si' ? this.nombreClub.trim() : null,
+        facility_satisfaction_level: this.toFacilitySatisfactionLevel(),
+        has_disability: this.recDeportiva && this.toBoolean(this.tieneDiscapacidad),
+        disability_type: this.recDeportiva && this.tieneDiscapacidad === 'si' ? (this.tipoDiscapacidad === 'fisica' ? 'physical' : 'cognitive') : null,
+        disability_description: this.recDeportiva && this.tieneDiscapacidad === 'si' ? this.descripcionDiscapacidad.trim() : null,
+        has_functional_classification: this.recDeportiva && this.toBoolean(this.clasificacionFuncional),
+        classification_category: this.toFunctionalClassificationCategory(),
+        classification_document_url: this.recDeportiva && this.clasificacionFuncional === 'si' ? this.classificationDocumentUrl.trim() || null : null,
+        accepts_data_usage: true,
+        accepts_info_accuracy: true,
+        disciplines: selectedDisciplines.map(d => ({
+          id: d.id_discipline,
+          is_representative: d.discipline_type === 'sport' && this.toBoolean(this.esRepresentacion)
+        })),
+        medals: this.recDeportiva && this.obtuvoPremio === 'si'
+          ? this.medallas().map(m => ({
+              competition_name: m.prueba,
+              year: Number(m.anio),
+              medal_type: medalTypes[m.tipo]
+            }))
+          : []
+      };
+
+      await firstValueFrom(this.authService.adminRegisterAthlete(payload));
+
+      this.manualSuccess.set('Atleta registrado correctamente.');
+      setTimeout(() => this.router.navigate(['/atletas']), 1200);
+    } catch (error) {
+      console.error('Error registrando atleta:', error);
+      this.manualError.set(this.getApiError(error));
+    } finally {
+      this.isSubmitting.set(false);
+    }
+  }
+
+  loadDisciplines() {
+    this.isLoadingDisciplines.set(true);
+    this.disciplinesService.getActiveDisciplines().subscribe({
+      next: data => {
+        this.disciplinas.set(data as Discipline[]);
+        this.isLoadingDisciplines.set(false);
+      },
+      error: error => {
+        console.error('Error cargando disciplinas:', error);
+        this.manualError.set('No fue posible cargar las disciplinas activas.');
+        this.isLoadingDisciplines.set(false);
+      }
+    });
   }
 
   // ── Dropdown handlers ─────────────────────────────
@@ -230,8 +410,6 @@ export class NuevoAtleta implements OnInit {
   }
 
   // ── Theme & auth ──────────────────────────────────
-  constructor(private router: Router) {}
-
   ngOnInit() {
     const saved = localStorage.getItem('theme');
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -239,6 +417,7 @@ export class NuevoAtleta implements OnInit {
       this.isDark.set(true);
       document.documentElement.setAttribute('data-theme', 'dark');
     }
+    this.loadDisciplines();
   }
 
   toggleTheme() {
@@ -254,6 +433,7 @@ export class NuevoAtleta implements OnInit {
   }
 
   logout() {
+    localStorage.removeItem('access_token');
     this.router.navigate(['/inicio-sesion']);
   }
 }
