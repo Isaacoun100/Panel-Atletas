@@ -20,6 +20,7 @@ export class RegistrarAtleta implements OnInit {
   tipoId = 'cedula';
   numeroId = '';
   contrasena = '';
+  confirmarContrasena = '';
   fechaNacimiento = '';
   sexo = '';
 
@@ -41,7 +42,6 @@ export class RegistrarAtleta implements OnInit {
 
   // ── 3. Contacto ───────────────────────────────────
   telefono = '';
-  correoManual = '';
   distrito = '';
 
   // ── 4. Actividad ──────────────────────────────────
@@ -147,9 +147,9 @@ export class RegistrarAtleta implements OnInit {
   // ── Wizard steps ──────────────────────────────────
   currentStep = signal(1);
   stepError = signal('');
-  readonly TOTAL_STEPS = 5;
-  readonly stepLabels = ['Cuenta', 'Datos', 'Contacto', 'Actividad', 'Finalizar'];
-  readonly stepNumbers = [1, 2, 3, 4, 5];
+  readonly TOTAL_STEPS = 4;
+  readonly stepLabels = ['Cuenta', 'Datos', 'Actividad', 'Finalizar'];
+  readonly stepNumbers = [1, 2, 3, 4];
 
   nextStep() {
     const err = this.validateCurrentStep();
@@ -178,16 +178,15 @@ export class RegistrarAtleta implements OnInit {
       case 1: return this.validateStep1();
       case 2: return this.validateStep2();
       case 3: return this.validateStep3();
-      case 4: return this.validateStep4();
       default: return null;
     }
   }
 
   private validateStep1(): string | null {
-    if (!this.correoManual.trim()) return 'El correo electrónico es requerido.';
-    if (!this.correoManual.includes('@')) return 'Ingrese un correo electrónico válido.';
     if (!this.contrasena.trim()) return 'La contraseña es requerida.';
     if (this.contrasena.length < 6) return 'La contraseña debe tener al menos 6 caracteres.';
+    if (!this.confirmarContrasena.trim()) return 'Confirmá tu contraseña.';
+    if (this.contrasena !== this.confirmarContrasena) return 'Las contraseñas no coinciden.';
     return null;
   }
 
@@ -202,16 +201,11 @@ export class RegistrarAtleta implements OnInit {
       if (!this.nombreEncargado.trim()) return 'El nombre del encargado es requerido.';
       if (!this.telefonoEncargado.trim()) return 'El teléfono del encargado es requerido.';
     }
+    if (!this.telefono.trim()) return 'El teléfono es requerido.';
     return null;
   }
 
   private validateStep3(): string | null {
-    if (!this.telefono.trim()) return 'El teléfono es requerido.';
-    if (!this.distrito) return 'El distrito de residencia es requerido.';
-    return null;
-  }
-
-  private validateStep4(): string | null {
     if (!this.recRecreativa && !this.recDeportiva) return 'Seleccione al menos un tipo de actividad.';
     if (this.selectedDisciplines().length === 0) return 'Seleccione al menos una disciplina.';
     if (this.showDeportiva) {
@@ -223,6 +217,7 @@ export class RegistrarAtleta implements OnInit {
     if (!this.frecuenciaSemanal) return 'La frecuencia semanal es requerida.';
     if (this.showDeportiva && !this.apoyoFamiliar) return '¿Cuenta con apoyo familiar? es requerido.';
     if (!this.nivelSatisfaccion) return 'El nivel de satisfacción es requerido.';
+    if (!this.distrito) return 'El distrito de residencia es requerido.';
     return null;
   }
 

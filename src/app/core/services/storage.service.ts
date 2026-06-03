@@ -47,6 +47,13 @@ export class StorageService {
     );
   }
 
+  getAvatarAsBlob(userId: string) {
+    return this.http.get(
+      `${this.base}/object/${this.bucket}/avatars/${userId}/avatar.jpg`,
+      { headers: this.getHeaders(), responseType: 'blob' }
+    );
+  }
+
   // ── Classification document ─────────────────────────
 
   uploadClassificationDocument(userId: string, file: File) {
