@@ -2,6 +2,7 @@ import { HttpClient } from "@angular/common/http";
 import { inject, Injectable,  } from "@angular/core";
 import { environment } from "../../environments/environment";
 import { Discipline } from "../models/discipline.model";
+import { map } from 'rxjs/operators';
 
 @Injectable({ providedIn: 'root' })
 export class AdminDisciplinesService {
@@ -74,6 +75,19 @@ export class AdminDisciplinesService {
   removeUserEnrollment(enrollmentId: number) {
     return this.http.delete(`${this.base}/rest/v1/users_disciplines`,
       { params: { id_user_discipline: `eq.${enrollmentId}` }, headers: this.getHeaders() }
+    );
+  }
+
+  // Método para contar atletas inscritos en una disciplina
+  getAthletesCountByDiscipline(disciplineId: number) {
+    return this.http.get<{ id_user_discipline: number }[]>(`${this.base}/rest/v1/users_disciplines`, {
+      params: {
+        select: 'id_user_discipline',
+        fk_discipline: `eq.${disciplineId}`
+      },
+      headers: this.getHeaders()
+    }).pipe(
+      map((response) => response.length)
     );
   }
 }
