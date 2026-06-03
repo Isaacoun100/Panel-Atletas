@@ -1,3 +1,9 @@
+export interface UpdateUserResponse {
+  id: string;
+  email: string;
+  app_metadata: { role: string; is_active: boolean };
+}
+
 export interface SignInResponse {
   access_token: string;
   refresh_token: string;
@@ -7,6 +13,9 @@ export interface SignInResponse {
     id: string;
     email: string;
     role: string;
+    app_metadata: {
+      role: string;
+    };
   };
 }
 

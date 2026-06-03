@@ -10,6 +10,10 @@ import { DistrictOfResidence, FunctionalClassificationCategory, SatisfactionLeve
 import { Discipline } from '../core/models/discipline.model';
 import { MedalType } from '../core/models/medal.model';
 import { RegisterUserDniType, RegisterUserSex } from '../core/models/auth.model';
+import { AdminInvitationsService } from '../core/services/admin-invitations.service';
+import { ProfileService } from '../core/services/profile.service';
+import { StorageService } from '../core/services/storage.service';
+import { UserProfile } from '../core/models/profile.model';
 
 interface Medalla { prueba: string; tipo: string; anio: string; }
 
@@ -23,8 +27,14 @@ export class NuevoAtleta implements OnInit {
   private authService = inject(AuthService);
   private disciplinesService = inject(DisciplinesService);
   private router = inject(Router);
+  private adminInvitationsService = inject(AdminInvitationsService);
+  private profileService  = inject(ProfileService);
+  private storageService  = inject(StorageService);
 
   isDark = signal(false);
+  sidebarName     = signal('Administrador');
+  sidebarInitials = signal('A');
+  sidebarAvatarUrl = signal<string | null>(null);
   activeTab = signal<'email' | 'manual'>('email');
   isSubmitting = signal(false);
   isLoadingDisciplines = signal(false);
@@ -36,6 +46,8 @@ export class NuevoAtleta implements OnInit {
   emailList = signal<string[]>([]);
   emailError = signal('');
   invitacionesEnviadas = signal(false);
+  enviandoInvitaciones = signal(false);
+  invitacionesError = signal('');
 
   // ── 1. Datos personales ───────────────────────────
   nombre = '';
@@ -402,11 +414,51 @@ export class NuevoAtleta implements OnInit {
   }
 
   sendInvitations() {
-    // TODO: connect to backend
-    this.invitacionesEnviadas.set(true);
-    this.emailList.set([]);
-    this.emailInput = '';
-    setTimeout(() => this.invitacionesEnviadas.set(false), 4000);
+    const pendingEmail = this.emailInput.trim();
+    if (pendingEmail) {
+      this.addEmail();
+    }
+
+    const emails = this.emailList();
+    if (this.emailError() || emails.length === 0 || this.enviandoInvitaciones()) return;
+
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      this.invitacionesError.set('No hay sesión activa. Inicie sesión nuevamente.');
+      return;
+    }
+
+    this.enviandoInvitaciones.set(true);
+    this.invitacionesError.set('');
+    this.invitacionesEnviadas.set(false);
+
+    this.adminInvitationsService.inviteUsers(emails, 'athlete').subscribe({
+      next: () => {
+        this.invitacionesEnviadas.set(true);
+        this.emailList.set([]);
+        this.emailInput = '';
+        this.enviandoInvitaciones.set(false);
+        setTimeout(() => this.invitacionesEnviadas.set(false), 4000);
+      },
+      error: (err) => {
+        console.error('Error enviando invitaciones:', err);
+        this.invitacionesError.set(this.getInvitationErrorMessage(err));
+        this.enviandoInvitaciones.set(false);
+      }
+    });
+  }
+
+  private getInvitationErrorMessage(err: unknown): string {
+    if (typeof err === 'object' && err !== null && 'error' in err) {
+      const errorBody = (err as { error?: unknown }).error;
+      if (typeof errorBody === 'string') return errorBody;
+      if (typeof errorBody === 'object' && errorBody !== null && 'message' in errorBody) {
+        const message = (errorBody as { message?: unknown }).message;
+        if (typeof message === 'string') return message;
+      }
+    }
+
+    return 'No se pudieron enviar las invitaciones. Intente nuevamente.';
   }
 
   // ── Theme & auth ──────────────────────────────────
@@ -418,6 +470,29 @@ export class NuevoAtleta implements OnInit {
       document.documentElement.setAttribute('data-theme', 'dark');
     }
     this.loadDisciplines();
+    this.loadSidebarData();
+  }
+
+  private loadSidebarData() {
+    const token = localStorage.getItem('access_token');
+    if (!token) return;
+    let userId = '';
+    try { userId = JSON.parse(atob(token.split('.')[1])).sub ?? ''; } catch { return; }
+    this.profileService.getOwnProfile().subscribe({
+      next: (data) => {
+        const profiles = data as UserProfile[];
+        const p = profiles.find(x => x.id_user === userId) ?? profiles[0];
+        if (p) {
+          this.sidebarName.set([p.name, p.first_last_name].filter(Boolean).join(' ') || 'Administrador');
+          this.sidebarInitials.set(((p.name?.[0] ?? '') + (p.first_last_name?.[0] ?? '')).toUpperCase() || 'A');
+        }
+      },
+      error: () => {},
+    });
+    this.storageService.getAvatarAsBlob(userId).subscribe({
+      next: (blob) => this.sidebarAvatarUrl.set(URL.createObjectURL(blob)),
+      error: () => this.sidebarAvatarUrl.set(null),
+    });
   }
 
   toggleTheme() {

@@ -20,7 +20,7 @@ export class DisciplinesService {
   getActiveDisciplines() {
     return this.http.get(`${this.base}/rest/v1/disciplines`, {
       params: { select: '*', is_active: 'eq.true', order: 'name.asc' },
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
     });
   }
 
@@ -28,9 +28,9 @@ export class DisciplinesService {
     return this.http.get(`${this.base}/rest/v1/users_disciplines`, {
       params: {
         select: '*,disciplines(name,discipline_type)',
-        'disciplines.is_active': 'eq.true'
+        'disciplines.is_active': 'eq.true',
       },
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
     });
   }
 

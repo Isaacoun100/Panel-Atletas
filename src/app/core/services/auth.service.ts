@@ -2,6 +2,7 @@ import { HttpClient } from "@angular/common/http";
 import { inject, Injectable,  } from "@angular/core";
 import { environment } from "../../environments/environment";
 import { AdminRegisterAthleteRequest, AdminRegisterAthleteResponse, AdminRegisterUserRequest, AdminRegisterUserResponse, SignInResponse, SignUpResponse } from "../models/auth.model";
+import { SignInResponse, UpdateUserResponse } from "../models/auth.model";
 
 
 @Injectable({ providedIn: 'root' })
@@ -62,7 +63,7 @@ export class AuthService {
   }
 
   updatePassword(newPassword: string, accessToken: string) {
-    return this.http.put(`${this.base}/auth/v1/user`,
+    return this.http.put<UpdateUserResponse>(`${this.base}/auth/v1/user`,
       { password: newPassword },
       { headers: { apikey: this.apiKey, Authorization: `Bearer ${accessToken}` } }
     );

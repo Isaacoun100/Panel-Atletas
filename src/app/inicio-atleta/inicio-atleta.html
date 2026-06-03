@@ -1,0 +1,809 @@
+<div style="min-height:100vh;background:var(--bg)">
+
+  <!-- Topbar -->
+  <nav class="sticky-top px-3 px-md-4 d-flex align-items-center justify-content-between"
+       style="height:56px;background:var(--surface);border-bottom:1px solid var(--border);box-shadow:var(--shadow-sm)">
+    <span class="fw-bold fs-6" style="color:var(--primary)">Panel Atletas</span>
+    <div class="d-flex align-items-center gap-2">
+      <button class="ia-theme-btn" (click)="toggleTheme()" [title]="isDark() ? 'Modo claro' : 'Modo oscuro'">
+        @if (isDark()) {
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm0 1a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0zm0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13zm8-5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 .5.5zM3 8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2A.5.5 0 0 1 3 8zm10.657-5.657a.5.5 0 0 1 0 .707l-1.414 1.415a.5.5 0 1 1-.707-.708l1.414-1.414a.5.5 0 0 1 .707 0zm-9.193 9.193a.5.5 0 0 1 0 .707L3.05 13.657a.5.5 0 0 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0zm9.193 2.121a.5.5 0 0 1-.707 0l-1.414-1.414a.5.5 0 0 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707zM4.464 4.465a.5.5 0 0 1-.707 0L2.343 3.05a.5.5 0 1 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .708z"/></svg>
+        } @else {
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M6 .278a.768.768 0 0 1 .08.858 7.208 7.208 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277.527 0 1.04-.055 1.533-.16a.787.787 0 0 1 .81.316.733.733 0 0 1-.031.893A8.349 8.349 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.752.752 0 0 1 6 .278z"/></svg>
+        }
+      </button>
+      <button class="btn btn-sm btn-outline-danger" (click)="logout()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="me-1" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0v2z"/><path fill-rule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3z"/></svg>
+        Cerrar sesión
+      </button>
+    </div>
+  </nav>
+
+  <!-- Content -->
+  <div class="container py-4" style="max-width:860px">
+
+    @if (isLoading()) {
+      <div class="text-center py-5">
+        <div class="spinner-border" style="color:var(--primary)" role="status">
+          <span class="visually-hidden">Cargando...</span>
+        </div>
+      </div>
+    } @else {
+
+      <!-- Greeting -->
+      <div class="mb-4">
+        <h4 class="fw-bold mb-1" style="color:var(--text)">Hola de vuelta, {{ nombre }}</h4>
+        <p class="mb-0 small" style="color:var(--text-3)">Comité Cantonal de Deportes y Recreación Montes de Oca</p>
+      </div>
+
+      <!-- Save error / success -->
+      @if (saveError()) {
+        <div class="alert alert-danger d-flex align-items-center gap-2 py-2 mb-3" role="alert">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg>
+          {{ saveError() }}
+        </div>
+      }
+      @if (saveSuccess()) {
+        <div class="alert alert-success d-flex align-items-center gap-2 py-2 mb-3" role="alert">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/></svg>
+          Información guardada correctamente.
+        </div>
+      }
+
+      <!-- ══ 1. Datos personales ══ -->
+      <div class="card mb-3" style="background:var(--surface);border-color:var(--border)">
+        <div class="card-header fw-semibold" style="background:var(--surface-2);border-color:var(--border);color:var(--text)">
+          Datos personales
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+
+            <!-- Avatar -->
+            <div class="col-12 d-flex align-items-center gap-3 pb-3 border-bottom" style="border-color:var(--border)!important">
+              <div class="ia-avatar-circle">
+                @if (avatarUrl()) {
+                  <img [src]="avatarUrl()" alt="Foto de perfil" class="ia-avatar-img">
+                } @else {
+                  <span class="ia-avatar-initials">{{ nombre.slice(0,1) | uppercase }}{{ primerApellido.slice(0,1) | uppercase }}</span>
+                }
+                @if (isUploadingAvatar()) {
+                  <div class="ia-avatar-overlay">
+                    <div class="spinner-border spinner-border-sm text-white" role="status"></div>
+                  </div>
+                }
+              </div>
+              <div class="d-flex flex-column gap-1">
+                <span class="form-label small fw-semibold mb-0" style="color:var(--text-2)">Foto de perfil</span>
+                <p class="small mb-1" style="color:var(--text-3)">JPG, PNG o WebP · máx. 2 MB</p>
+                <label class="btn btn-sm btn-outline-primary mb-0" style="width:fit-content" [class.disabled]="isUploadingAvatar()">
+                  @if (isUploadingAvatar()) { Subiendo... } @else { {{ avatarUrl() ? 'Cambiar foto' : 'Subir foto' }} }
+                  <input type="file" class="d-none" accept="image/jpeg,image/png,image/webp"
+                         [disabled]="isUploadingAvatar()"
+                         (change)="onAvatarFileSelected($event)">
+                </label>
+                @if (avatarUploadError()) {
+                  <span class="small text-danger">{{ avatarUploadError() }}</span>
+                }
+              </div>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold" style="color:var(--text-2)">Nombre <span class="text-danger">*</span></label>
+              <input class="form-control" [(ngModel)]="nombre" placeholder="Ej. Carlos"
+                     style="background:var(--surface-2);border-color:var(--border);color:var(--text)">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold" style="color:var(--text-2)">Primer apellido <span class="text-danger">*</span></label>
+              <input class="form-control" [(ngModel)]="primerApellido" placeholder="Ej. Mora"
+                     style="background:var(--surface-2);border-color:var(--border);color:var(--text)">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold" style="color:var(--text-2)">Segundo apellido <span class="text-danger">*</span></label>
+              <input class="form-control" [(ngModel)]="segundoApellido" placeholder="Ej. Jiménez"
+                     style="background:var(--surface-2);border-color:var(--border);color:var(--text)">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold" style="color:var(--text-2)">Identificación <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <select class="form-select" style="max-width:130px;background:var(--surface-2);border-color:var(--border);color:var(--text)" [(ngModel)]="tipoId">
+                  <option value="cedula">Cédula</option>
+                  <option value="dimex">DIMEX</option>
+                  <option value="pasaporte">Pasaporte</option>
+                </select>
+                <input type="text" class="form-control" [(ngModel)]="numeroId" placeholder="Número"
+                       style="background:var(--surface-2);border-color:var(--border);color:var(--text)">
+              </div>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small fw-semibold" style="color:var(--text-2)">Fecha de nacimiento <span class="text-danger">*</span></label>
+              <input type="date" class="form-control" [(ngModel)]="fechaNacimiento"
+                     style="background:var(--surface-2);border-color:var(--border);color:var(--text)">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small fw-semibold" style="color:var(--text-2)">Edad</label>
+              <div class="form-control" style="background:var(--surface-2);border-color:var(--border);color:var(--text-3);font-style:italic">
+                {{ edad > 0 ? edad + ' años' : '—' }}
+              </div>
+            </div>
+            <div class="col-12">
+              <label class="form-label small fw-semibold" style="color:var(--text-2)">Sexo <span class="text-danger">*</span></label>
+              <div>
+                <div class="btn-group btn-group-sm" role="group">
+                  <button type="button" class="btn"
+                    [class.btn-primary]="sexo === 'M'"
+                    [class.btn-outline-secondary]="sexo !== 'M'"
+                    (click)="sexo = 'M'">Masculino</button>
+                  <button type="button" class="btn"
+                    [class.btn-primary]="sexo === 'F'"
+                    [class.btn-outline-secondary]="sexo !== 'F'"
+                    (click)="sexo = 'F'">Femenino</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ 2. Encargado (si menor de edad) ══ -->
+      @if (esMinor) {
+        <div class="card mb-3 border-warning" style="background:var(--surface)">
+          <div class="card-header d-flex align-items-center justify-content-between fw-semibold"
+               style="background:var(--surface-2);border-color:var(--border);color:var(--text)">
+            Información del encargado
+            <span class="badge bg-warning text-dark">Menor de edad</span>
+          </div>
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold" style="color:var(--text-2)">Nombre del encargado <span class="text-danger">*</span></label>
+                <input class="form-control" [(ngModel)]="nombreEncargado" placeholder="Nombre completo"
+                       style="background:var(--surface-2);border-color:var(--border);color:var(--text)">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold" style="color:var(--text-2)">Teléfono del encargado <span class="text-danger">*</span></label>
+                <input type="tel" class="form-control" [(ngModel)]="telefonoEncargado" placeholder="Ej. 8888-8888"
+                       style="background:var(--surface-2);border-color:var(--border);color:var(--text)">
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- ══ 3. Contacto ══ -->
+      <div class="card mb-3" style="background:var(--surface);border-color:var(--border)">
+        <div class="card-header fw-semibold" style="background:var(--surface-2);border-color:var(--border);color:var(--text)">
+          Contacto
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold" style="color:var(--text-2)">Teléfono <span class="text-danger">*</span></label>
+              <input type="tel" class="form-control" [(ngModel)]="telefono" placeholder="Ej. 8888-8888"
+                     style="background:var(--surface-2);border-color:var(--border);color:var(--text)">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold" style="color:var(--text-2)">Correo electrónico</label>
+              <input type="email" class="form-control" [value]="emailAtleta" readonly
+                     style="background:var(--surface-2);border-color:var(--border);color:var(--text-3)">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold" style="color:var(--text-2)">Distrito de residencia <span class="text-danger">*</span></label>
+              <select class="form-select" [(ngModel)]="distrito"
+                      style="background:var(--surface-2);border-color:var(--border);color:var(--text)">
+                <option value="">Seleccionar...</option>
+                <option value="san-pedro">San Pedro</option>
+                <option value="sabanilla">Sabanilla</option>
+                <option value="mercedes">Mercedes</option>
+                <option value="san-rafael">San Rafael</option>
+                <option value="otro">Otro</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ 4. Actividad deportiva ══ -->
+      <div class="card mb-3" style="background:var(--surface);border-color:var(--border)">
+        <div class="card-header fw-semibold" style="background:var(--surface-2);border-color:var(--border);color:var(--text)">
+          Actividad deportiva
+        </div>
+        <div class="card-body d-flex flex-column gap-3">
+
+          <!-- Disciplines from API -->
+          <div>
+            <label class="form-label small fw-semibold" style="color:var(--text-2)">Disciplinas <span class="text-danger">*</span></label>
+            <div class="ia-multiselect">
+              <button type="button" class="btn btn-sm"
+                [class.btn-primary]="selectedDisciplines().length > 0"
+                [class.btn-outline-secondary]="selectedDisciplines().length === 0"
+                (click)="toggleDisciplineMenu($event)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" class="me-1" viewBox="0 0 16 16"><path d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1H7zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path fill-rule="evenodd" d="M5.216 14A2.238 2.238 0 0 1 5 13c0-1.355.68-2.75 1.936-3.72A6.325 6.325 0 0 0 5 9c-4 0-5 3-5 4s1 1 1 1h4.216z"/><path d="M4.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"/></svg>
+                {{ disciplineLabel() }}
+                <svg class="ms-1" style="opacity:.5" xmlns="http://www.w3.org/2000/svg" width="11" height="11" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/></svg>
+              </button>
+              @if (disciplineMenuOpen()) {
+                <div class="ia-multiselect-dropdown" (click)="$event.stopPropagation()">
+                  @if (allDisciplinesSignal().length === 0) {
+                    <span class="ia-multiselect-option" style="color:var(--text-3)">Cargando disciplinas...</span>
+                  }
+                  @for (d of allDisciplinesSignal(); track d.id_discipline) {
+                    <label class="ia-multiselect-option">
+                      <input type="checkbox" class="form-check-input flex-shrink-0"
+                             [checked]="selectedDisciplines().includes(d.name)"
+                             (change)="toggleDiscipline(d.name)">
+                      {{ d.name }}
+                      <span class="ms-auto badge rounded-pill fw-normal"
+                            style="font-size:.65rem"
+                            [class.bg-primary]="d.discipline_type === 'sport'"
+                            [class.bg-secondary]="d.discipline_type !== 'sport'">
+                        {{ d.discipline_type === 'sport' ? 'Deportiva' : 'Recreativa' }}
+                      </span>
+                    </label>
+                  }
+                </div>
+              }
+            </div>
+            @if (selectedDisciplines().length > 0) {
+              <div class="d-flex flex-wrap gap-1 mt-2">
+                @for (name of selectedDisciplines(); track name) {
+                  <span class="badge d-inline-flex align-items-center gap-1 rounded-pill fw-normal"
+                        style="background:var(--primary-soft);color:var(--primary);border:1px solid var(--primary)">
+                    {{ name }}
+                    <button type="button" class="btn p-0 border-0 lh-1"
+                            style="color:inherit;opacity:.7;background:none;font-size:.85rem"
+                            (click)="toggleDiscipline(name)">×</button>
+                  </span>
+                }
+              </div>
+            }
+          </div>
+
+          <!-- Para Tenis de Mesa: categoría funcional -->
+          @if (showCategoriaMenu()) {
+            <div>
+              <label class="form-label small fw-semibold" style="color:var(--text-2)">
+                Categoría funcional <span class="fw-normal" style="color:var(--text-3)">(Para Tenis de Mesa)</span>
+              </label>
+              <div class="ia-multiselect">
+                <button type="button" class="btn btn-sm"
+                  [class.btn-primary]="selectedCategorias().length > 0"
+                  [class.btn-outline-secondary]="selectedCategorias().length === 0"
+                  (click)="toggleCategoriaMenu($event)">
+                  {{ categoriaLabel() }}
+                  <svg class="ms-1" style="opacity:.5" xmlns="http://www.w3.org/2000/svg" width="11" height="11" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/></svg>
+                </button>
+                @if (categoriaMenuOpen()) {
+                  <div class="ia-multiselect-dropdown" (click)="$event.stopPropagation()">
+                    @for (c of categorias; track c) {
+                      <label class="ia-multiselect-option">
+                        <input type="checkbox" class="form-check-input flex-shrink-0"
+                               [checked]="selectedCategorias().includes(c)"
+                               (change)="toggleCategoria(c)">
+                        {{ c }}
+                      </label>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
+          <!-- Representación — only for deportiva -->
+          @if (showDeportiva()) {
+            <div>
+              <label class="form-label small fw-semibold" style="color:var(--text-2)">¿Representa al comité competitivamente? <span class="text-danger">*</span></label>
+              <div>
+                <div class="btn-group btn-group-sm" role="group">
+                  <button type="button" class="btn"
+                    [class.btn-primary]="esRepresentacion === 'si'"
+                    [class.btn-outline-secondary]="esRepresentacion !== 'si'"
+                    (click)="esRepresentacion = 'si'">Sí</button>
+                  <button type="button" class="btn"
+                    [class.btn-primary]="esRepresentacion === 'no'"
+                    [class.btn-outline-secondary]="esRepresentacion !== 'no'"
+                    (click)="esRepresentacion = 'no'">No</button>
+                </div>
+              </div>
+            </div>
+          }
+
+        </div>
+      </div>
+
+      <!-- ══ 5. Participación deportiva (solo deportiva) ══ -->
+      @if (showDeportiva()) {
+        <div class="card mb-3" style="background:var(--surface);border-color:var(--border)">
+          <div class="card-header fw-semibold" style="background:var(--surface-2);border-color:var(--border);color:var(--text)">
+            Participación deportiva
+          </div>
+          <div class="card-body d-flex flex-column gap-3">
+
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold" style="color:var(--text-2)">¿Ha participado en Juegos Deportivos Nacionales? <span class="text-danger">*</span></label>
+                <div>
+                  <div class="btn-group btn-group-sm" role="group">
+                    <button type="button" class="btn"
+                      [class.btn-primary]="participoJDN === 'si'"
+                      [class.btn-outline-secondary]="participoJDN !== 'si'"
+                      (click)="participoJDN = 'si'">Sí</button>
+                    <button type="button" class="btn"
+                      [class.btn-primary]="participoJDN === 'no'"
+                      [class.btn-outline-secondary]="participoJDN !== 'no'"
+                      (click)="participoJDN = 'no'">No</button>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold" style="color:var(--text-2)">¿Ha participado en competencias internacionales? <span class="text-danger">*</span></label>
+                <div>
+                  <div class="btn-group btn-group-sm" role="group">
+                    <button type="button" class="btn"
+                      [class.btn-primary]="participoInternacional === 'si'"
+                      [class.btn-outline-secondary]="participoInternacional !== 'si'"
+                      (click)="participoInternacional = 'si'">Sí</button>
+                    <button type="button" class="btn"
+                      [class.btn-primary]="participoInternacional === 'no'"
+                      [class.btn-outline-secondary]="participoInternacional !== 'no'"
+                      (click)="participoInternacional = 'no'">No</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Medals -->
+            <div>
+              <label class="form-label small fw-semibold" style="color:var(--text-2)">¿Ha obtenido medallas? <span class="text-danger">*</span></label>
+              <div>
+                <div class="btn-group btn-group-sm" role="group">
+                  <button type="button" class="btn"
+                    [class.btn-primary]="obtuvoPremio === 'si'"
+                    [class.btn-outline-secondary]="obtuvoPremio !== 'si'"
+                    (click)="obtuvoPremio = 'si'">Sí</button>
+                  <button type="button" class="btn"
+                    [class.btn-primary]="obtuvoPremio === 'no'"
+                    [class.btn-outline-secondary]="obtuvoPremio !== 'no'"
+                    (click)="obtuvoPremio = 'no'">No</button>
+                </div>
+              </div>
+            </div>
+
+            @if (obtuvoPremio === 'si') {
+
+              <!-- Medal list -->
+              @if (medallas().length > 0) {
+                <div class="border rounded overflow-hidden" style="border-color:var(--border)!important">
+                  @for (m of medallas(); track m.id ?? $index; let i = $index) {
+                    @if (editingMedalIdx() !== i) {
+                      <!-- Display row -->
+                      <div class="d-flex align-items-center gap-2 px-3 py-2"
+                           style="background:var(--surface);border-bottom:1px solid var(--border);color:var(--text)">
+                        <span class="badge rounded-pill ia-badge-{{ m.tipo }}">{{ m.tipo | titlecase }}</span>
+                        <span class="fw-medium small">{{ m.prueba }}</span>
+                        <span class="small ms-1" style="color:var(--text-3)">{{ m.anio }}</span>
+                        <div class="ms-auto d-flex gap-1">
+                          <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2"
+                                  [disabled]="isDeletingMedalIdx() === i"
+                                  (click)="startEdit(i)" title="Editar">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" fill="currentColor" viewBox="0 0 16 16"><path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/></svg>
+                          </button>
+                          <button type="button" class="btn btn-sm btn-outline-danger py-0 px-2"
+                                  [disabled]="isDeletingMedalIdx() === i"
+                                  (click)="removeMedalla(i)">
+                            @if (isDeletingMedalIdx() === i) {
+                              <span class="spinner-border spinner-border-sm" style="width:.7rem;height:.7rem"></span>
+                            } @else { × }
+                          </button>
+                        </div>
+                      </div>
+                    } @else {
+                      <!-- Edit row — saves immediately to API -->
+                      <div class="p-2" style="background:var(--surface-2);border-bottom:1px solid var(--border)">
+                        <div class="row g-2 align-items-end">
+                          <div class="col-md-4">
+                            <label class="form-label small fw-semibold mb-1" style="color:var(--text-2)">Prueba</label>
+                            <input type="text" class="form-control form-control-sm" [(ngModel)]="editPrueba"
+                                   style="background:var(--surface);border-color:var(--border);color:var(--text)">
+                          </div>
+                          <div class="col-md-4">
+                            <label class="form-label small fw-semibold mb-1" style="color:var(--text-2)">Medalla</label>
+                            <div class="btn-group btn-group-sm w-100" role="group">
+                              <button type="button" class="btn"
+                                [class.ia-medal-oro]="editTipo === 'oro'"
+                                [class.btn-outline-secondary]="editTipo !== 'oro'"
+                                (click)="editTipo = 'oro'">Oro</button>
+                              <button type="button" class="btn"
+                                [class.ia-medal-plata]="editTipo === 'plata'"
+                                [class.btn-outline-secondary]="editTipo !== 'plata'"
+                                (click)="editTipo = 'plata'">Plata</button>
+                              <button type="button" class="btn"
+                                [class.ia-medal-bronce]="editTipo === 'bronce'"
+                                [class.btn-outline-secondary]="editTipo !== 'bronce'"
+                                (click)="editTipo = 'bronce'">Bronce</button>
+                            </div>
+                          </div>
+                          <div class="col-md-2">
+                            <label class="form-label small fw-semibold mb-1" style="color:var(--text-2)">Año</label>
+                            <input type="number" class="form-control form-control-sm" [(ngModel)]="editAnio"
+                                   min="1990" [max]="2026"
+                                   style="background:var(--surface);border-color:var(--border);color:var(--text)">
+                          </div>
+                          <div class="col-md-2 d-flex gap-1">
+                            <button type="button" class="btn btn-sm btn-primary flex-grow-1"
+                                    [disabled]="isEditSaving()"
+                                    (click)="saveEdit(i)">
+                              @if (isEditSaving()) {
+                                <span class="spinner-border spinner-border-sm" style="width:.7rem;height:.7rem"></span>
+                              } @else { ✓ }
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary flex-grow-1"
+                                    [disabled]="isEditSaving()"
+                                    (click)="cancelEdit()">✕</button>
+                          </div>
+                        </div>
+                      </div>
+                    }
+                  }
+                </div>
+              }
+
+              <!-- Add new medal — saves immediately to API on Agregar -->
+              <div class="border rounded p-3" style="background:var(--surface-2);border-color:var(--border)!important">
+                <p class="small fw-semibold mb-2" style="color:var(--text-2)">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" class="me-1" viewBox="0 0 16 16"><path d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2z"/></svg>
+                  Agregar medalla
+                </p>
+                <div class="row g-2 align-items-end">
+                  <div class="col-md-4">
+                    <label class="form-label small fw-semibold mb-1" style="color:var(--text-2)">Prueba</label>
+                    <input type="text" class="form-control form-control-sm" placeholder="Ej. 100m libre"
+                           [(ngModel)]="medallaTempPrueba" [disabled]="isAddingMedal()"
+                           style="background:var(--surface);border-color:var(--border);color:var(--text)">
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label small fw-semibold mb-1" style="color:var(--text-2)">Medalla</label>
+                    <div class="btn-group btn-group-sm w-100" role="group">
+                      <button type="button" class="btn" [disabled]="isAddingMedal()"
+                        [class.ia-medal-oro]="medallaTempTipo === 'oro'"
+                        [class.btn-outline-secondary]="medallaTempTipo !== 'oro'"
+                        (click)="medallaTempTipo = 'oro'">Oro</button>
+                      <button type="button" class="btn" [disabled]="isAddingMedal()"
+                        [class.ia-medal-plata]="medallaTempTipo === 'plata'"
+                        [class.btn-outline-secondary]="medallaTempTipo !== 'plata'"
+                        (click)="medallaTempTipo = 'plata'">Plata</button>
+                      <button type="button" class="btn" [disabled]="isAddingMedal()"
+                        [class.ia-medal-bronce]="medallaTempTipo === 'bronce'"
+                        [class.btn-outline-secondary]="medallaTempTipo !== 'bronce'"
+                        (click)="medallaTempTipo = 'bronce'">Bronce</button>
+                    </div>
+                  </div>
+                  <div class="col-md-2">
+                    <label class="form-label small fw-semibold mb-1" style="color:var(--text-2)">Año</label>
+                    <input type="number" class="form-control form-control-sm" placeholder="2023"
+                           min="1990" [max]="2026" [(ngModel)]="medallaTempAnio" [disabled]="isAddingMedal()"
+                           style="background:var(--surface);border-color:var(--border);color:var(--text)">
+                  </div>
+                  <div class="col-md-2">
+                    <button type="button" class="btn btn-sm btn-outline-primary w-100"
+                            [disabled]="isAddingMedal()"
+                            (click)="addMedalla()">
+                      @if (isAddingMedal()) {
+                        <span class="spinner-border spinner-border-sm me-1" style="width:.7rem;height:.7rem"></span>
+                        Guardando...
+                      } @else {
+                        Agregar
+                      }
+                    </button>
+                  </div>
+                </div>
+                @if (addMedalError()) {
+                  <p class="text-danger small mt-2 mb-0">{{ addMedalError() }}</p>
+                }
+              </div>
+
+            }
+          </div>
+        </div>
+      }
+
+      <!-- ══ 6. Seguimiento ══ -->
+      <div class="card mb-3" style="background:var(--surface);border-color:var(--border)">
+        <div class="card-header fw-semibold" style="background:var(--surface-2);border-color:var(--border);color:var(--text)">
+          Seguimiento
+        </div>
+        <div class="card-body d-flex flex-column gap-3">
+
+          <div>
+            <label class="form-label small fw-semibold" style="color:var(--text-2)">Frecuencia semanal (días) <span class="text-danger">*</span></label>
+            <div>
+              <div class="btn-group btn-group-sm" role="group">
+                @for (d of frequencies; track d) {
+                  <button type="button" class="btn"
+                    [class.btn-primary]="frecuenciaSemanal === d.toString()"
+                    [class.btn-outline-secondary]="frecuenciaSemanal !== d.toString()"
+                    (click)="frecuenciaSemanal = d.toString()">{{ d }}</button>
+                }
+              </div>
+            </div>
+          </div>
+
+          @if (showDeportiva()) {
+            <div>
+              <label class="form-label small fw-semibold" style="color:var(--text-2)">¿Cuenta con apoyo familiar? <span class="text-danger">*</span></label>
+              <div>
+                <div class="btn-group btn-group-sm" role="group">
+                  <button type="button" class="btn"
+                    [class.btn-primary]="apoyoFamiliar === 'si'"
+                    [class.btn-outline-secondary]="apoyoFamiliar !== 'si'"
+                    (click)="apoyoFamiliar = 'si'">Sí</button>
+                  <button type="button" class="btn"
+                    [class.btn-primary]="apoyoFamiliar === 'no'"
+                    [class.btn-outline-secondary]="apoyoFamiliar !== 'no'"
+                    (click)="apoyoFamiliar = 'no'">No</button>
+                </div>
+              </div>
+            </div>
+          }
+
+          <div>
+            <label class="form-label small fw-semibold" style="color:var(--text-2)">Nivel de satisfacción <span class="text-danger">*</span></label>
+            <div>
+              <div class="btn-group btn-group-sm flex-wrap" role="group">
+                <button type="button" class="btn"
+                  [class.btn-primary]="nivelSatisfaccion === 'muy-satisfecho'"
+                  [class.btn-outline-secondary]="nivelSatisfaccion !== 'muy-satisfecho'"
+                  (click)="nivelSatisfaccion = 'muy-satisfecho'">Muy satisfecho</button>
+                <button type="button" class="btn"
+                  [class.btn-primary]="nivelSatisfaccion === 'satisfecho'"
+                  [class.btn-outline-secondary]="nivelSatisfaccion !== 'satisfecho'"
+                  (click)="nivelSatisfaccion = 'satisfecho'">Satisfecho</button>
+                <button type="button" class="btn"
+                  [class.btn-primary]="nivelSatisfaccion === 'insatisfecho'"
+                  [class.btn-outline-secondary]="nivelSatisfaccion !== 'insatisfecho'"
+                  (click)="nivelSatisfaccion = 'insatisfecho'">Insatisfecho</button>
+                <button type="button" class="btn"
+                  [class.btn-primary]="nivelSatisfaccion === 'muy-insatisfecho'"
+                  [class.btn-outline-secondary]="nivelSatisfaccion !== 'muy-insatisfecho'"
+                  (click)="nivelSatisfaccion = 'muy-insatisfecho'">Muy insatisfecho</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ══ 7. Vínculo con el Comité ══ -->
+      <div class="card mb-3" style="background:var(--surface);border-color:var(--border)">
+        <div class="card-header fw-semibold" style="background:var(--surface-2);border-color:var(--border);color:var(--text)">
+          Vínculo con el Comité
+        </div>
+        <div class="card-body d-flex flex-column gap-3">
+
+          @if (showDeportiva()) {
+            <div>
+              <label class="form-label small fw-semibold" style="color:var(--text-2)">¿Tiene familiares en el Comité? <span class="text-danger">*</span></label>
+              <div>
+                <div class="btn-group btn-group-sm" role="group">
+                  <button type="button" class="btn"
+                    [class.btn-primary]="familiarComite === 'si'"
+                    [class.btn-outline-secondary]="familiarComite !== 'si'"
+                    (click)="familiarComite = 'si'">Sí</button>
+                  <button type="button" class="btn"
+                    [class.btn-primary]="familiarComite === 'no'"
+                    [class.btn-outline-secondary]="familiarComite !== 'no'"
+                    (click)="familiarComite = 'no'">No</button>
+                </div>
+              </div>
+            </div>
+          }
+
+          <div>
+            <label class="form-label small fw-semibold" style="color:var(--text-2)">¿Ha pertenecido a otro Comité? <span class="text-danger">*</span></label>
+            <div>
+              <div class="btn-group btn-group-sm" role="group">
+                <button type="button" class="btn"
+                  [class.btn-primary]="otraComite === 'si'"
+                  [class.btn-outline-secondary]="otraComite !== 'si'"
+                  (click)="otraComite = 'si'">Sí</button>
+                <button type="button" class="btn"
+                  [class.btn-primary]="otraComite === 'no'"
+                  [class.btn-outline-secondary]="otraComite !== 'no'"
+                  (click)="otraComite = 'no'">No</button>
+              </div>
+            </div>
+          </div>
+          @if (otraComite === 'si') {
+            <div class="border rounded p-3" style="background:var(--surface-2);border-color:var(--border)!important">
+              <label class="form-label small fw-semibold" style="color:var(--text-2)">Nombre del Comité anterior <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" [(ngModel)]="nombreOtraComite" placeholder="Nombre del Comité anterior"
+                     style="max-width:360px;background:var(--surface);border-color:var(--border);color:var(--text)">
+            </div>
+          }
+
+          @if (showDeportiva()) {
+            <div>
+              <label class="form-label small fw-semibold" style="color:var(--text-2)">¿Pertenece a algún club? <span class="text-danger">*</span></label>
+              <div>
+                <div class="btn-group btn-group-sm" role="group">
+                  <button type="button" class="btn"
+                    [class.btn-primary]="perteneceClub === 'si'"
+                    [class.btn-outline-secondary]="perteneceClub !== 'si'"
+                    (click)="perteneceClub = 'si'">Sí</button>
+                  <button type="button" class="btn"
+                    [class.btn-primary]="perteneceClub === 'no'"
+                    [class.btn-outline-secondary]="perteneceClub !== 'no'"
+                    (click)="perteneceClub = 'no'">No</button>
+                </div>
+              </div>
+            </div>
+            @if (perteneceClub === 'si') {
+              <div class="border rounded p-3" style="background:var(--surface-2);border-color:var(--border)!important">
+                <label class="form-label small fw-semibold" style="color:var(--text-2)">Nombre del club <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" [(ngModel)]="nombreClub" placeholder="Nombre del club"
+                       style="max-width:360px;background:var(--surface);border-color:var(--border);color:var(--text)">
+              </div>
+            }
+          }
+
+        </div>
+      </div>
+
+      <!-- ══ 8. Instalaciones ══ -->
+      <div class="card mb-3" style="background:var(--surface);border-color:var(--border)">
+        <div class="card-header fw-semibold" style="background:var(--surface-2);border-color:var(--border);color:var(--text)">
+          Instalaciones
+        </div>
+        <div class="card-body">
+          <label class="form-label small fw-semibold" style="color:var(--text-2)">¿Las instalaciones que utiliza son adecuadas? <span class="text-danger">*</span></label>
+          <div>
+            <div class="btn-group btn-group-sm" role="group">
+              <button type="button" class="btn"
+                [class.btn-primary]="instalacionesAdecuadas === 'si'"
+                [class.btn-outline-secondary]="instalacionesAdecuadas !== 'si'"
+                (click)="instalacionesAdecuadas = 'si'">Sí</button>
+              <button type="button" class="btn"
+                [class.btn-primary]="instalacionesAdecuadas === 'no'"
+                [class.btn-outline-secondary]="instalacionesAdecuadas !== 'no'"
+                (click)="instalacionesAdecuadas = 'no'">No</button>
+              <button type="button" class="btn"
+                [class.btn-primary]="instalacionesAdecuadas === 'parcialmente'"
+                [class.btn-outline-secondary]="instalacionesAdecuadas !== 'parcialmente'"
+                (click)="instalacionesAdecuadas = 'parcialmente'">Parcialmente</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ 9. Inclusión (solo deportiva) ══ -->
+      @if (showDeportiva()) {
+        <div class="card mb-3" style="background:var(--surface);border-color:var(--border)">
+          <div class="card-header fw-semibold" style="background:var(--surface-2);border-color:var(--border);color:var(--text)">
+            Inclusión
+          </div>
+          <div class="card-body d-flex flex-column gap-3">
+
+            <!-- Discapacidad -->
+            <div>
+              <label class="form-label small fw-semibold" style="color:var(--text-2)">¿Tiene alguna discapacidad? <span class="text-danger">*</span></label>
+              <div>
+                <div class="btn-group btn-group-sm" role="group">
+                  <button type="button" class="btn"
+                    [class.btn-primary]="tieneDiscapacidad === 'si'"
+                    [class.btn-outline-secondary]="tieneDiscapacidad !== 'si'"
+                    (click)="tieneDiscapacidad = 'si'; onDiscapacidadChange()">Sí</button>
+                  <button type="button" class="btn"
+                    [class.btn-primary]="tieneDiscapacidad === 'no'"
+                    [class.btn-outline-secondary]="tieneDiscapacidad !== 'no'"
+                    (click)="tieneDiscapacidad = 'no'; onDiscapacidadChange()">No</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- When discapacidad = sí: type, description and clasificación -->
+            @if (tieneDiscapacidad === 'si') {
+              <div class="border rounded p-3 d-flex flex-column gap-3" style="background:var(--surface-2);border-color:var(--border)!important">
+
+                <div class="row g-3">
+                  <div class="col-md-5">
+                    <label class="form-label small fw-semibold" style="color:var(--text-2)">Tipo de discapacidad <span class="text-danger">*</span></label>
+                    <div>
+                      <div class="btn-group btn-group-sm" role="group">
+                        <button type="button" class="btn"
+                          [class.btn-primary]="tipoDiscapacidad === 'fisica'"
+                          [class.btn-outline-secondary]="tipoDiscapacidad !== 'fisica'"
+                          (click)="tipoDiscapacidad = 'fisica'">Física</button>
+                        <button type="button" class="btn"
+                          [class.btn-primary]="tipoDiscapacidad === 'cognitiva'"
+                          [class.btn-outline-secondary]="tipoDiscapacidad !== 'cognitiva'"
+                          (click)="tipoDiscapacidad = 'cognitiva'">Cognitiva</button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-7">
+                    <label class="form-label small fw-semibold" style="color:var(--text-2)">Descripción</label>
+                    <textarea class="form-control form-control-sm" rows="2"
+                              placeholder="Describa brevemente la discapacidad..."
+                              [(ngModel)]="descripcionDiscapacidad"
+                              style="background:var(--surface);border-color:var(--border);color:var(--text)"></textarea>
+                  </div>
+                </div>
+
+                <!-- Clasificación funcional — only when discapacidad is set -->
+                <div>
+                  <label class="form-label small fw-semibold" style="color:var(--text-2)">¿Tiene clasificación funcional? <span class="text-danger">*</span></label>
+                  <div>
+                    <div class="btn-group btn-group-sm" role="group">
+                      <button type="button" class="btn"
+                        [class.btn-primary]="clasificacionFuncional === 'si'"
+                        [class.btn-outline-secondary]="clasificacionFuncional !== 'si'"
+                        (click)="clasificacionFuncional = 'si'">Sí</button>
+                      <button type="button" class="btn"
+                        [class.btn-primary]="clasificacionFuncional === 'no'"
+                        [class.btn-outline-secondary]="clasificacionFuncional !== 'no'"
+                        (click)="clasificacionFuncional = 'no'">No</button>
+                    </div>
+                  </div>
+                </div>
+
+                @if (clasificacionFuncional === 'si') {
+                  <div>
+                    <label class="form-label small fw-semibold" style="color:var(--text-2)">Categoría <span class="text-danger">*</span></label>
+                    <div>
+                      <div class="btn-group btn-group-sm" role="group">
+                        @for (cat of categorias; track cat) {
+                          <button type="button" class="btn"
+                            [class.btn-primary]="categoriaFuncionalSel === cat"
+                            [class.btn-outline-secondary]="categoriaFuncionalSel !== cat"
+                            (click)="categoriaFuncionalSel = cat">{{ cat }}</button>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                  <!-- Clasificación document upload -->
+                  <div>
+                    <label class="form-label small fw-semibold" style="color:var(--text-2)">Documento de clasificación funcional</label>
+                    <div class="d-flex align-items-center gap-3 flex-wrap">
+                      @if (clasificacionDocUploaded()) {
+                        <span class="badge bg-success d-inline-flex align-items-center gap-1 py-1 px-2">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" fill="currentColor" class="me-1" viewBox="0 0 16 16"><path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z"/></svg>
+                          Archivo subido
+                        </span>
+                      }
+                      <label class="btn btn-sm btn-outline-secondary mb-0" [class.disabled]="isUploadingClasificacion()">
+                        @if (isUploadingClasificacion()) { Subiendo... } @else { {{ clasificacionDocUploaded() ? 'Reemplazar archivo' : 'Subir archivo' }} }
+                        <input type="file" class="d-none"
+                               accept="image/jpeg,image/png,image/webp,application/pdf,.docx"
+                               [disabled]="isUploadingClasificacion()"
+                               (change)="onClasificacionFileSelected($event)">
+                      </label>
+                    </div>
+                    <p class="small mt-1 mb-0" style="color:var(--text-3)">Imágenes, PDF o DOCX · máx. 2 MB</p>
+                    @if (clasificacionUploadError()) {
+                      <span class="small text-danger d-block mt-1">{{ clasificacionUploadError() }}</span>
+                    }
+                  </div>
+                }
+
+              </div>
+            }
+
+          </div>
+        </div>
+      }
+
+      <!-- Save button -->
+      <div class="d-flex justify-content-end gap-2 pb-5">
+        <button type="button" class="btn btn-primary px-4" (click)="save()" [disabled]="isSaving()">
+          @if (isSaving()) {
+            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+            Guardando...
+          } @else {
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="me-2" viewBox="0 0 16 16"><path d="M2 1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H9.5a1 1 0 0 0-1 1v7.293l2.646-2.647a.5.5 0 0 1 .708.708l-3.5 3.5a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L7.5 9.293V2a2 2 0 0 1 2-2H14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h4.5a.5.5 0 0 1 0 1H2z"/></svg>
+            Guardar cambios
+          }
+        </button>
+      </div>
+
+    }
+  </div>
+</div>

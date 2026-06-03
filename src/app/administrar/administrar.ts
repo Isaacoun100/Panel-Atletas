@@ -7,6 +7,9 @@ import { TitleCasePipe } from '@angular/common';
 // Servicios y modelos
 import { AdminDisciplinesService } from '../core/services/admin-disciplines.service';
 import { Discipline } from '../core/models/discipline.model';
+import { ProfileService } from '../core/services/profile.service';
+import { StorageService } from '../core/services/storage.service';
+import { UserProfile } from '../core/models/profile.model';
 
 
 interface AdminUser {
@@ -37,9 +40,14 @@ interface DisciplinaUI {
 
 export class Administrar implements OnInit {
   private adminDisciplinesService = inject(AdminDisciplinesService);
+  private profileService  = inject(ProfileService);
+  private storageService  = inject(StorageService);
   private router = inject(Router);
 
   isDark = signal(false);
+  sidebarName     = signal('Administrador');
+  sidebarInitials = signal('A');
+  sidebarAvatarUrl = signal<string | null>(null);
 
   usuarios: AdminUser[] = [
     { foto: 'https://github.com/Isaacoun100.png?size=40',  nombre: 'Isaac Herrera Monge', cedula: '1-0234-0567', correo: 'isaacoun100@gmail.com', rol: 'Administrador' },
@@ -114,6 +122,7 @@ export class Administrar implements OnInit {
         // Guardar copia original para detectar cambios
         this.disciplinasOriginal = JSON.parse(JSON.stringify(disciplinasReales));
         this.hasChangesDisciplinas.set(false);
+        this.cargarConteoAtletasPorDisciplina();
         this.isLoading.set(false);
       },
       error: (err) => {
@@ -123,6 +132,29 @@ export class Administrar implements OnInit {
       }
     });
   }
+
+  // ── Contar atletas por disciplina ───────────────────────────────────
+  cargarConteoAtletasPorDisciplina() {
+    const disciplinasActuales = this.disciplinas();
+    
+    disciplinasActuales.forEach((disciplina) => {
+      this.adminDisciplinesService.getAthletesCountByDiscipline(disciplina.id_discipline).subscribe({
+        next: (count: number) => {
+          this.disciplinas.update(currentList =>
+            currentList.map(d =>
+              d.id_discipline === disciplina.id_discipline
+              ? { ...d, totalAtletas: count }
+              : d
+            )
+          );
+        },
+        error: (err) => {
+          console.error(`Error contando atletas para ${disciplina.nombre}:`, err);
+        }
+      });
+    });
+  }
+  
 
   // Crear nueva disciplina
   addDisciplina() {
@@ -279,8 +311,31 @@ export class Administrar implements OnInit {
     }
     // Cargar disciplinas reales desde Supabase
     this.cargarDisciplinas();
+    this.loadSidebarData();
   }
-  
+
+  private loadSidebarData() {
+    const token = localStorage.getItem('access_token');
+    if (!token) return;
+    let userId = '';
+    try { userId = JSON.parse(atob(token.split('.')[1])).sub ?? ''; } catch { return; }
+    this.profileService.getOwnProfile().subscribe({
+      next: (data) => {
+        const profiles = data as UserProfile[];
+        const p = profiles.find(x => x.id_user === userId) ?? profiles[0];
+        if (p) {
+          this.sidebarName.set([p.name, p.first_last_name].filter(Boolean).join(' ') || 'Administrador');
+          this.sidebarInitials.set(((p.name?.[0] ?? '') + (p.first_last_name?.[0] ?? '')).toUpperCase() || 'A');
+        }
+      },
+      error: () => {},
+    });
+    this.storageService.getAvatarAsBlob(userId).subscribe({
+      next: (blob) => this.sidebarAvatarUrl.set(URL.createObjectURL(blob)),
+      error: () => this.sidebarAvatarUrl.set(null),
+    });
+  }
+
   toggleTheme() {
     const next = !this.isDark();
     this.isDark.set(next);

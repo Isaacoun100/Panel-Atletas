@@ -132,8 +132,15 @@
                 @if (forgotError()) {
                   <p class="small text-danger mb-2">{{ forgotError() }}</p>
                 }
-                <button type="button" class="btn btn-primary w-100" (click)="submitForgot()">
-                  Enviar enlace
+                <button type="button" class="btn btn-primary w-100"
+                        [disabled]="isSendingReset()"
+                        (click)="submitForgot()">
+                  @if (isSendingReset()) {
+                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                    Enviando...
+                  } @else {
+                    Enviar enlace
+                  }
                 </button>
               } @else {
                 <div class="login-forgot-ok">
