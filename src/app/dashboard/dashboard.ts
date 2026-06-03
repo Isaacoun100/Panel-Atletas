@@ -3,6 +3,9 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
 import { Router } from '@angular/router';
 import { DashboardService } from '../core/services/dashboard.service';
 import { DashboardStats, RecentAthlete, ActivityEntry, ActivityAction } from '../core/models/dashboard.model';
+import { ProfileService } from '../core/services/profile.service';
+import { StorageService } from '../core/services/storage.service';
+import { UserProfile } from '../core/models/profile.model';
 
 @Component({
   selector: 'app-dashboard',
@@ -12,8 +15,13 @@ import { DashboardStats, RecentAthlete, ActivityEntry, ActivityAction } from '..
 })
 export class Dashboard implements OnInit {
   private dashboardService = inject(DashboardService);
+  private profileService  = inject(ProfileService);
+  private storageService  = inject(StorageService);
 
   isDark       = signal(false);
+  sidebarName     = signal('Administrador');
+  sidebarInitials = signal('A');
+  sidebarAvatarUrl = signal<string | null>(null);
   isLoading    = signal(true);
   loadError    = signal('');
   stats        = signal<DashboardStats | null>(null);
@@ -30,6 +38,30 @@ export class Dashboard implements OnInit {
       document.documentElement.setAttribute('data-theme', 'dark');
     }
     this.loadDashboard();
+    this.loadSidebarData();
+  }
+
+  private loadSidebarData() {
+    const token = localStorage.getItem('access_token');
+    if (!token) return;
+    let userId = '';
+    try { userId = JSON.parse(atob(token.split('.')[1])).sub ?? ''; } catch { return; }
+
+    this.profileService.getOwnProfile().subscribe({
+      next: (data) => {
+        const profiles = data as UserProfile[];
+        const p = profiles.find(x => x.id_user === userId) ?? profiles[0];
+        if (p) {
+          this.sidebarName.set([p.name, p.first_last_name].filter(Boolean).join(' ') || 'Administrador');
+          this.sidebarInitials.set(((p.name?.[0] ?? '') + (p.first_last_name?.[0] ?? '')).toUpperCase() || 'A');
+        }
+      },
+      error: () => {},
+    });
+    this.storageService.getAvatarAsBlob(userId).subscribe({
+      next: (blob) => this.sidebarAvatarUrl.set(URL.createObjectURL(blob)),
+      error: () => this.sidebarAvatarUrl.set(null),
+    });
   }
 
   private loadDashboard() {

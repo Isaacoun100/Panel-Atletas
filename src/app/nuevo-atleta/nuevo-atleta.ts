@@ -4,6 +4,9 @@ import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TitleCasePipe } from '@angular/common';
 import { AdminInvitationsService } from '../core/services/admin-invitations.service';
+import { ProfileService } from '../core/services/profile.service';
+import { StorageService } from '../core/services/storage.service';
+import { UserProfile } from '../core/models/profile.model';
 
 interface Medalla { prueba: string; tipo: string; anio: string; }
 
@@ -15,8 +18,13 @@ interface Medalla { prueba: string; tipo: string; anio: string; }
 })
 export class NuevoAtleta implements OnInit {
   private adminInvitationsService = inject(AdminInvitationsService);
+  private profileService  = inject(ProfileService);
+  private storageService  = inject(StorageService);
 
   isDark = signal(false);
+  sidebarName     = signal('Administrador');
+  sidebarInitials = signal('A');
+  sidebarAvatarUrl = signal<string | null>(null);
   activeTab = signal<'email' | 'manual'>('email');
 
   // ── Email invitation ──────────────────────────────
@@ -284,6 +292,29 @@ export class NuevoAtleta implements OnInit {
       this.isDark.set(true);
       document.documentElement.setAttribute('data-theme', 'dark');
     }
+    this.loadSidebarData();
+  }
+
+  private loadSidebarData() {
+    const token = localStorage.getItem('access_token');
+    if (!token) return;
+    let userId = '';
+    try { userId = JSON.parse(atob(token.split('.')[1])).sub ?? ''; } catch { return; }
+    this.profileService.getOwnProfile().subscribe({
+      next: (data) => {
+        const profiles = data as UserProfile[];
+        const p = profiles.find(x => x.id_user === userId) ?? profiles[0];
+        if (p) {
+          this.sidebarName.set([p.name, p.first_last_name].filter(Boolean).join(' ') || 'Administrador');
+          this.sidebarInitials.set(((p.name?.[0] ?? '') + (p.first_last_name?.[0] ?? '')).toUpperCase() || 'A');
+        }
+      },
+      error: () => {},
+    });
+    this.storageService.getAvatarAsBlob(userId).subscribe({
+      next: (blob) => this.sidebarAvatarUrl.set(URL.createObjectURL(blob)),
+      error: () => this.sidebarAvatarUrl.set(null),
+    });
   }
 
   toggleTheme() {

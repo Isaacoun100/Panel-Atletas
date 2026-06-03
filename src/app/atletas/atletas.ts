@@ -12,6 +12,9 @@ import { AdminAthletesService } from '../core/services/admin-athletes.service';
 import { AdminDisciplinesService } from '../core/services/admin-disciplines.service';
 import { Discipline } from '../core/models/discipline.model';
 import { AdminProfilesService } from '../core/services/admin-profiles.service';
+import { ProfileService } from '../core/services/profile.service';
+import { StorageService } from '../core/services/storage.service';
+import { UserProfile } from '../core/models/profile.model';
 
 
 interface Atleta {
@@ -48,8 +51,13 @@ export class Atletas implements OnInit {
   private adminDisciplinesService = inject(AdminDisciplinesService);
   private router = inject(Router);
   private adminProfilesService = inject(AdminProfilesService);
+  private profileService  = inject(ProfileService);
+  private storageService  = inject(StorageService);
 
   isDark = signal(false);
+  sidebarName     = signal('Administrador');
+  sidebarInitials = signal('A');
+  sidebarAvatarUrl = signal<string | null>(null);
 
   // ── Datos reales desde API ──────────────────────────────────────────
   atletasReales = signal<Atleta[]>([]);
@@ -956,6 +964,29 @@ onFechaNacimientoChange() {
     // Cargar datos reales
     this.cargarAtletasReales();
     this.cargarDisciplinas();
+    this.loadSidebarData();
+  }
+
+  private loadSidebarData() {
+    const token = localStorage.getItem('access_token');
+    if (!token) return;
+    let userId = '';
+    try { userId = JSON.parse(atob(token.split('.')[1])).sub ?? ''; } catch { return; }
+    this.profileService.getOwnProfile().subscribe({
+      next: (data) => {
+        const profiles = data as UserProfile[];
+        const p = profiles.find(x => x.id_user === userId) ?? profiles[0];
+        if (p) {
+          this.sidebarName.set([p.name, p.first_last_name].filter(Boolean).join(' ') || 'Administrador');
+          this.sidebarInitials.set(((p.name?.[0] ?? '') + (p.first_last_name?.[0] ?? '')).toUpperCase() || 'A');
+        }
+      },
+      error: () => {},
+    });
+    this.storageService.getAvatarAsBlob(userId).subscribe({
+      next: (blob) => this.sidebarAvatarUrl.set(URL.createObjectURL(blob)),
+      error: () => this.sidebarAvatarUrl.set(null),
+    });
   }
 
   toggleTheme() {

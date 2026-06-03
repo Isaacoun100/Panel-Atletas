@@ -3,7 +3,6 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
-import { environment } from '../environments/environment';
 
 // Servicios y modelos
 import { ProfileService } from '../core/services/profile.service';
@@ -52,6 +51,8 @@ export class MiPerfil implements OnInit {
 
   // ── Avatar ──────────────────────────────────────────────────────────
   avatarUrl = signal<string | null>(null);
+  isUploadingAvatar = signal(false);
+  avatarUploadError = signal('');
 
   // ── Iniciales del nombre ────────────────────────────────────────────
   getInitials(): string {
@@ -110,18 +111,73 @@ export class MiPerfil implements OnInit {
   // ── Cargar avatar ────────────────────────────────────────────────────
   private loadAvatar() {
     if (!this.userId) return;
-    
-    // Usar StorageService para obtener URL firmada del avatar
-    import('../core/services/storage.service').then(({ StorageService }) => {
-      const storageService = inject(StorageService);
-      storageService.getAvatarSignedUrl(this.userId).subscribe({
-        next: (res) => {
-          this.avatarUrl.set(`${environment.apiUrl}${res.signedURL}`);
+    this.storageService.getAvatarAsBlob(this.userId).subscribe({
+      next: (blob) => this.avatarUrl.set(URL.createObjectURL(blob)),
+      error: () => this.avatarUrl.set(null),
+    });
+  }
+
+  async onAvatarFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      this.avatarUploadError.set('Solo se aceptan imágenes (JPG, PNG, WebP).');
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      this.avatarUploadError.set('La imagen no puede superar los 2 MB.');
+      return;
+    }
+
+    this.avatarUploadError.set('');
+    this.isUploadingAvatar.set(true);
+
+    try {
+      const blob = await this.compressImage(file);
+      const compressed = new File([blob], 'avatar.jpg', { type: 'image/jpeg' });
+      this.storageService.uploadAvatar(this.userId, compressed).subscribe({
+        next: () => {
+          this.profileService.updateOwnProfile(this.userId, {
+            profile_image_url: `avatars/${this.userId}/avatar.jpg`,
+          }).subscribe();
+          const old = this.avatarUrl();
+          if (old?.startsWith('blob:')) URL.revokeObjectURL(old);
+          this.avatarUrl.set(URL.createObjectURL(blob));
+          this.isUploadingAvatar.set(false);
         },
         error: () => {
-          // Si no hay avatar, se mostrarán las iniciales
-        }
+          this.avatarUploadError.set('Error al subir la imagen. Intente nuevamente.');
+          this.isUploadingAvatar.set(false);
+        },
       });
+    } catch {
+      this.avatarUploadError.set('No se pudo procesar la imagen.');
+      this.isUploadingAvatar.set(false);
+    }
+  }
+
+  private compressImage(file: File, maxWidth = 400, quality = 0.82): Promise<Blob> {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        let { width, height } = img;
+        if (width > maxWidth) { height = Math.round((height * maxWidth) / width); width = maxWidth; }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        canvas.getContext('2d')!.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(
+          b => b ? resolve(b) : reject(new Error('Compression failed')),
+          'image/jpeg', quality
+        );
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Image load failed')); };
+      img.src = url;
     });
   }
 
@@ -272,7 +328,11 @@ export class MiPerfil implements OnInit {
   }
 
   getRolBadgeClass(): string {
-    return 'db-badge--success';
+    return this.profile?.role === 'admon' ? 'db-badge--success' : 'db-badge--warning';
+  }
+
+  getAccessLevel(): string {
+    return this.profile?.role === 'admon' ? 'Total' : 'Limitado';
   }
 
   getEstadoLabel(): string {
