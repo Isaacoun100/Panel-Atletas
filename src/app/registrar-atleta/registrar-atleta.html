@@ -511,31 +511,31 @@
                     </div>
                   </div>
                 </div>
-              }
-              <div>
-                <label class="ra-label">¿Tiene clasificación funcional?</label>
-                <div class="ra-toggle-group">
-                  <button type="button" class="ra-toggle-btn" [class.ra-toggle-btn--active]="clasificacionFuncional === 'si'" (click)="clasificacionFuncional = 'si'">Sí</button>
-                  <button type="button" class="ra-toggle-btn" [class.ra-toggle-btn--active]="clasificacionFuncional === 'no'" (click)="clasificacionFuncional = 'no'">No</button>
-                </div>
-              </div>
-              @if (clasificacionFuncional === 'si') {
-                <div class="ra-conditional-block">
-                  <div class="row g-3">
-                    <div class="col-12 col-md-6">
-                      <label class="ra-label ra-label--opt">Categoría</label>
-                      <div class="ra-toggle-group">
-                        @for (cat of categorias; track cat) {
-                          <button type="button" class="ra-toggle-btn" [class.ra-toggle-btn--active]="categoriaFuncionalSel === cat" (click)="categoriaFuncionalSel = cat">{{ cat }}</button>
-                        }
-                      </div>
-                    </div>
-                    <div class="col-12 col-md-6">
-                      <label class="ra-label ra-label--opt">Documento de clasificación</label>
-                      <input type="file" class="ra-input" accept=".pdf,.jpg,.jpeg,.png">
-                    </div>
+                <div>
+                  <label class="ra-label">¿Tiene clasificación funcional?</label>
+                  <div class="ra-toggle-group">
+                    <button type="button" class="ra-toggle-btn" [class.ra-toggle-btn--active]="clasificacionFuncional === 'si'" (click)="clasificacionFuncional = 'si'">Sí</button>
+                    <button type="button" class="ra-toggle-btn" [class.ra-toggle-btn--active]="clasificacionFuncional === 'no'" (click)="clasificacionFuncional = 'no'">No</button>
                   </div>
                 </div>
+                @if (clasificacionFuncional === 'si') {
+                  <div class="ra-conditional-block">
+                    <div class="row g-3">
+                      <div class="col-12 col-md-6">
+                        <label class="ra-label ra-label--opt">Categoría</label>
+                        <div class="ra-toggle-group">
+                          @for (cat of categorias; track cat) {
+                            <button type="button" class="ra-toggle-btn" [class.ra-toggle-btn--active]="categoriaFuncionalSel === cat" (click)="categoriaFuncionalSel = cat">{{ cat }}</button>
+                          }
+                        </div>
+                      </div>
+                      <div class="col-12 col-md-6">
+                        <label class="ra-label ra-label--opt">Documento de clasificación</label>
+                        <input type="file" class="ra-input" accept=".pdf,.jpg,.jpeg,.png">
+                      </div>
+                    </div>
+                  </div>
+                }
               }
             </div>
           </div>

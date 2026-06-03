@@ -243,10 +243,25 @@ export class RegistrarAtleta implements OnInit {
 
       this.authService.updatePassword(this.contrasena, this.inviteToken).subscribe({
         next: (res) => {
-          this.userRole.set(res.app_metadata?.role === 'admin' ? 'admin' : 'athlete');
-          this.isUpdatingPassword.set(false);
-          this.currentStep.update(s => s + 1);
-          window.scrollTo({ top: 0, behavior: 'smooth' });
+          const role = res.app_metadata?.role === 'admin' ? 'admin' : 'athlete';
+          this.userRole.set(role);
+
+          // Exchange invite token for a full session token so data API calls
+          // (profile, athlete record, enrollments, storage) pass RLS checks.
+          this.authService.signIn(this.emailFromToken, this.contrasena).subscribe({
+            next: (session) => {
+              localStorage.setItem('access_token', session.access_token);
+              this.isUpdatingPassword.set(false);
+              this.currentStep.update(s => s + 1);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            },
+            error: () => {
+              // Sign-in failed but password was set — proceed with invite token
+              this.isUpdatingPassword.set(false);
+              this.currentStep.update(s => s + 1);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            },
+          });
         },
         error: (err) => {
           console.error('Password update error:', err);
