@@ -1,7 +1,15 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { firstValueFrom } from 'rxjs';
+import { environment } from '../environments/environment';
+
+// Servicios y modelos
+import { ProfileService } from '../core/services/profile.service';
+import { AuthService } from '../core/services/auth.service';
+import { UserProfile } from '../core/models/profile.model';
+import { StorageService } from '../core/services/storage.service';
 
 @Component({
   selector: 'app-mi-perfil',
@@ -10,24 +18,29 @@ import { FormsModule } from '@angular/forms';
   styleUrl: './mi-perfil.css',
 })
 export class MiPerfil implements OnInit {
-  isDark = signal(false);
+  private profileService = inject(ProfileService);
+  private authService = inject(AuthService);
+  private router = inject(Router);
+  private storageService = inject(StorageService);
 
+  isDark = signal(false);
+  isLoading = signal(true);
+  errorMessage = signal('');
+
+  // ── Datos del perfil ────────────────────────────────────────────────
+  userId = '';
+  profile: UserProfile | null = null;
+  
   // ── Edit profile panel ────────────────────────────
   showEditPanel = signal(false);
-  editNombre = 'Isaac Herrera Monge';
-  editCorreo = 'isaacoun100@gmail.com';
-  editTelefono = '8888-8888';
-  editUbicacion = 'Montes de Oca, San José';
+  editNombre = '';
+  editPrimerApellido = '';
+  editSegundoApellido = '';
+  editCorreo = '';
+  editDni = '';
+  editBirthDate = '';
   editSaved = signal(false);
-
-  openEditPanel() { this.showEditPanel.set(true); this.editSaved.set(false); }
-  closeEditPanel() { this.showEditPanel.set(false); }
-
-  saveProfile() {
-    // TODO: persist to backend
-    this.editSaved.set(true);
-    setTimeout(() => { this.editSaved.set(false); this.closeEditPanel(); }, 2000);
-  }
+  editError = signal('');
 
   // ── Change password panel ─────────────────────────
   showPasswordPanel = signal(false);
@@ -37,10 +50,146 @@ export class MiPerfil implements OnInit {
   passError = signal('');
   passSaved = signal(false);
 
-  openPasswordPanel() { this.showPasswordPanel.set(true); this.passError.set(''); this.passSaved.set(false); }
-  closePasswordPanel() { this.showPasswordPanel.set(false); this.passActual = ''; this.passNueva = ''; this.passConfirmar = ''; }
+  // ── Avatar ──────────────────────────────────────────────────────────
+  avatarUrl = signal<string | null>(null);
 
-  savePassword() {
+  // ── Iniciales del nombre ────────────────────────────────────────────
+  getInitials(): string {
+    if (!this.profile) return 'A';
+    const first = this.profile.name?.charAt(0) || '';
+    const last = this.profile.first_last_name?.charAt(0) || '';
+    return (first + last).toUpperCase() || 'A';
+  }
+
+  constructor() {}
+
+  private getUserIdFromToken(): string {
+    const token = localStorage.getItem('access_token');
+    if (!token) return '';
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.sub || '';
+    } catch {
+      return '';
+    }
+  }
+  
+  async loadProfile() {
+    this.isLoading.set(true);
+    this.errorMessage.set('');
+
+    try {
+      const profiles = await firstValueFrom(this.profileService.getOwnProfile()) as UserProfile[];
+      const userId = this.getUserIdFromToken();
+      const myProfile = profiles.find(p => p.id_user === userId);
+      
+      if (myProfile) {
+        this.profile = myProfile;
+        this.userId = myProfile.id_user;
+        this.editNombre = myProfile.name || '';
+        this.editPrimerApellido = myProfile.first_last_name || '';
+        this.editSegundoApellido = myProfile.second_last_name || '';
+        this.editCorreo = this.getEmailFromToken();
+        this.editDni = myProfile.dni || '';
+        // Mostrar fecha en DD/MM/YYYY
+        this.editBirthDate = this.formatFechaParaMostrar(myProfile.birth_date) || '';
+        
+        // Se carga el avatar si existe
+        this.loadAvatar();
+      } else {
+        this.errorMessage.set('No se encontró el perfil del usuario');
+      }
+    } catch (error) {
+      console.error('Error loading profile:', error);
+      this.errorMessage.set('Error al cargar el perfil');
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
+
+  // ── Cargar avatar ────────────────────────────────────────────────────
+  private loadAvatar() {
+    if (!this.userId) return;
+    
+    // Usar StorageService para obtener URL firmada del avatar
+    import('../core/services/storage.service').then(({ StorageService }) => {
+      const storageService = inject(StorageService);
+      storageService.getAvatarSignedUrl(this.userId).subscribe({
+        next: (res) => {
+          this.avatarUrl.set(`${environment.apiUrl}${res.signedURL}`);
+        },
+        error: () => {
+          // Si no hay avatar, se mostrarán las iniciales
+        }
+      });
+    });
+  }
+
+  private getEmailFromToken(): string {
+    const token = localStorage.getItem('access_token');
+    if (!token) return '';
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.email || '';
+    } catch {
+      return '';
+    }
+  }
+
+
+  async saveProfile() {
+    if (!this.userId) return;
+
+    this.editError.set('');
+    this.editSaved.set(false);
+
+    // Validaciones
+    if (!this.editNombre.trim()) {
+      this.editError.set('El nombre es requerido');
+      return;
+    }
+    if (!this.editPrimerApellido.trim()) {
+      this.editError.set('El primer apellido es requerido');
+      return;
+    }
+
+    try {
+      const profileData: Partial<UserProfile> = {
+        name: this.editNombre.trim(),
+        first_last_name: this.editPrimerApellido.trim(),
+        second_last_name: this.editSegundoApellido.trim() || '',
+        dni: this.editDni.trim(),
+        birth_date: this.formatFechaParaAPI(this.editBirthDate),
+      };
+
+      await firstValueFrom(this.profileService.updateOwnProfile(this.userId, profileData));
+
+      // Se actualiza el perfil local
+      if (this.profile) {
+        this.profile.name = this.editNombre.trim() || '';
+        this.profile.first_last_name = this.editPrimerApellido.trim() || '';
+        this.profile.second_last_name = this.editSegundoApellido.trim() || '';
+        this.profile.dni = this.editDni.trim() || '';
+        this.profile.birth_date = this.formatFechaParaAPI(this.editBirthDate) || '';
+      }
+
+      this.editSaved.set(true);
+      setTimeout(() => {
+        this.editSaved.set(false);
+        this.closeEditPanel();
+      }, 1500);
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      this.editError.set('Error al guardar los cambios');
+    }
+  }
+
+
+  async savePassword() {
+    this.passError.set('');
+    this.passSaved.set(false);
+
+    // Se hacen las validaciones
     if (!this.passActual || !this.passNueva || !this.passConfirmar) {
       this.passError.set('Todos los campos son obligatorios.');
       return;
@@ -53,12 +202,116 @@ export class MiPerfil implements OnInit {
       this.passError.set('La contraseña debe tener al menos 6 caracteres.');
       return;
     }
-    this.passError.set('');
-    this.passSaved.set(true);
-    setTimeout(() => { this.passSaved.set(false); this.closePasswordPanel(); }, 2000);
+
+    try {
+      // Se verifica que la contraseña actual sea correcta
+      const email = this.getEmailFromToken();
+      
+      await firstValueFrom(this.authService.signIn(email, this.passActual));
+      
+      const token = localStorage.getItem('access_token');
+      if (!token) throw new Error('No hay sesión activa');
+
+      await firstValueFrom(this.authService.updatePassword(this.passNueva, token));
+
+      this.passSaved.set(true);
+      setTimeout(() => {
+        this.passSaved.set(false);
+        this.closePasswordPanel();
+      }, 1500);
+    } catch (error) {
+      console.error('Error changing password:', error);
+      this.passError.set('Contraseña actual incorrecta. Intente nuevamente.');
+    }
+  }
+  
+
+  openEditPanel() {
+    this.editError.set('');
+    this.editSaved.set(false);
+    this.showEditPanel.set(true);
   }
 
-  constructor(private router: Router) {}
+  closeEditPanel() {
+    this.showEditPanel.set(false);
+    this.editError.set('');
+  }
+
+  openPasswordPanel() {
+    this.passError.set('');
+    this.passSaved.set(false);
+    this.passActual = '';
+    this.passNueva = '';
+    this.passConfirmar = '';
+    this.showPasswordPanel.set(true);
+  }
+
+  closePasswordPanel() {
+    this.showPasswordPanel.set(false);
+    this.passError.set('');
+  }
+
+  // ── Helpers ─────────────────────────────────────────────────────────
+  getNombreCompleto(): string {
+    if (!this.profile) return 'Cargando...';
+    const parts = [this.profile.name, this.profile.first_last_name, this.profile.second_last_name].filter(Boolean);
+    return parts.join(' ') || 'Administrador';
+  }
+  
+  getDni(): string {
+    return this.profile?.dni || 'No registrado';
+  }
+  
+  getBirthDate(): string {
+    if (!this.profile?.birth_date) return 'No registrado';
+    return this.formatFechaParaMostrar(this.profile.birth_date);
+  }
+
+  getRolLabel(): string {
+    return this.profile?.role === 'admon' ? 'Administrador' : 'Atleta';
+  }
+
+  getRolBadgeClass(): string {
+    return 'db-badge--success';
+  }
+
+  getEstadoLabel(): string {
+    return this.profile?.is_active ? 'Activa' : 'Inactiva';
+  }
+
+  getEstadoColor(): string {
+    return this.profile?.is_active ? 'var(--success)' : 'var(--danger)';
+  }
+
+  getMiembroDesde(): string {
+    if (!this.profile?.created_at) return 'N/A';
+    const date = new Date(this.profile.created_at);
+    return date.toLocaleDateString('es-CR', { year: 'numeric', month: 'long' });
+  }
+
+  // Formatear fecha YYYY-MM-DD a DD/MM/YYYY para mostrar
+  formatFechaParaMostrar(fecha: string): string {
+    if (!fecha || fecha === 'N/A') return '';
+    // Extraer partes directamente sin usar Date()
+    const partes = fecha.split('-');
+    if (partes.length === 3) {
+      return `${partes[2]}/${partes[1]}/${partes[0]}`;
+    }
+    return fecha;
+  }
+
+  // Se formatea fecha DD/MM/YYYY a YYYY-MM-DD para la API
+  formatFechaParaAPI(fecha: string): string {
+    if (!fecha || fecha === 'N/A') return '';
+    const partes = fecha.split('/');
+    if (partes.length === 3) {
+      const dia = partes[0].padStart(2, '0');
+      const mes = partes[1].padStart(2, '0');
+      const anio = partes[2];
+      return `${anio}-${mes}-${dia}`;
+    }
+    return fecha;
+  }
 
   ngOnInit() {
     const saved = localStorage.getItem('theme');
@@ -66,6 +319,8 @@ export class MiPerfil implements OnInit {
     const dark = saved ? saved === 'dark' : prefersDark;
     this.isDark.set(dark);
     document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+
+    this.loadProfile();
   }
 
   toggleTheme() {
@@ -76,6 +331,7 @@ export class MiPerfil implements OnInit {
   }
 
   logout() {
+    localStorage.removeItem('access_token');
     this.router.navigate(['/inicio-sesion']);
   }
 }
