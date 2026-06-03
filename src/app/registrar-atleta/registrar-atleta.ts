@@ -7,6 +7,7 @@ import { AuthService } from '../core/services/auth.service';
 import { ProfileService } from '../core/services/profile.service';
 import { AthleteService } from '../core/services/athlete.service';
 import { DisciplinesService } from '../core/services/disciplines.service';
+import { MedalsService } from '../core/services/medals.service';
 import { StorageService } from '../core/services/storage.service';
 import { Discipline } from '../core/models/discipline.model';
 import { UserProfile } from '../core/models/profile.model';
@@ -25,6 +26,7 @@ export class RegistrarAtleta implements OnInit {
   private profileService  = inject(ProfileService);
   private athleteService  = inject(AthleteService);
   private disciplinesService = inject(DisciplinesService);
+  private medalsService   = inject(MedalsService);
   private storageService  = inject(StorageService);
 
   // ── Invite session ────────────────────────────────
@@ -446,10 +448,20 @@ export class RegistrarAtleta implements OnInit {
           d.discipline_type === 'sport' && this.esRepresentacion === 'si'
         ));
 
-      if (enrollments.length === 0) {
+      const medalOps: Observable<unknown>[] = this.medallas()
+        .filter(m => m.prueba.trim() && m.tipo && m.anio)
+        .map(m => this.medalsService.createMedal({
+          id_user: this.userId,
+          competition_name: m.prueba.trim(),
+          year: Number(m.anio),
+          medal_type: this.mapMedalType(m.tipo),
+        }));
+
+      const all = [...enrollments, ...medalOps];
+      if (all.length === 0) {
         this.isSubmitting.set(false); this.finishRegistration(); return;
       }
-      forkJoin(enrollments).subscribe({
+      forkJoin(all).subscribe({
         next: () => { this.isSubmitting.set(false); this.finishRegistration(); },
         error: () => { this.isSubmitting.set(false); this.finishRegistration(); },
       });
@@ -494,6 +506,11 @@ export class RegistrarAtleta implements OnInit {
 
   private mapDisability(v: string): string {
     const m: Record<string, string> = { fisica: 'physical', cognitiva: 'cognitive' };
+    return m[v] ?? v;
+  }
+
+  private mapMedalType(v: string): string {
+    const m: Record<string, string> = { oro: 'gold', plata: 'silver', bronce: 'bronze' };
     return m[v] ?? v;
   }
 
