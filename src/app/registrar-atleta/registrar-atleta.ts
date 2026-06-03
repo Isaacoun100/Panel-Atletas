@@ -379,16 +379,21 @@ export class RegistrarAtleta implements OnInit {
       accepts_info_accuracy: this.aceptaVeracidad === 'si',
     };
 
-    forkJoin([
-      this.profileService.createProfile(profilePayload),
-      this.athleteService.createAthleteRecord(athletePayload),
-    ]).subscribe({
+    // Sequential: profile must be committed before athlete RLS check runs
+    this.profileService.createProfile(profilePayload).subscribe({
       next: () => {
-        this.uploadAvatarThenEnrollDisciplines();
+        this.athleteService.createAthleteRecord(athletePayload).subscribe({
+          next: () => this.uploadAvatarThenEnrollDisciplines(),
+          error: (err) => {
+            console.error('Athlete create error:', err);
+            this.submitError.set('Ocurrió un error al guardar el registro de atleta. Intente nuevamente.');
+            this.isSubmitting.set(false);
+          },
+        });
       },
       error: (err) => {
-        console.error('Registration submit error:', err);
-        this.submitError.set('Ocurrió un error al guardar. Intente nuevamente.');
+        console.error('Profile create error:', err);
+        this.submitError.set('Ocurrió un error al guardar el perfil. Intente nuevamente.');
         this.isSubmitting.set(false);
       },
     });
