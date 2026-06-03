@@ -71,12 +71,12 @@
           <div class="ra-body">
             <div class="row g-3">
               <div class="col-12 col-md-6">
-                <label class="ra-label" for="email">Correo electrónico</label>
-                <input id="email" type="email" class="ra-input" placeholder="correo@ejemplo.com" [(ngModel)]="correoManual">
-              </div>
-              <div class="col-12 col-md-6">
                 <label class="ra-label" for="pass">Contraseña</label>
                 <input id="pass" type="password" class="ra-input" placeholder="Mínimo 6 caracteres" [(ngModel)]="contrasena" autocomplete="new-password">
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="ra-label" for="passConfirm">Confirmar contraseña</label>
+                <input id="passConfirm" type="password" class="ra-input" placeholder="Repetí tu contraseña" [(ngModel)]="confirmarContrasena" autocomplete="new-password">
               </div>
             </div>
           </div>
@@ -127,6 +127,10 @@
                   <button type="button" class="ra-toggle-btn" [class.ra-toggle-btn--active]="sexo === 'F'" (click)="sexo = 'F'">Femenino</button>
                 </div>
               </div>
+              <div class="col-12 col-md-6">
+                <label class="ra-label" for="tel">Teléfono</label>
+                <input id="tel" type="tel" class="ra-input" placeholder="Ej. 8888-8888" [(ngModel)]="telefono">
+              </div>
             </div>
           </div>
         </div>
@@ -153,34 +157,8 @@
         }
       }
 
-      <!-- ══ Step 3: Contacto ══ -->
+      <!-- ══ Step 3: Actividad + Participación + Seguimiento ══ -->
       @if (currentStep() === 3) {
-        <div class="ra-card">
-          <div class="ra-card-header">3. Contacto</div>
-          <div class="ra-body">
-            <div class="row g-3">
-              <div class="col-12 col-md-6">
-                <label class="ra-label" for="tel">Teléfono</label>
-                <input id="tel" type="tel" class="ra-input" placeholder="Ej. 8888-8888" [(ngModel)]="telefono">
-              </div>
-              <div class="col-12 col-md-6">
-                <label class="ra-label" for="dist">Distrito de residencia</label>
-                <select id="dist" class="ra-select" [(ngModel)]="distrito">
-                  <option value="">Seleccionar...</option>
-                  <option value="san-pedro">San Pedro</option>
-                  <option value="sabanilla">Sabanilla</option>
-                  <option value="mercedes">Mercedes</option>
-                  <option value="san-rafael">San Rafael</option>
-                  <option value="otro">Otro</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        </div>
-      }
-
-      <!-- ══ Step 4: Actividad + Participación + Seguimiento ══ -->
-      @if (currentStep() === 4) {
 
         <!-- 4. Actividad deportiva -->
         <div class="ra-card ra-card--overflow">
@@ -387,13 +365,24 @@
                 <button type="button" class="ra-toggle-btn" [class.ra-toggle-btn--active]="nivelSatisfaccion === 'muy-insatisfecho'" (click)="nivelSatisfaccion = 'muy-insatisfecho'">Muy insatisfecho</button>
               </div>
             </div>
+            <div>
+              <label class="ra-label" for="dist">Distrito de residencia</label>
+              <select id="dist" class="ra-select" style="max-width:260px" [(ngModel)]="distrito">
+                <option value="">Seleccionar...</option>
+                <option value="san-pedro">San Pedro</option>
+                <option value="sabanilla">Sabanilla</option>
+                <option value="mercedes">Mercedes</option>
+                <option value="san-rafael">San Rafael</option>
+                <option value="otro">Otro</option>
+              </select>
+            </div>
           </div>
         </div>
 
       }
 
-      <!-- ══ Step 5: Vínculo + Instalaciones + Inclusión + Descargo ══ -->
-      @if (currentStep() === 5) {
+      <!-- ══ Step 4: Vínculo + Instalaciones + Inclusión + Descargo ══ -->
+      @if (currentStep() === 4) {
 
         <!-- 7. Vínculo -->
         <div class="ra-card">

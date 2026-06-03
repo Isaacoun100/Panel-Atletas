@@ -12,7 +12,6 @@ import { Athlete } from '../core/models/athlete.model';
 import { UserProfile } from '../core/models/profile.model';
 import { Discipline, UserDiscipline } from '../core/models/discipline.model';
 import { Medal } from '../core/models/medal.model';
-import { environment } from '../environments/environment';
 
 interface MedalForm { id?: string; prueba: string; tipo: string; anio: string; }
 
@@ -476,9 +475,9 @@ export class InicioAtleta implements OnInit {
         })));
         this.obtuvoPremio = medals.length > 0 ? 'si' : '';
 
-        // Load avatar signed URL (silent if none exists)
-        this.storageService.getAvatarSignedUrl(this.userId).subscribe({
-          next: (res) => this.avatarUrl.set(`${environment.apiUrl}${res.signedURL}`),
+        // Fetch avatar as blob so it can be used as <img src> without auth headers
+        this.storageService.getAvatarAsBlob(this.userId).subscribe({
+          next: (blob) => this.avatarUrl.set(URL.createObjectURL(blob)),
           error: () => this.avatarUrl.set(null),
         });
 
@@ -526,9 +525,11 @@ export class InicioAtleta implements OnInit {
           this.profileService.updateOwnProfile(this.userId, {
             profile_image_url: `avatars/${this.userId}/avatar.jpg`,
           }).subscribe();
-          this.storageService.getAvatarSignedUrl(this.userId).subscribe({
-            next: (res) => {
-              this.avatarUrl.set(`${environment.apiUrl}${res.signedURL}?t=${Date.now()}`);
+          this.storageService.getAvatarAsBlob(this.userId).subscribe({
+            next: (blob) => {
+              const old = this.avatarUrl();
+              if (old?.startsWith('blob:')) URL.revokeObjectURL(old);
+              this.avatarUrl.set(URL.createObjectURL(blob));
               this.isUploadingAvatar.set(false);
             },
             error: () => this.isUploadingAvatar.set(false),
