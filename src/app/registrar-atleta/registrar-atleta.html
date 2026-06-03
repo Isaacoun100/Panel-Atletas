@@ -24,8 +24,8 @@
         <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" viewBox="0 0 16 16">
           <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
         </svg>
-        <h2>¡Registro enviado!</h2>
-        <p>Tu información fue recibida correctamente.</p>
+        <h2>¡Registro completado!</h2>
+        <p>Tu información fue guardada correctamente. Redirigiendo al inicio de sesión...</p>
       </div>
     </div>
   }
@@ -35,7 +35,7 @@
 
       <!-- ── Step indicator ── -->
       <div class="ra-stepper">
-        @for (s of stepNumbers; track s) {
+        @for (s of stepNumbers(); track s) {
           <div class="ra-step-item"
                [class.ra-step-item--active]="currentStep() === s"
                [class.ra-step-item--done]="currentStep() > s">
@@ -48,9 +48,9 @@
                 {{ s }}
               }
             </div>
-            <span class="ra-step-label">{{ stepLabels[s - 1] }}</span>
+            <span class="ra-step-label">{{ stepLabels()[s - 1] }}</span>
           </div>
-          @if (s < 5) {
+          @if (s < totalSteps()) {
             <div class="ra-step-line" [class.ra-step-line--done]="currentStep() > s"></div>
           }
         }
@@ -89,6 +89,46 @@
           <div class="ra-card-header">1. Datos personales</div>
           <div class="ra-body">
             <div class="row g-3">
+
+              <!-- Avatar -->
+              <div class="col-12 d-flex align-items-center gap-3 pb-3 border-bottom" style="border-color:var(--border)">
+                <div class="ra-avatar-circle">
+                  @if (avatarPreviewUrl()) {
+                    <img [src]="avatarPreviewUrl()" alt="Foto de perfil" class="ra-avatar-img">
+                  } @else {
+                    <span class="ra-avatar-initials">
+                      {{ nombre.slice(0,1) | uppercase }}{{ primerApellido.slice(0,1) | uppercase }}
+                    </span>
+                  }
+                  @if (isUploadingAvatar()) {
+                    <div class="ra-avatar-overlay">
+                      <div class="spinner-border spinner-border-sm text-white" role="status"></div>
+                    </div>
+                  }
+                </div>
+                <div class="d-flex flex-column gap-1">
+                  <span class="ra-label ra-label--opt mb-0">Foto de perfil</span>
+                  <p class="small mb-1" style="color:var(--text-3)">JPG, PNG o WebP · máx. 2 MB · opcional</p>
+                  <label class="ra-add-btn" style="width:fit-content;padding:.35rem .75rem;font-size:.8rem"
+                         [class.disabled]="isUploadingAvatar()">
+                    @if (isUploadingAvatar()) { Subiendo... }
+                    @else { {{ avatarPreviewUrl() ? 'Cambiar foto' : 'Subir foto' }} }
+                    <input type="file" class="d-none" accept="image/jpeg,image/png,image/webp"
+                           [disabled]="isUploadingAvatar()"
+                           (change)="onAvatarSelected($event)">
+                  </label>
+                  @if (avatarError()) {
+                    <span class="small text-danger">{{ avatarError() }}</span>
+                  }
+                </div>
+              </div>
+
+              <!-- Email from invite — read-only -->
+              <div class="col-12 col-md-6">
+                <label class="ra-label ra-label--opt">Correo electrónico</label>
+                <div class="ra-readonly">{{ emailFromToken }}</div>
+              </div>
+
               <div class="col-12 col-md-4">
                 <label class="ra-label" for="nombre">Nombre</label>
                 <input id="nombre" type="text" class="ra-input" placeholder="Ej. Carlos" [(ngModel)]="nombre">
@@ -197,13 +237,21 @@
                     </button>
                     @if (disciplineMenuOpen()) {
                       <div class="ra-multiselect-dropdown" (click)="$event.stopPropagation()">
-                        @for (d of disciplineOptions; track d) {
+                        @if (disciplineOptions.length === 0) {
+                          <span class="ra-multiselect-option" style="color:var(--text-3)">Cargando disciplinas...</span>
+                        }
+                        @for (d of disciplineOptions; track d.id_discipline) {
                           <label class="ra-multiselect-option d-flex align-items-center gap-2">
-                            <span class="ra-checkbox" [class.ra-checkbox--checked]="selectedDisciplines().includes(d)">
-                              @if (selectedDisciplines().includes(d)) { <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="currentColor" viewBox="0 0 16 16"><path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/></svg> }
+                            <span class="ra-checkbox" [class.ra-checkbox--checked]="selectedDisciplines().includes(d.name)">
+                              @if (selectedDisciplines().includes(d.name)) { <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="currentColor" viewBox="0 0 16 16"><path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/></svg> }
                             </span>
-                            <input type="checkbox" hidden [checked]="selectedDisciplines().includes(d)" (change)="toggleDiscipline(d)">
-                            {{ d }}
+                            <input type="checkbox" hidden [checked]="selectedDisciplines().includes(d.name)" (change)="toggleDiscipline(d.name)">
+                            {{ d.name }}
+                            <span class="ms-auto badge rounded-pill fw-normal" style="font-size:.65rem"
+                                  [class.bg-primary]="d.discipline_type === 'sport'"
+                                  [class.bg-secondary]="d.discipline_type !== 'sport'">
+                              {{ d.discipline_type === 'sport' ? 'Deportiva' : 'Recreativa' }}
+                            </span>
                           </label>
                         }
                       </div>
@@ -211,9 +259,9 @@
                   </div>
                   @if (selectedDisciplines().length > 0) {
                     <div class="d-flex flex-wrap gap-1 mt-2">
-                      @for (d of selectedDisciplines(); track d) {
-                        <span class="ra-chip">{{ d }}
-                          <button type="button" class="ra-chip-remove" (click)="toggleDiscipline(d)">
+                      @for (name of selectedDisciplines(); track name) {
+                        <span class="ra-chip">{{ name }}
+                          <button type="button" class="ra-chip-remove" (click)="toggleDiscipline(name)">
                             <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="currentColor" viewBox="0 0 16 16"><path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/></svg>
                           </button>
                         </span>
@@ -523,9 +571,19 @@
               </div>
             </div>
 
-            <button type="button" class="btn btn-primary btn-lg w-100" [disabled]="!canSubmit" (click)="onSubmit()">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="me-2" viewBox="0 0 16 16"><path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4z"/></svg>
-              Enviar registro
+            @if (submitError()) {
+              <div class="alert alert-danger py-2 small" role="alert">{{ submitError() }}</div>
+            }
+            <button type="button" class="btn btn-primary btn-lg w-100"
+                    [disabled]="!canSubmit || isSubmitting()"
+                    (click)="onSubmit()">
+              @if (isSubmitting()) {
+                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                Guardando...
+              } @else {
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="me-2" viewBox="0 0 16 16"><path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4z"/></svg>
+                Enviar registro
+              }
             </button>
           </div>
         </div>
@@ -535,17 +593,40 @@
       <!-- ── Navigation buttons ── -->
       <div class="d-flex justify-content-between align-items-center pb-5 mt-1">
         @if (currentStep() > 1) {
-          <button type="button" class="btn btn-outline-secondary" (click)="prevStep()">
+          <button type="button" class="btn btn-outline-secondary" (click)="prevStep()" [disabled]="isSubmitting()">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="me-1" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/></svg>
             Anterior
           </button>
         } @else {
           <div></div>
         }
-        @if (currentStep() < TOTAL_STEPS) {
-          <button type="button" class="btn btn-primary px-4" (click)="nextStep()">
-            Siguiente
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="ms-1" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"/></svg>
+        @if (currentStep() < totalSteps()) {
+          <button type="button" class="btn btn-primary px-4"
+                  [disabled]="isUpdatingPassword()"
+                  (click)="nextStep()">
+            @if (currentStep() === 1 && isUpdatingPassword()) {
+              <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+              Verificando...
+            } @else {
+              Siguiente
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="ms-1" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"/></svg>
+            }
+          </button>
+        }
+        @if (currentStep() === totalSteps() && userRole() === 'admin') {
+          @if (submitError()) {
+            <span class="small text-danger me-3">{{ submitError() }}</span>
+          }
+          <button type="button" class="btn btn-primary px-4"
+                  [disabled]="isSubmitting()"
+                  (click)="onSubmit()">
+            @if (isSubmitting()) {
+              <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+              Guardando...
+            } @else {
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="me-1" viewBox="0 0 16 16"><path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4z"/></svg>
+              Enviar registro
+            }
           </button>
         }
       </div>
