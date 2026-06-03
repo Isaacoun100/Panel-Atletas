@@ -1,17 +1,40 @@
-import { Component, OnInit, HostListener, signal, computed } from '@angular/core';
+import { Component, OnInit, HostListener, signal, computed, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { TitleCasePipe } from '@angular/common';
+import { TitleCasePipe, UpperCasePipe } from '@angular/common';
+import { forkJoin, Observable } from 'rxjs';
+import { AuthService } from '../core/services/auth.service';
+import { ProfileService } from '../core/services/profile.service';
+import { AthleteService } from '../core/services/athlete.service';
+import { DisciplinesService } from '../core/services/disciplines.service';
+import { StorageService } from '../core/services/storage.service';
+import { Discipline } from '../core/models/discipline.model';
+import { UserProfile } from '../core/models/profile.model';
+import { Athlete } from '../core/models/athlete.model';
 
 interface Medalla { prueba: string; tipo: string; anio: string; }
 
 @Component({
   selector: 'app-registrar-atleta',
-  imports: [FormsModule, TitleCasePipe],
+  imports: [FormsModule, TitleCasePipe, UpperCasePipe],
   templateUrl: './registrar-atleta.html',
   styleUrl: './registrar-atleta.css',
 })
 export class RegistrarAtleta implements OnInit {
+  private authService     = inject(AuthService);
+  private profileService  = inject(ProfileService);
+  private athleteService  = inject(AthleteService);
+  private disciplinesService = inject(DisciplinesService);
+  private storageService  = inject(StorageService);
+
+  // ── Invite session ────────────────────────────────
+  inviteToken   = '';
+  userId        = '';
+  emailFromToken = '';
+  userRole      = signal<'admin' | 'athlete' | null>(null);
+  isUpdatingPassword = signal(false);
+  isSubmitting  = signal(false);
+  submitError   = signal('');
 
   // ── 1. Datos personales ───────────────────────────
   nombre = '';
@@ -50,25 +73,18 @@ export class RegistrarAtleta implements OnInit {
 
   get showDeportiva(): boolean { return this.recDeportiva; }
 
-  readonly disciplinasRecreativas = [
-    'Aeróbicos', 'Yoga', 'Caminata', 'Baile', 'Zumba', 'Pilates', 'Natación recreativa',
-  ];
+  allDisciplines = signal<Discipline[]>([]);
 
-  readonly disciplinasDeportivas = [
-    'Natación', 'Atletismo', 'Fútbol', 'Gimnasia', 'Baloncesto',
-    'Ciclismo', 'Voleibol', 'Para Tenis de Mesa', 'Tenis', 'Judo', 'Taekwondo',
-  ];
-
-  get disciplineOptions(): string[] {
-    const opts: string[] = [];
-    if (this.recRecreativa) opts.push(...this.disciplinasRecreativas);
-    if (this.recDeportiva) opts.push(...this.disciplinasDeportivas);
-    return opts;
+  get disciplineOptions(): Discipline[] {
+    return this.allDisciplines().filter(d =>
+      (this.recRecreativa && d.discipline_type !== 'sport') ||
+      (this.recDeportiva  && d.discipline_type === 'sport')
+    );
   }
 
   onTipoChange() {
-    const available = this.disciplineOptions;
-    this.selectedDisciplines.update(list => list.filter(d => available.includes(d)));
+    const available = this.disciplineOptions.map(d => d.name);
+    this.selectedDisciplines.update(list => list.filter(n => available.includes(n)));
     if (!this.recDeportiva) this.selectedCategorias.set([]);
   }
 
@@ -79,9 +95,7 @@ export class RegistrarAtleta implements OnInit {
   categoriaMenuOpen = signal(false);
   selectedCategorias = signal<string[]>([]);
 
-  showCategoriaMenu = computed(() =>
-    this.selectedDisciplines().includes('Para Tenis de Mesa')
-  );
+  showCategoriaMenu = computed(() => this.selectedDisciplines().includes('Para Tenis de Mesa'));
 
   readonly categorias = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
   readonly frequencies = [1, 2, 3, 4, 5, 6, 7];
@@ -144,22 +158,120 @@ export class RegistrarAtleta implements OnInit {
 
   submitted = false;
 
-  // ── Wizard steps ──────────────────────────────────
-  currentStep = signal(1);
-  stepError = signal('');
-  readonly TOTAL_STEPS = 4;
-  readonly stepLabels = ['Cuenta', 'Datos', 'Actividad', 'Finalizar'];
-  readonly stepNumbers = [1, 2, 3, 4];
+  // ── Avatar (immediate upload) ─────────────────────
+  avatarPreviewUrl = signal<string | null>(null);
+  profileImagePath = '';
+  avatarError = signal('');
+  isUploadingAvatar = signal(false);
 
-  nextStep() {
-    const err = this.validateCurrentStep();
-    if (err) {
-      this.stepError.set(err);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+  async onAvatarSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      this.avatarError.set('Solo se aceptan imágenes (JPG, PNG, WebP).');
       return;
     }
+    if (file.size > 2 * 1024 * 1024) {
+      this.avatarError.set('La imagen no puede superar los 2 MB.');
+      return;
+    }
+
+    this.avatarError.set('');
+    this.isUploadingAvatar.set(true);
+
+    try {
+      const blob = await this.compressImage(file);
+      const compressed = new File([blob], 'avatar.jpg', { type: 'image/jpeg' });
+
+      this.storageService.uploadAvatar(this.userId, compressed).subscribe({
+        next: () => {
+          const old = this.avatarPreviewUrl();
+          if (old?.startsWith('blob:')) URL.revokeObjectURL(old);
+          this.avatarPreviewUrl.set(URL.createObjectURL(blob));
+          this.profileImagePath = `avatars/${this.userId}/avatar.jpg`;
+          this.isUploadingAvatar.set(false);
+        },
+        error: (err) => {
+          console.error('Avatar upload error:', err);
+          this.avatarError.set('Error al subir la imagen. Intente nuevamente.');
+          this.isUploadingAvatar.set(false);
+        },
+      });
+    } catch {
+      this.avatarError.set('No se pudo procesar la imagen.');
+      this.isUploadingAvatar.set(false);
+    }
+  }
+
+  private compressImage(file: File, maxWidth = 400, quality = 0.82): Promise<Blob> {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        let { width, height } = img;
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext('2d')!.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(
+          blob => blob ? resolve(blob) : reject(new Error('Compression failed')),
+          'image/jpeg',
+          quality
+        );
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Image load failed')); };
+      img.src = url;
+    });
+  }
+
+  // ── Wizard ────────────────────────────────────────
+  currentStep = signal(1);
+  stepError = signal('');
+
+  totalSteps  = computed(() => this.userRole() === 'admin' ? 2 : 4);
+  stepNumbers = computed(() => Array.from({ length: this.totalSteps() }, (_, i) => i + 1));
+  stepLabels  = computed<string[]>(() =>
+    this.userRole() === 'admin'
+      ? ['Cuenta', 'Datos']
+      : ['Cuenta', 'Datos', 'Actividad', 'Finalizar']
+  );
+
+  nextStep() {
+    if (this.currentStep() === 1) {
+      const err = this.validateStep1();
+      if (err) { this.stepError.set(err); window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+      this.stepError.set('');
+      this.isUpdatingPassword.set(true);
+
+      this.authService.updatePassword(this.contrasena, this.inviteToken).subscribe({
+        next: (res) => {
+          this.userRole.set(res.app_metadata?.role === 'admin' ? 'admin' : 'athlete');
+          this.isUpdatingPassword.set(false);
+          this.currentStep.update(s => s + 1);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        },
+        error: (err) => {
+          console.error('Password update error:', err);
+          this.stepError.set('No se pudo actualizar la contraseña. Intente nuevamente.');
+          this.isUpdatingPassword.set(false);
+        },
+      });
+      return;
+    }
+
+    const err = this.validateCurrentStep();
+    if (err) { this.stepError.set(err); window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
     this.stepError.set('');
-    if (this.currentStep() < this.TOTAL_STEPS) {
+    if (this.currentStep() < this.totalSteps()) {
       this.currentStep.update(s => s + 1);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -175,7 +287,6 @@ export class RegistrarAtleta implements OnInit {
 
   private validateCurrentStep(): string | null {
     switch (this.currentStep()) {
-      case 1: return this.validateStep1();
       case 2: return this.validateStep2();
       case 3: return this.validateStep3();
       default: return null;
@@ -221,6 +332,128 @@ export class RegistrarAtleta implements OnInit {
     return null;
   }
 
+  // ── Submit ────────────────────────────────────────
+  onSubmit() {
+    if (this.isSubmitting()) return;
+    if (this.userRole() === 'athlete' && !this.canSubmit) return;
+    this.submitError.set('');
+    this.isSubmitting.set(true);
+
+    const profilePayload: Partial<UserProfile> = {
+      id_user: this.userId,
+      name: this.nombre,
+      first_last_name: this.primerApellido,
+      second_last_name: this.segundoApellido,
+      dni_type: this.tipoId as UserProfile['dni_type'],
+      dni: this.numeroId,
+      birth_date: this.fechaNacimiento,
+      sex: this.sexo === 'M' ? 'male' : 'female',
+      profile_image_url: this.profileImagePath || null,
+      role: this.userRole() === 'admin' ? 'admon' : 'athlete',
+    };
+
+    if (this.userRole() === 'admin') {
+      this.profileService.createProfile(profilePayload).subscribe({
+        next: () => { this.isSubmitting.set(false); this.finishRegistration(); },
+        error: (err) => {
+          console.error('Profile create error:', err);
+          this.submitError.set('Ocurrió un error al guardar. Intente nuevamente.');
+          this.isSubmitting.set(false);
+        },
+      });
+      return;
+    }
+
+    // Athlete: profile + athlete record in parallel
+    const athletePayload: Partial<Athlete> = {
+      id_user: this.userId,
+      phone: this.telefono,
+      district_of_residence: this.mapDistrito(this.distrito) as Athlete['district_of_residence'],
+      legal_guardian_name:  this.esMinor ? this.nombreEncargado  : null,
+      legal_guardian_phone: this.esMinor ? this.telefonoEncargado : null,
+      nacional_games_participation: this.participoJDN === 'si',
+      international_games_participation: this.participoInternacional === 'si',
+      weekly_exercise: this.frecuenciaSemanal ? parseInt(this.frecuenciaSemanal) : 0,
+      has_family_support: this.apoyoFamiliar === 'si',
+      satisfaction_level: this.mapSatisfaction(this.nivelSatisfaccion) as Athlete['satisfaction_level'],
+      has_family_in_committee: this.familiarComite === 'si',
+      has_previous_committee: this.otraComite === 'si',
+      previous_committee_name: this.otraComite === 'si' ? this.nombreOtraComite : null,
+      is_club_member: this.perteneceClub === 'si',
+      club_name: this.perteneceClub === 'si' ? this.nombreClub : null,
+      facility_satisfaction_level: this.mapFacility(this.instalacionesAdecuadas) as Athlete['facility_satisfaction_level'],
+      has_disability: this.tieneDiscapacidad === 'si',
+      disability_type: this.tieneDiscapacidad === 'si' ? this.mapDisability(this.tipoDiscapacidad) as Athlete['disability_type'] : null,
+      disability_description: this.tieneDiscapacidad === 'si' ? this.descripcionDiscapacidad : null,
+      has_functional_classification: this.tieneDiscapacidad === 'si' && this.clasificacionFuncional === 'si',
+      classification_category: (this.tieneDiscapacidad === 'si' && this.clasificacionFuncional === 'si') ? this.categoriaFuncionalSel : null,
+      classification_document_url: null,
+      accepts_data_usage: this.autorizaDatos === 'si',
+      accepts_info_accuracy: this.aceptaVeracidad === 'si',
+    };
+
+    forkJoin([
+      this.profileService.createProfile(profilePayload),
+      this.athleteService.createAthleteRecord(athletePayload),
+    ]).subscribe({
+      next: () => {
+        const disciplines = this.allDisciplines();
+        const enrollments: Observable<unknown>[] = this.selectedDisciplines()
+          .map(name => disciplines.find(d => d.name === name))
+          .filter((d): d is Discipline => !!d)
+          .map(d => this.disciplinesService.enrollInDiscipline(
+            d.id_discipline,
+            d.discipline_type === 'sport' && this.esRepresentacion === 'si'
+          ));
+
+        if (enrollments.length === 0) {
+          this.isSubmitting.set(false);
+          this.finishRegistration();
+          return;
+        }
+
+        forkJoin(enrollments).subscribe({
+          next: () => { this.isSubmitting.set(false); this.finishRegistration(); },
+          // Enrollments failing is non-fatal — profile and athlete record already created
+          error: () => { this.isSubmitting.set(false); this.finishRegistration(); },
+        });
+      },
+      error: (err) => {
+        console.error('Registration submit error:', err);
+        this.submitError.set('Ocurrió un error al guardar. Intente nuevamente.');
+        this.isSubmitting.set(false);
+      },
+    });
+  }
+
+  private finishRegistration() {
+    localStorage.removeItem('access_token');
+    this.submitted = true;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTimeout(() => this.router.navigate(['/inicio-sesion']), 3000);
+  }
+
+  // ── Mapping helpers ───────────────────────────────
+  private mapDistrito(v: string): string {
+    const m: Record<string, string> = { 'san-pedro': 'san_pedro', sabanilla: 'sabanilla', mercedes: 'mercedes', 'san-rafael': 'san_rafael', otro: 'other' };
+    return m[v] ?? v;
+  }
+
+  private mapSatisfaction(v: string): string {
+    const m: Record<string, string> = { 'muy-satisfecho': 'very_satisfied', satisfecho: 'satisfied', insatisfecho: 'neutral', 'muy-insatisfecho': 'dissatisfied' };
+    return m[v] ?? v;
+  }
+
+  private mapFacility(v: string): string {
+    const m: Record<string, string> = { si: 'yes', no: 'no', parcialmente: 'partial' };
+    return m[v] ?? v;
+  }
+
+  private mapDisability(v: string): string {
+    const m: Record<string, string> = { fisica: 'physical', cognitiva: 'cognitive' };
+    return m[v] ?? v;
+  }
+
   // ── Dropdown handlers ─────────────────────────────
   @HostListener('document:click', ['$event'])
   onDocumentClick(e: MouseEvent) {
@@ -242,21 +475,19 @@ export class RegistrarAtleta implements OnInit {
     this.disciplineMenuOpen.set(false);
   }
 
-  toggleDiscipline(d: string) {
+  toggleDiscipline(name: string) {
     const cur = this.selectedDisciplines();
-    if (cur.includes(d)) {
-      this.selectedDisciplines.set(cur.filter(x => x !== d));
-      if (d === 'Para Tenis de Mesa') this.selectedCategorias.set([]);
+    if (cur.includes(name)) {
+      this.selectedDisciplines.set(cur.filter(x => x !== name));
+      if (name === 'Para Tenis de Mesa') this.selectedCategorias.set([]);
     } else {
-      this.selectedDisciplines.set([...cur, d]);
+      this.selectedDisciplines.set([...cur, name]);
     }
   }
 
   toggleCategoria(c: string) {
     const cur = this.selectedCategorias();
-    this.selectedCategorias.set(
-      cur.includes(c) ? cur.filter(x => x !== c) : [...cur, c]
-    );
+    this.selectedCategorias.set(cur.includes(c) ? cur.filter(x => x !== c) : [...cur, c]);
   }
 
   disciplineLabel() {
@@ -279,6 +510,34 @@ export class RegistrarAtleta implements OnInit {
     const dark = saved ? saved === 'dark' : prefersDark;
     this.isDark.set(dark);
     document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+
+    // Extract invite token from URL hash (#access_token=...&type=invite)
+    const hash = window.location.hash.substring(1);
+    const params = new URLSearchParams(hash);
+    const token = params.get('access_token');
+    const type  = params.get('type');
+
+    if (!token || type !== 'invite') {
+      this.router.navigate(['/inicio-sesion']);
+      return;
+    }
+
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      this.userId        = payload.sub   ?? '';
+      this.emailFromToken = payload.email ?? '';
+    } catch {
+      this.router.navigate(['/inicio-sesion']);
+      return;
+    }
+
+    this.inviteToken = token;
+    localStorage.setItem('access_token', token);
+
+    this.disciplinesService.getActiveDisciplines().subscribe({
+      next: (data) => this.allDisciplines.set(data as Discipline[]),
+      error: (err) => console.error('Failed to load disciplines:', err),
+    });
   }
 
   toggleTheme() {
@@ -286,11 +545,5 @@ export class RegistrarAtleta implements OnInit {
     this.isDark.set(next);
     document.documentElement.setAttribute('data-theme', next ? 'dark' : 'light');
     localStorage.setItem('theme', next ? 'dark' : 'light');
-  }
-
-  onSubmit() {
-    if (this.canSubmit) {
-      this.submitted = true;
-    }
   }
 }
