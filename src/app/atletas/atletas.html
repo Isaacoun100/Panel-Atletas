@@ -225,6 +225,18 @@
       </div>
     </section>
 
+    <!-- Mensaje de error -->
+    @if (errorMessage()) {
+      <div class="alert alert-warning text-center py-3 mx-3 mb-3" role="alert">
+        <div class="d-flex flex-column align-items-center gap-2">
+          <span>{{ errorMessage() }}</span>
+          <button class="btn btn-outline-primary btn-sm" (click)="cargarAtletasReales()">
+            Reintentar ahora
+          </button>
+        </div>
+      </div>
+    }
+
     <!-- Selection bar — appears when athletes are selected -->
     @if (someSelected()) {
       <section class="db-section">
@@ -405,7 +417,7 @@
           <div class="text-center mb-3">
             @if (panelAtleta()!.foto) {
               <img [src]="panelAtleta()!.foto" [alt]="panelAtleta()!.nombre"
-                  class="rounded-circle" style="width:72px;height:72px;object-fit:cover;border:3px solid var(--border)">
+                  class="at-panel-avatar">
             } @else {
               <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto"
                   style="width:72px;height:72px;background: var(--primary); color: white; font-size: 28px; font-weight: 600; border:3px solid var(--border)">

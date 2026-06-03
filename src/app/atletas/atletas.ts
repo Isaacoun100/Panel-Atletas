@@ -65,6 +65,8 @@ export class Atletas implements OnInit {
   isLoading = signal(false);
   errorMessage = signal('');
 
+  avatarUrls = signal<Map<string, string>>(new Map());
+
 
   // ── Filters ───────────────────────────────────────
   searchQuery = signal('');
@@ -76,6 +78,9 @@ export class Atletas implements OnInit {
   categoriaMenuOpen = signal(false);
   selectedDisciplines = signal<string[]>([]);
   selectedCategorias = signal<string[]>([]);
+
+  // ── Datos del administrador para reportes ────────────────────────────
+  adminNombre = signal('')
 
   disciplinesList: string[] = [];
 
@@ -242,7 +247,7 @@ async savePanel() {
       id_user: atletaActual.id_user,
       cedula: this.editForm.cedula,
       nombre: nombreCompleto,
-      fechaNacimiento: fechaFormateada ? new Date(fechaFormateada).toLocaleDateString() : this.editForm.fechaNacimiento,
+      fechaNacimiento: fechaFormateada ? this.formatFechaParaMostrar(fechaFormateada) : this.editForm.fechaNacimiento,
       edad: nuevaEdad,
       sexo: this.editForm.sexo,
       disciplinas: this.editForm.disciplinas || [],
@@ -278,6 +283,60 @@ async savePanel() {
   }
 }
 
+// ── Cargar nombre del administrador ──────────────────────────────────
+cargarAdminNombre() {
+  const token = localStorage.getItem('access_token');
+  if (!token) return;
+  
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const userId = payload.sub; // ID del usuario autenticado
+    
+    // Buscar el perfil del administrador por id_user
+    this.adminProfilesService.getAllProfiles().subscribe({
+      next: (profiles: any) => {
+        const adminProfile = profiles.find((p: any) => p.id_user === userId);
+        if (adminProfile) {
+          const nombre = `${adminProfile.name || ''} ${adminProfile.first_last_name || ''} ${adminProfile.second_last_name || ''}`.trim();
+          this.adminNombre.set(nombre || 'Administrador');
+        } else {
+          this.adminNombre.set('Administrador');
+        }
+      },
+      error: () => {
+        this.adminNombre.set('Administrador');
+      }
+    });
+  } catch {
+    this.adminNombre.set('Administrador');
+  }
+}
+
+// ── Cargar avatar directamente desde storage ─────────────────────────
+async cargarAvatarUrl(userId: string) {
+  if (!userId) return;
+  if (this.avatarUrls().has(userId)) return;
+  
+  try {
+    // Usar getAvatarAsBlob de StorageService
+    const blob = await firstValueFrom(this.storageService.getAvatarAsBlob(userId));
+    const url = URL.createObjectURL(blob);
+    this.avatarUrls.update(map => new Map(map).set(userId, url));
+  } catch (error) {
+    // No hay avatar, no hacemos nada (se muestran las iniciales)
+    console.log(`No hay avatar para ${userId}`);
+  }
+}
+
+// Formatear fecha YYYY-MM-DD a DD/MM/YYYY para mostrar (sin desfase)
+formatFechaParaMostrar(fecha: string): string {
+  if (!fecha || fecha === 'N/A') return '';
+  const partes = fecha.split('-');
+  if (partes.length === 3) {
+    return `${partes[2]}/${partes[1]}/${partes[0]}`;
+  }
+  return fecha;
+}
 
 // Formatear fecha DD/MM/YYYY a YYYY-MM-DD para la API
 formatFechaParaAPI(fecha: string): string {
@@ -374,13 +433,17 @@ exportarSeleccionados(formato: 'pdf' | 'excel' | 'word') {
 
 private exportarExcel(atletas: Atleta[]) {
   const hayMenores = atletas.some(a => a.esMenor);
+  const adminName = this.adminNombre();
   
   const datos = atletas.map(a => {
     const telefono = a.esMenor ? (a.encargadoTelefono || 'No registrado') : (a.telefono || 'No registrado');
     
-    const disciplinasTexto = a.disciplinasInfo && a.disciplinasInfo.length > 0
-      ? a.disciplinasInfo.map(d => `${d.nombre} (${d.tipo === 'sport' ? 'Deportiva' : 'Recreativa'})`).join(', ')
-      : 'Ninguna';
+    let disciplinasTexto = 'Ninguna';
+    if (a.disciplinasInfo && a.disciplinasInfo.length > 0) {
+      disciplinasTexto = a.disciplinasInfo.map(d => `${d.nombre} (${d.tipo === 'sport' ? 'Deportiva' : 'Recreativa'})`).join(', ');
+    } else if (a.disciplinas && a.disciplinas.length > 0) {
+      disciplinasTexto = a.disciplinas.join(', ');
+    }
     
     const row: any = {
       'Nombre': a.nombre,
@@ -405,7 +468,7 @@ private exportarExcel(atletas: Atleta[]) {
   XLSX.utils.book_append_sheet(wb, ws, 'Atletas');
   
   const timestamp = new Date().toISOString().replace(/[:T]/g, '-').slice(0, 19);
-  XLSX.writeFile(wb, `atletas_exportados_${timestamp}.xlsx`);
+  XLSX.writeFile(wb, `atletas_exportados_${timestamp}_por_${adminName.replace(/\s/g, '_')}.xlsx`);
   this.mostrarMensaje(`${atletas.length} atleta(s) exportados a Excel`, 'success');
 }
 
@@ -523,13 +586,17 @@ private exportarWord(atletas: Atleta[]) {
 
 private generarPaginaHTML(atletas: Atleta[], paginaNumero: number, totalPaginas: number): string {
   const hayMenores = atletas.some(a => a.esMenor);
+  const adminName = this.adminNombre();
   
   const filas = atletas.map(a => {
     const telefono = a.esMenor ? (a.encargadoTelefono || 'No registrado') : (a.telefono || 'No registrado');
     
-    const disciplinasTexto = a.disciplinasInfo && a.disciplinasInfo.length > 0
-      ? a.disciplinasInfo.map(d => `${d.nombre} (${d.tipo === 'sport' ? 'Deportiva' : 'Recreativa'})`).join(', ')
-      : 'Ninguna';
+    let disciplinasTexto = 'Ninguna';
+    if (a.disciplinasInfo && a.disciplinasInfo.length > 0) {
+      disciplinasTexto = a.disciplinasInfo.map(d => `${d.nombre} (${d.tipo === 'sport' ? 'Deportiva' : 'Recreativa'})`).join(', ');
+    } else if (a.disciplinas && a.disciplinas.length > 0) {
+      disciplinasTexto = a.disciplinas.join(', ');
+    }
     
     return `
       <tr>
@@ -607,6 +674,7 @@ private generarPaginaHTML(atletas: Atleta[], paginaNumero: number, totalPaginas:
       <div class="reporte-container">
         <h1>Listado de Atletas</h1>
         <div class="info">Página ${paginaNumero} de ${totalPaginas} | Fecha: ${new Date().toLocaleString()} | Total en esta página: ${atletas.length} atletas</div>
+        <p><strong>Generado por:</strong> ${adminName}</p>
         <table cellspacing="0">
           <thead>
             <tr>
@@ -632,13 +700,17 @@ private generarPaginaHTML(atletas: Atleta[], paginaNumero: number, totalPaginas:
 
 private generarHTMLParaExportar(atletas: Atleta[]): string {
   const hayMenores = atletas.some(a => a.esMenor);
+  const adminName = this.adminNombre();
   
   const filas = atletas.map(a => {
     const telefono = a.esMenor ? (a.encargadoTelefono || 'No registrado') : (a.telefono || 'No registrado');
     
-    const disciplinasTexto = a.disciplinasInfo && a.disciplinasInfo.length > 0
-      ? a.disciplinasInfo.map(d => `${d.nombre} (${d.tipo === 'sport' ? 'Deportiva' : 'Recreativa'})`).join(', ')
-      : 'Ninguna';
+    let disciplinasTexto = 'Ninguna';
+    if (a.disciplinasInfo && a.disciplinasInfo.length > 0) {
+      disciplinasTexto = a.disciplinasInfo.map(d => `${d.nombre} (${d.tipo === 'sport' ? 'Deportiva' : 'Recreativa'})`).join(', ');
+    } else if (a.disciplinas && a.disciplinas.length > 0) {
+      disciplinasTexto = a.disciplinas.join(', ');
+    }
     
     return `
       <tr>
@@ -679,6 +751,7 @@ private generarHTMLParaExportar(atletas: Atleta[]): string {
     <body>
       <h1>Listado de Atletas</h1>
       <p>Fecha: ${new Date().toLocaleString()} | Total: ${atletas.length} atletas</p>
+      <p><strong>Generado por:</strong> ${adminName}</p>
       <table cellspacing="0">
         <thead>
           <tr><th>Nombre</th><th>Cédula</th><th>Fecha nac.</th><th>Edad</th>
@@ -755,8 +828,9 @@ exportSelection(format: 'csv' | 'pdf' | 'word') {
   }
 
   // ── Cargar datos desde API ─────────────────────────────────────────
-  cargarAtletasReales() {
+  cargarAtletasReales(reintentos = 2) {
   this.isLoading.set(true);
+  this.errorMessage.set('');
     
   const token = localStorage.getItem('access_token');
   if (!token) {
@@ -772,11 +846,27 @@ exportSelection(format: 'csv' | 'pdf' | 'word') {
     },
     error: (err) => {
       console.error('Error cargando atletas:', err);
-      this.errorMessage.set('Error al cargar atletas.');
-      this.isLoading.set(false);
+       // Reintentar solo en errores de red (status 0) y si hay reintentos disponibles
+      if (reintentos > 0 && err.status === 0) {
+        console.log(`Error de conexión. Reintentando... (${reintentos} intentos restantes)`);
+        setTimeout(() => {
+          this.cargarAtletasReales(reintentos - 1);
+        }, 1500);
+      } else {
+        // Mensaje de error según el tipo
+        if (err.status === 0) {
+          this.errorMessage.set('Error de conexión. Verifica tu internet y recarga la página.');
+        } else if (err.status === 401) {
+          this.errorMessage.set('Sesión expirada. Por favor inicia sesión nuevamente.');
+        } else {
+          this.errorMessage.set('Error al cargar atletas. Intente recargar la página.');
+        }
+        this.isLoading.set(false);
       }
-    });
-  }
+    }
+  });
+}
+      
 
 cargarDisciplinas() {
   const token = localStorage.getItem('access_token');
@@ -808,7 +898,19 @@ procesarAtletasConDisciplinas(atletasData: any[]) {
         // Se buscar el perfil que coincide con el id_user del atleta
         const perfil = perfiles.find((p: any) => p.id_user === atleta.id_user);
         
-        return new Promise<Atleta>((resolve) => {
+        return new Promise<Atleta>(async (resolve) => {
+          let avatarUrl = '';
+          if (perfil?.id_user) {
+            try {
+              const blob = await firstValueFrom(this.storageService.getAvatarAsBlob(perfil.id_user));
+              avatarUrl = URL.createObjectURL(blob);
+              // Guardar en el Map para limpiar después
+              this.avatarUrls.update(map => new Map(map).set(perfil.id_user, avatarUrl));
+            } catch (error) {
+              // No hay avatar, mantener vacío
+              console.log(`No hay avatar para ${perfil.id_user}`);
+            }
+          }
           this.adminDisciplinesService.getUserEnrollments(atleta.id_user).subscribe({
             next: (enrollments: any) => {
               const disciplinasInfo = enrollments
@@ -847,11 +949,11 @@ procesarAtletasConDisciplinas(atletasData: any[]) {
                 id_user: atleta.id_user,
                 cedula: perfil?.dni || 'N/A',
                 nombre: nombreCompleto || 'Sin nombre',
-                fechaNacimiento: perfil?.birth_date ? new Date(perfil.birth_date).toLocaleDateString() : 'N/A',
+                fechaNacimiento: perfil?.birth_date ? this.formatFechaParaMostrar(perfil.birth_date) : 'N/A',
                 edad: edad,
                 sexo: this.mapearSexo(perfil?.sex),
                 // Si hay foto se usa, pero si no, usa un string vacío, que en HTML se manejará con iniciales
-                foto: perfil?.profile_image_url || '',
+                foto: avatarUrl || '',
                 estado: perfil?.is_active ? 'Activo' : 'Inactivo',
                 disciplinas: disciplinasNombres,
                 disciplinasInfo: disciplinasInfo,
@@ -884,10 +986,10 @@ procesarAtletasConDisciplinas(atletasData: any[]) {
                 id_user: atleta.id_user,
                 cedula: perfil?.dni || 'N/A',
                 nombre: nombreCompleto || 'Sin nombre',
-                fechaNacimiento: perfil?.birth_date ? new Date(perfil.birth_date).toLocaleDateString() : 'N/A',
+                fechaNacimiento: perfil?.birth_date ? this.formatFechaParaMostrar(perfil.birth_date) : 'N/A',
                 edad: edad,
                 sexo: this.mapearSexo(perfil?.sex),
-                foto: perfil?.profile_image_url || '',
+                foto: avatarUrl || '',
                 estado: perfil?.is_active ? 'Activo' : 'Inactivo',
                 disciplinas: [],
                 disciplinasInfo: [],
@@ -921,13 +1023,27 @@ mapearSexo(sexo: string): 'M' | 'F' {
 }
 
 calcularEdad(fechaNacimiento: string): number {
+  if (!fechaNacimiento || fechaNacimiento === 'N/A') return 0;
+  
+  // Se extrae el año, mes, día directamente del string (formato YYYY-MM-DD)
+  const partes = fechaNacimiento.split('-');
+  if (partes.length !== 3) return 0;
+  
+  const anio = parseInt(partes[0], 10);
+  const mes = parseInt(partes[1], 10);
+  const dia = parseInt(partes[2], 10);
+  
   const hoy = new Date();
-  const nacimiento = new Date(fechaNacimiento);
-  let edad = hoy.getFullYear() - nacimiento.getFullYear();
-  const mes = hoy.getMonth() - nacimiento.getMonth();
-  if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
+  const hoyAnio = hoy.getFullYear();
+  const hoyMes = hoy.getMonth() + 1; // getMonth() devuelve 0-11
+  const hoyDia = hoy.getDate();
+  
+  let edad = hoyAnio - anio;
+  
+  if (hoyMes < mes || (hoyMes === mes && hoyDia < dia)) {
     edad--;
   }
+  
   return edad;
 }
 
@@ -965,6 +1081,16 @@ onFechaNacimientoChange() {
     this.cargarAtletasReales();
     this.cargarDisciplinas();
     this.loadSidebarData();
+    this.cargarAdminNombre();
+  }
+  
+  ngOnDestroy() {
+    // Limpiar todas las URLs de objeto para evitar memory leaks
+    this.avatarUrls().forEach(url => {
+      if (url?.startsWith('blob:')) {
+        URL.revokeObjectURL(url);
+      }
+    });
   }
 
   private loadSidebarData() {

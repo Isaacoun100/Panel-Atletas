@@ -1,6 +1,6 @@
 export type DniType = 'cedula' | 'dimex' | 'pasaporte';
 export type Sex = 'male' | 'female';
-export type UserRole = 'admon' | 'athlete';
+export type UserRole = 'admin' | 'athlete';
 
 export interface UserProfile {
   id_user: string;
