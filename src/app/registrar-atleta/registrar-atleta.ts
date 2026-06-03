@@ -158,9 +158,9 @@ export class RegistrarAtleta implements OnInit {
 
   submitted = false;
 
-  // ── Avatar (immediate upload) ─────────────────────
+  // ── Avatar (compress locally; upload deferred to submit) ─────────────
   avatarPreviewUrl = signal<string | null>(null);
-  profileImagePath = '';
+  avatarBlob = signal<Blob | null>(null);
   avatarError = signal('');
   isUploadingAvatar = signal(false);
 
@@ -185,24 +185,13 @@ export class RegistrarAtleta implements OnInit {
 
     try {
       const blob = await this.compressImage(file);
-      const compressed = new File([blob], 'avatar.jpg', { type: 'image/jpeg' });
-
-      this.storageService.uploadAvatar(this.userId, compressed).subscribe({
-        next: () => {
-          const old = this.avatarPreviewUrl();
-          if (old?.startsWith('blob:')) URL.revokeObjectURL(old);
-          this.avatarPreviewUrl.set(URL.createObjectURL(blob));
-          this.profileImagePath = `avatars/${this.userId}/avatar.jpg`;
-          this.isUploadingAvatar.set(false);
-        },
-        error: (err) => {
-          console.error('Avatar upload error:', err);
-          this.avatarError.set('Error al subir la imagen. Intente nuevamente.');
-          this.isUploadingAvatar.set(false);
-        },
-      });
+      const old = this.avatarPreviewUrl();
+      if (old?.startsWith('blob:')) URL.revokeObjectURL(old);
+      this.avatarPreviewUrl.set(URL.createObjectURL(blob));
+      this.avatarBlob.set(blob);
     } catch {
       this.avatarError.set('No se pudo procesar la imagen.');
+    } finally {
       this.isUploadingAvatar.set(false);
     }
   }
@@ -339,8 +328,8 @@ export class RegistrarAtleta implements OnInit {
     this.submitError.set('');
     this.isSubmitting.set(true);
 
+    // id_user and role are injected by DB triggers — do not send them
     const profilePayload: Partial<UserProfile> = {
-      id_user: this.userId,
       name: this.nombre,
       first_last_name: this.primerApellido,
       second_last_name: this.segundoApellido,
@@ -348,13 +337,12 @@ export class RegistrarAtleta implements OnInit {
       dni: this.numeroId,
       birth_date: this.fechaNacimiento,
       sex: this.sexo === 'M' ? 'male' : 'female',
-      profile_image_url: this.profileImagePath || null,
-      role: this.userRole() === 'admin' ? 'admon' : 'athlete',
+      profile_image_url: null,
     };
 
     if (this.userRole() === 'admin') {
       this.profileService.createProfile(profilePayload).subscribe({
-        next: () => { this.isSubmitting.set(false); this.finishRegistration(); },
+        next: () => this.uploadAvatarThenFinish(),
         error: (err) => {
           console.error('Profile create error:', err);
           this.submitError.set('Ocurrió un error al guardar. Intente nuevamente.');
@@ -364,9 +352,8 @@ export class RegistrarAtleta implements OnInit {
       return;
     }
 
-    // Athlete: profile + athlete record in parallel
+    // id_user injected by set_athlete_id_from_auth trigger — do not send it
     const athletePayload: Partial<Athlete> = {
-      id_user: this.userId,
       phone: this.telefono,
       district_of_residence: this.mapDistrito(this.distrito) as Athlete['district_of_residence'],
       legal_guardian_name:  this.esMinor ? this.nombreEncargado  : null,
@@ -397,32 +384,68 @@ export class RegistrarAtleta implements OnInit {
       this.athleteService.createAthleteRecord(athletePayload),
     ]).subscribe({
       next: () => {
-        const disciplines = this.allDisciplines();
-        const enrollments: Observable<unknown>[] = this.selectedDisciplines()
-          .map(name => disciplines.find(d => d.name === name))
-          .filter((d): d is Discipline => !!d)
-          .map(d => this.disciplinesService.enrollInDiscipline(
-            d.id_discipline,
-            d.discipline_type === 'sport' && this.esRepresentacion === 'si'
-          ));
-
-        if (enrollments.length === 0) {
-          this.isSubmitting.set(false);
-          this.finishRegistration();
-          return;
-        }
-
-        forkJoin(enrollments).subscribe({
-          next: () => { this.isSubmitting.set(false); this.finishRegistration(); },
-          // Enrollments failing is non-fatal — profile and athlete record already created
-          error: () => { this.isSubmitting.set(false); this.finishRegistration(); },
-        });
+        this.uploadAvatarThenEnrollDisciplines();
       },
       error: (err) => {
         console.error('Registration submit error:', err);
         this.submitError.set('Ocurrió un error al guardar. Intente nuevamente.');
         this.isSubmitting.set(false);
       },
+    });
+  }
+
+  private uploadAvatarThenFinish() {
+    const blob = this.avatarBlob();
+    if (!blob) { this.isSubmitting.set(false); this.finishRegistration(); return; }
+
+    const file = new File([blob], 'avatar.jpg', { type: 'image/jpeg' });
+    this.storageService.uploadAvatar(this.userId, file).subscribe({
+      next: () => {
+        this.profileService.updateOwnProfile(this.userId, {
+          profile_image_url: `avatars/${this.userId}/avatar.jpg`,
+        }).subscribe();
+        this.isSubmitting.set(false);
+        this.finishRegistration();
+      },
+      error: () => { // avatar upload non-fatal
+        this.isSubmitting.set(false);
+        this.finishRegistration();
+      },
+    });
+  }
+
+  private uploadAvatarThenEnrollDisciplines() {
+    const blob = this.avatarBlob();
+    const enroll = () => {
+      const disciplines = this.allDisciplines();
+      const enrollments: Observable<unknown>[] = this.selectedDisciplines()
+        .map(name => disciplines.find(d => d.name === name))
+        .filter((d): d is Discipline => !!d)
+        .map(d => this.disciplinesService.enrollInDiscipline(
+          d.id_discipline,
+          d.discipline_type === 'sport' && this.esRepresentacion === 'si'
+        ));
+
+      if (enrollments.length === 0) {
+        this.isSubmitting.set(false); this.finishRegistration(); return;
+      }
+      forkJoin(enrollments).subscribe({
+        next: () => { this.isSubmitting.set(false); this.finishRegistration(); },
+        error: () => { this.isSubmitting.set(false); this.finishRegistration(); },
+      });
+    };
+
+    if (!blob) { enroll(); return; }
+
+    const file = new File([blob], 'avatar.jpg', { type: 'image/jpeg' });
+    this.storageService.uploadAvatar(this.userId, file).subscribe({
+      next: () => {
+        this.profileService.updateOwnProfile(this.userId, {
+          profile_image_url: `avatars/${this.userId}/avatar.jpg`,
+        }).subscribe();
+        enroll();
+      },
+      error: () => enroll(), // avatar upload non-fatal
     });
   }
 
