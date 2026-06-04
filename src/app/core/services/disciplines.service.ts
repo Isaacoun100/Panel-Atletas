@@ -10,12 +10,11 @@ export class DisciplinesService {
 
   private getHeaders() {
     const token = localStorage.getItem('access_token');
-    const headers: Record<string, string> = {
-      'apikey': this.apiKey,
+    return {
+      apikey: this.apiKey,
       'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {})
     };
-    if (token) headers['Authorization'] = `Bearer ${token}`;
-    return headers;
   }
 
   getActiveDisciplines() {
@@ -35,9 +34,13 @@ export class DisciplinesService {
     });
   }
 
-  enrollInDiscipline(disciplineId: number, isRepresentative = false) {
+  enrollInDiscipline(disciplineId: number, isRepresentative = false, userId?: string) {
     return this.http.post(`${this.base}/rest/v1/users_disciplines`,
-      { fk_discipline: disciplineId, is_representative: isRepresentative },
+      {
+        ...(userId ? { fk_user: userId } : {}),
+        fk_discipline: disciplineId,
+        is_representative: isRepresentative
+      },
       { headers: this.getHeaders() }
     );
   }

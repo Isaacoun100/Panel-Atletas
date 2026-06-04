@@ -11,20 +11,22 @@ export class AthleteService {
 
   private getHeaders() {
     const token = localStorage.getItem('access_token');
-    const headers: Record<string, string> = {
-      'apikey': this.apiKey,
+    return {
+      apikey: this.apiKey,
       'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {})
     };
-    if (token) headers['Authorization'] = `Bearer ${token}`;
-    return headers;
   }
 
   createAthleteRecord(data: Partial<Athlete>) {
-    return this.http.post(`${this.base}/rest/v1/athletes`, data, { headers: this.getHeaders() });
+    return this.http.post<Athlete[]>(`${this.base}/rest/v1/athletes`,
+      data,
+      { headers: { ...this.getHeaders(), Prefer: 'return=representation' } }
+    );
   }
 
   getOwnAthleteRecord() {
-    return this.http.get<Athlete[]>(`${this.base}/rest/v1/athletes`,
+    return this.http.get(`${this.base}/rest/v1/athletes`,
       { params: { select: '*' }, headers: this.getHeaders() }
     );
   }

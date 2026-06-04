@@ -11,12 +11,11 @@ export class MedalsService {
 
   private getHeaders() {
     const token = localStorage.getItem('access_token');
-    const headers: Record<string, string> = {
-      'apikey': this.apiKey,
+    return {
+      apikey: this.apiKey,
       'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {})
     };
-    if (token) headers['Authorization'] = `Bearer ${token}`;
-    return headers;
   }
 
   getOwnMedals() {

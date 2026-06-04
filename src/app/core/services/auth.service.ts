@@ -1,7 +1,8 @@
 import { HttpClient } from "@angular/common/http";
 import { inject, Injectable,  } from "@angular/core";
 import { environment } from "../../environments/environment";
-import { SignInResponse, UpdateUserResponse } from "../models/auth.model";
+import { AdminRegisterAthleteRequest, AdminRegisterAthleteResponse, AdminRegisterUserRequest, AdminRegisterUserResponse, SignInResponse, SignUpResponse, UpdateUserResponse } from "../models/auth.model";
+
 
 
 @Injectable({ providedIn: 'root' })
@@ -14,6 +15,43 @@ export class AuthService {
     return this.http.post<SignInResponse>(`${this.base}/auth/v1/token?grant_type=password`,
       { email, password },
       { headers: { apikey: this.apiKey } }
+    );
+  }
+
+  signUp(email: string, password: string) {
+    return this.http.post<SignUpResponse>(`${this.base}/auth/v1/signup`,
+      { email, password },
+      { headers: { apikey: this.apiKey } }
+    );
+  }
+
+  adminRegisterUser(data: AdminRegisterUserRequest) {
+    const token = localStorage.getItem('access_token');
+
+    return this.http.post<AdminRegisterUserResponse>(`${this.base}/functions/v1/admin-register-admin`,
+      data,
+      {
+        headers: {
+          apikey: this.apiKey,
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        }
+      }
+    );
+  }
+
+  adminRegisterAthlete(data: AdminRegisterAthleteRequest) {
+    const token = localStorage.getItem('access_token');
+
+    return this.http.post<AdminRegisterAthleteResponse>(`${this.base}/functions/v1/admin-register-athlete`,
+      data,
+      {
+        headers: {
+          apikey: this.apiKey,
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        }
+      }
     );
   }
 
