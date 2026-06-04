@@ -3,6 +3,11 @@ import { inject, Injectable,  } from "@angular/core";
 import { environment } from "../../environments/environment";
 
 export interface InviteUsersResponse {
+  results?: Array<{
+    email: string;
+    status: 'sent' | 'error';
+    reason?: string;
+  }>;
   invited?: string[];
   errors?: unknown[];
   message?: string;
@@ -28,7 +33,7 @@ export class AdminInvitationsService {
     return headers;
   }
 
-  inviteUsers(emails: string[], initialRole: string) {
+  inviteUsers(emails: string[], initialRole: 'athlete' | 'coach' | 'admin') {
     return this.http.post<InviteUsersResponse>(`${this.base}/functions/v1/invite-user`,
       { emails, initial_role: initialRole },
       { headers: this.getHeaders() }

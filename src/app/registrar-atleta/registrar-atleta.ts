@@ -235,6 +235,12 @@ export class RegistrarAtleta implements OnInit {
       ? ['Cuenta', 'Datos']
       : ['Cuenta', 'Datos', 'Actividad', 'Finalizar']
   );
+  pageTitle = computed(() => this.userRole() === 'admin' ? 'Registro de Administrador' : 'Registro de Atleta');
+  completionMessage = computed(() =>
+    this.userRole() === 'admin'
+      ? 'Tu cuenta de administrador fue creada correctamente. Redirigiendo al inicio de sesion...'
+      : 'Tu informacion fue guardada correctamente. Redirigiendo al inicio de sesion...'
+  );
 
   nextStep() {
     if (this.currentStep() === 1) {
@@ -245,7 +251,7 @@ export class RegistrarAtleta implements OnInit {
 
       this.authService.updatePassword(this.contrasena, this.inviteToken).subscribe({
         next: (res) => {
-          const role = res.app_metadata?.role === 'admin' ? 'admin' : 'athlete';
+          const role = this.normalizeInviteRole(res.app_metadata?.role);
           this.userRole.set(role);
 
           // Exchange invite token for a full session token so data API calls
@@ -310,15 +316,15 @@ export class RegistrarAtleta implements OnInit {
   private validateStep2(): string | null {
     if (!this.nombre.trim()) return 'El nombre es requerido.';
     if (!this.primerApellido.trim()) return 'El primer apellido es requerido.';
-    if (!this.segundoApellido.trim()) return 'El segundo apellido es requerido.';
+    if (this.userRole() !== 'admin' && !this.segundoApellido.trim()) return 'El segundo apellido es requerido.';
     if (!this.numeroId.trim()) return 'El número de identificación es requerido.';
     if (!this.fechaNacimiento) return 'La fecha de nacimiento es requerida.';
     if (!this.sexo) return 'El sexo es requerido.';
-    if (this.esMinor) {
+    if (this.userRole() !== 'admin' && this.esMinor) {
       if (!this.nombreEncargado.trim()) return 'El nombre del encargado es requerido.';
       if (!this.telefonoEncargado.trim()) return 'El teléfono del encargado es requerido.';
     }
-    if (!this.telefono.trim()) return 'El teléfono es requerido.';
+    if (this.userRole() !== 'admin' && !this.telefono.trim()) return 'El teléfono es requerido.';
     return null;
   }
 
@@ -588,6 +594,7 @@ export class RegistrarAtleta implements OnInit {
       const payload = JSON.parse(atob(token.split('.')[1]));
       this.userId        = payload.sub   ?? '';
       this.emailFromToken = payload.email ?? '';
+      this.userRole.set(this.normalizeInviteRole(payload.app_metadata?.role));
     } catch {
       this.router.navigate(['/inicio-sesion']);
       return;
@@ -607,5 +614,9 @@ export class RegistrarAtleta implements OnInit {
     this.isDark.set(next);
     document.documentElement.setAttribute('data-theme', next ? 'dark' : 'light');
     localStorage.setItem('theme', next ? 'dark' : 'light');
+  }
+
+  private normalizeInviteRole(role: unknown): 'admin' | 'athlete' {
+    return role === 'admin' ? 'admin' : 'athlete';
   }
 }

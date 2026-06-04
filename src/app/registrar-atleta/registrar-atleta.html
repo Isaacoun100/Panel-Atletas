@@ -13,7 +13,7 @@
   <!-- Header -->
   <div class="ra-header">
     <img src="logo-vaciado.png" alt="Panel Atletas" class="ra-logo">
-    <h1 class="ra-title">Registro de Atleta</h1>
+    <h1 class="ra-title">{{ pageTitle() }}</h1>
     <p class="ra-subtitle">Comité Cantonal de Deportes y Recreación Montes de Oca</p>
   </div>
 
@@ -25,7 +25,7 @@
           <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
         </svg>
         <h2>¡Registro completado!</h2>
-        <p>Tu información fue guardada correctamente. Redirigiendo al inicio de sesión...</p>
+        <p>{{ completionMessage() }}</p>
       </div>
     </div>
   }
@@ -86,7 +86,7 @@
       <!-- ══ Step 2: Datos personales + Encargado ══ -->
       @if (currentStep() === 2) {
         <div class="ra-card">
-          <div class="ra-card-header">1. Datos personales</div>
+          <div class="ra-card-header">{{ userRole() === 'admin' ? 'Datos del administrador' : '1. Datos personales' }}</div>
           <div class="ra-body">
             <div class="row g-3">
 
@@ -138,7 +138,7 @@
                 <input id="ap1" type="text" class="ra-input" placeholder="Ej. Mora" [(ngModel)]="primerApellido">
               </div>
               <div class="col-12 col-md-4">
-                <label class="ra-label" for="ap2">Segundo apellido</label>
+                <label class="ra-label" [class.ra-label--opt]="userRole() === 'admin'" for="ap2">Segundo apellido</label>
                 <input id="ap2" type="text" class="ra-input" placeholder="Ej. Jiménez" [(ngModel)]="segundoApellido">
               </div>
               <div class="col-12">
@@ -167,15 +167,17 @@
                   <button type="button" class="ra-toggle-btn" [class.ra-toggle-btn--active]="sexo === 'F'" (click)="sexo = 'F'">Femenino</button>
                 </div>
               </div>
-              <div class="col-12 col-md-6">
-                <label class="ra-label" for="tel">Teléfono</label>
-                <input id="tel" type="tel" class="ra-input" placeholder="Ej. 8888-8888" [(ngModel)]="telefono">
-              </div>
+              @if (userRole() !== 'admin') {
+                <div class="col-12 col-md-6">
+                  <label class="ra-label" for="tel">Teléfono</label>
+                  <input id="tel" type="tel" class="ra-input" placeholder="Ej. 8888-8888" [(ngModel)]="telefono">
+                </div>
+              }
             </div>
           </div>
         </div>
 
-        @if (esMinor) {
+        @if (userRole() !== 'admin' && esMinor) {
           <div class="ra-card ra-card--alert">
             <div class="ra-card-header d-flex align-items-center justify-content-between">
               <span>2. Información del encargado</span>

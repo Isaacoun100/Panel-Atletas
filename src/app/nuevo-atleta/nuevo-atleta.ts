@@ -48,6 +48,7 @@ export class NuevoAtleta implements OnInit {
   invitacionesEnviadas = signal(false);
   enviandoInvitaciones = signal(false);
   invitacionesError = signal('');
+  invitationRole = signal<'athlete' | 'admin'>('athlete');
 
   // ── 1. Datos personales ───────────────────────────
   nombre = '';
@@ -432,7 +433,7 @@ export class NuevoAtleta implements OnInit {
     this.invitacionesError.set('');
     this.invitacionesEnviadas.set(false);
 
-    this.adminInvitationsService.inviteUsers(emails, 'athlete').subscribe({
+    this.adminInvitationsService.inviteUsers(emails, this.invitationRole()).subscribe({
       next: () => {
         this.invitacionesEnviadas.set(true);
         this.emailList.set([]);
