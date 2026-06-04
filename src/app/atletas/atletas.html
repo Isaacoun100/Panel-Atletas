@@ -74,9 +74,16 @@
 
     <div class="db-sidebar-footer">
       <div class="db-user-chip">
-        <img src="https://github.com/Isaacoun100.png?size=32" alt="User" class="db-user-avatar">
+        @if (sidebarAvatarUrl()) {
+          <img [src]="sidebarAvatarUrl()" alt="Foto de perfil" class="db-user-avatar">
+        } @else {
+          <div class="db-user-avatar d-flex align-items-center justify-content-center"
+               style="background:var(--primary);color:#fff;font-weight:700;font-size:0.72rem">
+            {{ sidebarInitials() }}
+          </div>
+        }
         <div class="db-user-info">
-          <span class="db-user-name">Administrador</span>
+          <span class="db-user-name">{{ sidebarName() }}</span>
           <span class="db-user-role">Comité Montes de Oca</span>
         </div>
       </div>

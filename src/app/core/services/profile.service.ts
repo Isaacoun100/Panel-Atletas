@@ -28,6 +28,12 @@ export class ProfileService {
     );
   }
 
+  getProfileByUserId(userId: string) {
+    return this.http.get<UserProfile[]>(`${this.base}/rest/v1/users_profiles`,
+      { params: { select: '*', id_user: `eq.${userId}`, limit: '1' }, headers: this.getHeaders() }
+    );
+  }
+
   getProfileByDni(dni: string) {
     return this.http.get<UserProfile[]>(`${this.base}/rest/v1/users_profiles`,
       {

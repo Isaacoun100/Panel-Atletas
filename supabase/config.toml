@@ -1,0 +1,5 @@
+[functions.admin-list-users]
+verify_jwt = false
+
+[functions.set-user-active]
+verify_jwt = false

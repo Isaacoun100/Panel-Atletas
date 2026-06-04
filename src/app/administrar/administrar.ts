@@ -10,14 +10,19 @@ import { Discipline } from '../core/models/discipline.model';
 import { ProfileService } from '../core/services/profile.service';
 import { StorageService } from '../core/services/storage.service';
 import { UserProfile } from '../core/models/profile.model';
+import { AdminProfilesService, AdminUserProfile } from '../core/services/admin-profiles.service';
 
 
 interface AdminUser {
-  foto: string;
+  id_user: string;
+  foto: string | null;
+  iniciales: string;
   nombre: string;
   cedula: string;
   correo: string;
   rol: 'Administrador' | 'Atleta';
+  activa: boolean;
+  guardando: boolean;
 }
 
 interface DisciplinaUI {
@@ -40,6 +45,7 @@ interface DisciplinaUI {
 
 export class Administrar implements OnInit {
   private adminDisciplinesService = inject(AdminDisciplinesService);
+  private adminProfilesService = inject(AdminProfilesService);
   private profileService  = inject(ProfileService);
   private storageService  = inject(StorageService);
   private router = inject(Router);
@@ -49,14 +55,8 @@ export class Administrar implements OnInit {
   sidebarInitials = signal('A');
   sidebarAvatarUrl = signal<string | null>(null);
 
-  usuarios: AdminUser[] = [
-    { foto: 'https://github.com/Isaacoun100.png?size=40',  nombre: 'Isaac Herrera Monge', cedula: '1-0234-0567', correo: 'isaacoun100@gmail.com', rol: 'Administrador' },
-    { foto: 'https://github.com/BraCR10.png?size=40',      nombre: 'Brian Ramírez',        cedula: '1-0890-1234', correo: 'bracr10@gmail.com',     rol: 'Atleta'        },
-    { foto: 'https://github.com/Oseec.png?size=40',         nombre: 'Isaac Gamboa',         cedula: '1-1234-5678', correo: 'oseec@gmail.com',       rol: 'Atleta'        },
-    { foto: 'https://github.com/LuisArrietaV.png?size=40',  nombre: 'Luis Arrieta Vargas',  cedula: '1-0456-7890', correo: 'luisarrieta@gmail.com', rol: 'Atleta'        },
-  ];
-
-  readonly roles: AdminUser['rol'][] = ['Administrador', 'Atleta'];
+  usuarios = signal<AdminUser[]>([]);
+  isLoadingUsers = signal(false);
 
   readonly rolBadgeClass: Record<string, string> = {
     'Administrador': 'db-badge--success',
@@ -238,14 +238,100 @@ export class Administrar implements OnInit {
     this.hasChangesDisciplinas.set(changed);
   }
 
+  cargarUsuarios() {
+    const token = localStorage.getItem('access_token');
+    if (!token) return;
 
-  // ── Método para usuarios y roles (placeholder) ───────────────────────
-  markChanged() {
-    // Este método es para la sección de Usuarios y roles
-    // La implementación real se realizará luego
-    console.log('Cambios en usuarios/roles detectados');
+    this.isLoadingUsers.set(true);
+    this.adminProfilesService.getAllUsers().subscribe({
+      next: (profiles) => {
+        const usuarios = profiles.filter(p => this.isAdminRole(p.role)).map((profile) => this.mapUserProfile(profile));
+        this.usuarios.set(usuarios);
+        this.cargarAvataresUsuarios(usuarios);
+        this.isLoadingUsers.set(false);
+      },
+      error: (err) => {
+        console.error('Error cargando usuarios:', err);
+        this.mostrarMensaje('Error al cargar usuarios', 'error');
+        this.isLoadingUsers.set(false);
+      },
+    });
   }
 
+  toggleUsuarioActivo(usuario: AdminUser) {
+    const nuevoEstado = usuario.activa;
+    this.usuarios.update(lista =>
+      lista.map(u => u.id_user === usuario.id_user ? { ...u, guardando: true } : u)
+    );
+
+    this.adminProfilesService.blockUnblockUser(usuario.id_user, nuevoEstado).subscribe({
+      next: () => {
+        this.usuarios.update(lista =>
+          lista.map(u => u.id_user === usuario.id_user ? { ...u, activa: nuevoEstado, guardando: false } : u)
+        );
+        this.mostrarMensaje(`${usuario.nombre} ${nuevoEstado ? 'activado' : 'desactivado'} correctamente`, 'success');
+
+        if (!nuevoEstado && usuario.id_user === this.getCurrentUserId()) {
+          this.logout();
+        }
+      },
+      error: (err) => {
+        console.error('Error actualizando estado del usuario:', err);
+        this.usuarios.update(lista =>
+          lista.map(u => u.id_user === usuario.id_user ? { ...u, activa: !nuevoEstado, guardando: false } : u)
+        );
+        this.mostrarMensaje('Error al actualizar el usuario', 'error');
+      },
+    });
+  }
+
+  private mapUserProfile(profile: AdminUserProfile): AdminUser {
+    const nombre = [
+      profile.name,
+      profile.first_last_name,
+      profile.second_last_name,
+    ].filter(Boolean).join(' ').trim() || 'Sin nombre';
+
+    return {
+      id_user: profile.id_user,
+      foto: null,
+      iniciales: this.getInitials(profile.name, profile.first_last_name),
+      nombre,
+      cedula: profile.dni || '-',
+      correo: profile.email || '-',
+      rol: this.isAdminRole(profile.role) ? 'Administrador' : 'Atleta',
+      activa: profile.is_active,
+      guardando: false,
+    };
+  }
+
+  private cargarAvataresUsuarios(usuarios: AdminUser[]) {
+    usuarios.forEach((usuario) => {
+      this.storageService.getAvatarAsBlob(usuario.id_user).subscribe({
+        next: (blob) => {
+          const url = URL.createObjectURL(blob);
+          this.usuarios.update(lista =>
+            lista.map(u => u.id_user === usuario.id_user ? { ...u, foto: url } : u)
+          );
+        },
+        error: () => {},
+      });
+    });
+  }
+
+  private getInitials(name?: string, lastName?: string): string {
+    return `${name?.[0] ?? ''}${lastName?.[0] ?? ''}`.toUpperCase() || 'U';
+  }
+
+  private getCurrentUserId(): string {
+    const token = localStorage.getItem('access_token');
+    if (!token) return '';
+    try { return JSON.parse(atob(token.split('.')[1])).sub ?? ''; } catch { return ''; }
+  }
+
+  private isAdminRole(role?: string | null): boolean {
+    return role === 'admin' || role === 'admon';
+  }
 
   markDisciplinaChanged() {
     this.detectarCambiosDisciplinas();
@@ -311,6 +397,7 @@ export class Administrar implements OnInit {
     }
     // Cargar disciplinas reales desde Supabase
     this.cargarDisciplinas();
+    this.cargarUsuarios();
     this.loadSidebarData();
   }
 
