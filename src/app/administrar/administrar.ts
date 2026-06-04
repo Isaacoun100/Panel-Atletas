@@ -299,7 +299,7 @@ export class Administrar implements OnInit {
       nombre,
       cedula: profile.dni || '-',
       correo: profile.email || '-',
-      rol: profile.role === 'admon' ? 'Administrador' : 'Atleta',
+      rol: this.isAdminRole(profile.role) ? 'Administrador' : 'Atleta',
       activa: profile.is_active,
       guardando: false,
     };
@@ -328,6 +328,10 @@ export class Administrar implements OnInit {
     const token = localStorage.getItem('access_token');
     if (!token) return '';
     try { return JSON.parse(atob(token.split('.')[1])).sub ?? ''; } catch { return ''; }
+  }
+
+  private isAdminRole(role?: string | null): boolean {
+    return role === 'admin' || role === 'admon';
   }
 
   markDisciplinaChanged() {

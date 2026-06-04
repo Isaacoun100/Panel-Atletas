@@ -86,7 +86,7 @@ export class IncioSesion implements OnInit {
               return;
             }
 
-            if (response.user.app_metadata.role === 'admin' || profile.role === 'admon') {
+            if (this.isAdminRole(response.user.app_metadata.role) || this.isAdminRole(profile.role)) {
               this.router.navigate(['/dashboard']);
             } else if (response.user.app_metadata.role === 'athlete' || profile.role === 'athlete') {
               this.router.navigate(['/inicio-atleta']);
@@ -114,5 +114,9 @@ export class IncioSesion implements OnInit {
     localStorage.removeItem('access_token');
     this.errorMessage.set('Tu usuario se encuentra inactivo. Contacta al comite para recuperar el acceso.');
     this.isLoading.set(false);
+  }
+
+  private isAdminRole(role?: string | null): boolean {
+    return role === 'admin' || role === 'admon';
   }
 }
