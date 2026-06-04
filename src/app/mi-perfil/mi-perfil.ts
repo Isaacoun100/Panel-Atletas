@@ -324,15 +324,15 @@ export class MiPerfil implements OnInit {
   }
 
   getRolLabel(): string {
-    return this.profile?.role === 'admon' ? 'Administrador' : 'Atleta';
-  }
+    return this.profile?.role === 'admin' ? 'Administrador' : 'Atleta';
+}
 
   getRolBadgeClass(): string {
-    return this.profile?.role === 'admon' ? 'db-badge--success' : 'db-badge--warning';
+    return this.profile?.role === 'admin' ? 'db-badge--success' : 'db-badge--warning';
   }
 
   getAccessLevel(): string {
-    return this.profile?.role === 'admon' ? 'Total' : 'Limitado';
+    return this.profile?.role === 'admin' ? 'Total' : 'Limitado';
   }
 
   getEstadoLabel(): string {

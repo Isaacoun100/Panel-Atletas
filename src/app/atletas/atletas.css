@@ -141,11 +141,24 @@
 
 /* ── Athlete photo ──────────────────────────────────── */
 .at-athlete-photo {
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   object-fit: cover;
-  flex-shrink: 0;
+  object-position: top center;
+  border-radius: 50%;
   border: 2px solid var(--border);
+  flex-shrink: 0;
+}
+
+/* Avatar en panel lateral */
+.at-panel-avatar {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  object-position: top center;
+  border-radius: 50%;
+  border: 3px solid var(--border);
+  flex-shrink: 0;
 }
 
 /* ── Sex badge ──────────────────────────────────────── */
@@ -327,6 +340,7 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  border: 2px solid var(--border);
 }
 
 /* Spinner de carga */
