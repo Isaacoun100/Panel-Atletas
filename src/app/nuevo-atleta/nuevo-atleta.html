@@ -169,6 +169,28 @@
               </div>
             }
             <div class="na-field-group">
+              <label class="na-label">Rol de la invitacion</label>
+              <div class="na-role-switch" role="group" aria-label="Rol de la invitacion">
+                <button type="button" class="na-role-option"
+                        [class.na-role-option--active]="invitationRole() === 'athlete'"
+                        (click)="invitationRole.set('athlete')">
+                  Atleta
+                </button>
+                <button type="button" class="na-role-option"
+                        [class.na-role-option--active]="invitationRole() === 'admin'"
+                        (click)="invitationRole.set('admin')">
+                  Administrador
+                </button>
+              </div>
+              <p class="na-field-hint">
+                @if (invitationRole() === 'admin') {
+                  La invitacion se enviara con rol administrador.
+                } @else {
+                  La invitacion se enviara con rol atleta.
+                }
+              </p>
+            </div>
+            <div class="na-field-group">
               <label class="na-label na-label--opt" for="msg">Mensaje personalizado <span class="na-label-opt">(opcional)</span></label>
               <textarea id="msg" class="na-textarea" rows="3" placeholder="Escribe un mensaje para incluir en la invitación..."></textarea>
             </div>

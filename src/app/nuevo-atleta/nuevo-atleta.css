@@ -291,6 +291,40 @@
 
 .na-chip-remove:hover { opacity: 1; }
 
+/* Role selector */
+.na-role-switch {
+  display: inline-flex;
+  width: fit-content;
+  padding: 0.2rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  gap: 0.2rem;
+}
+
+.na-role-option {
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-2);
+  cursor: pointer;
+  font-family: var(--font-ui);
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.42rem 0.85rem;
+  transition: background 0.12s, color 0.12s;
+}
+
+.na-role-option:hover {
+  background: var(--surface);
+  color: var(--text);
+}
+
+.na-role-option--active {
+  background: var(--primary);
+  color: #fff;
+}
+
 /* ── Multi-select ───────────────────────────────────── */
 .na-multiselect { position: relative; }
 
