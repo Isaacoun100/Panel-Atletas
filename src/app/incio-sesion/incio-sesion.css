@@ -51,6 +51,24 @@
   margin: 0;
 }
 
+/* Dark mode form overrides */
+[data-theme="dark"] .form-control {
+  background-color: var(--surface-2);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+[data-theme="dark"] .form-control::placeholder {
+  color: var(--text-3);
+}
+
+[data-theme="dark"] .form-control:focus {
+  background-color: var(--surface-2);
+  border-color: var(--primary);
+  color: var(--text);
+  box-shadow: 0 0 0 0.25rem oklch(0.70 0.13 260 / 0.25);
+}
+
 /* Mobile logo */
 .login-mobile-logo {
   max-width: 160px;

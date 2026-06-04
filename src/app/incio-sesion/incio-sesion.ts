@@ -18,6 +18,18 @@ export class IncioSesion implements OnInit {
 
   isDark = signal(false);
 
+  carouselImages: string[] = [];
+
+  private buildCarouselImages(): string[] {
+    const base = 'https://oduejasasklthjttssze.supabase.co/storage/v1/object/public/collage/collage';
+    const images = Array.from({ length: 9 }, (_, i) => `${base}(${i + 1}).png`);
+    for (let i = images.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [images[i], images[j]] = [images[j], images[i]];
+    }
+    return images;
+  }
+
   email = '';
   password = '';
 
@@ -55,14 +67,21 @@ export class IncioSesion implements OnInit {
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     const dark = saved ? saved === 'dark' : prefersDark;
     this.isDark.set(dark);
-    document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+    this.applyTheme(dark);
+    this.carouselImages = this.buildCarouselImages();
   }
 
   toggleTheme() {
     const next = !this.isDark();
     this.isDark.set(next);
-    document.documentElement.setAttribute('data-theme', next ? 'dark' : 'light');
+    this.applyTheme(next);
     localStorage.setItem('theme', next ? 'dark' : 'light');
+  }
+
+  private applyTheme(dark: boolean) {
+    const theme = dark ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', theme);
+    document.documentElement.setAttribute('data-bs-theme', theme);
   }
 
   onLogin() {
