@@ -1,7 +1,6 @@
-import { Component, OnInit, signal,inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { Component, OnInit, signal, inject } from '@angular/core';
 import { AuthService } from '../core/services/auth.service';
-import { SignInResponse } from '../core/models/auth.model';
+import { ProfileService } from '../core/services/profile.service';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 
@@ -15,21 +14,19 @@ export class IncioSesion implements OnInit {
   constructor(private router: Router) {}
 
   private authService = inject(AuthService);
+  private profileService = inject(ProfileService);
 
   isDark = signal(false);
 
-  //Sign in variables
   email = '';
   password = '';
 
-  // Forgot password
   showForgot = signal(false);
   forgotEmail = '';
   forgotSent = signal(false);
   forgotError = signal('');
   isSendingReset = signal(false);
 
-  // For the login
   isLoading = signal(false);
   errorMessage = signal('');
 
@@ -38,7 +35,7 @@ export class IncioSesion implements OnInit {
 
   submitForgot() {
     const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.forgotEmail.trim());
-    if (!valid) { this.forgotError.set('Ingresá un correo válido.'); return; }
+    if (!valid) { this.forgotError.set('Ingresa un correo valido.'); return; }
     this.forgotError.set('');
     this.isSendingReset.set(true);
     this.authService.passwordRecovery(this.forgotEmail.trim()).subscribe({
@@ -70,32 +67,52 @@ export class IncioSesion implements OnInit {
 
   onLogin() {
     this.isLoading.set(true);
-    this.errorMessage.set('')
+    this.errorMessage.set('');
 
     this.authService.signIn(this.email, this.password).subscribe({
       next: (response) => {
+        localStorage.setItem('access_token', response.access_token);
 
-        localStorage.setItem('access_token', response.access_token)
-        
-        if(response.user.app_metadata.role==="admin")
-          this.router.navigate(['/dashboard']);
+        if (response.user.app_metadata.is_active === false) {
+          this.denyInactiveUser();
+          return;
+        }
 
-        else if (response.user.app_metadata.role==="athlete")
-          this.router.navigate(['/inicio-atleta']);
-        
-        else
-          this.errorMessage.set('Hay un problema con tu usuario, por favor ponte en contacto con el comité');  
-          
-        
-        this.isLoading.set(false);
+        this.profileService.getProfileByUserId(response.user.id).subscribe({
+          next: (profiles) => {
+            const profile = profiles[0];
+            if (!profile?.is_active) {
+              this.denyInactiveUser();
+              return;
+            }
 
+            if (response.user.app_metadata.role === 'admin' || profile.role === 'admon') {
+              this.router.navigate(['/dashboard']);
+            } else if (response.user.app_metadata.role === 'athlete' || profile.role === 'athlete') {
+              this.router.navigate(['/inicio-atleta']);
+            } else {
+              this.errorMessage.set('Hay un problema con tu usuario, por favor ponte en contacto con el comite');
+            }
 
+            this.isLoading.set(false);
+          },
+          error: () => {
+            localStorage.removeItem('access_token');
+            this.errorMessage.set('No se pudo validar el estado de tu usuario');
+            this.isLoading.set(false);
+          },
+        });
       },
       error: () => {
-        this.errorMessage.set('Usuario o contraseña no válido')
+        this.errorMessage.set('Usuario o contrasena no valido');
         this.isLoading.set(false);
-      }
-    })
+      },
+    });
+  }
 
+  private denyInactiveUser() {
+    localStorage.removeItem('access_token');
+    this.errorMessage.set('Tu usuario se encuentra inactivo. Contacta al comite para recuperar el acceso.');
+    this.isLoading.set(false);
   }
 }

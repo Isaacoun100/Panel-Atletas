@@ -15,6 +15,7 @@ export interface SignInResponse {
     role: string;
     app_metadata: {
       role: string;
+      is_active?: boolean;
     };
   };
 }

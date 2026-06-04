@@ -3,6 +3,14 @@ import { inject, Injectable,  } from "@angular/core";
 import { environment } from "../../environments/environment";
 import { UserProfile } from "../models/profile.model";
 
+export interface AdminUserProfile extends Partial<UserProfile> {
+  id_user: string;
+  email: string;
+  role: UserProfile['role'];
+  is_active: boolean;
+  created_at: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AdminProfilesService {
   private http = inject(HttpClient);
@@ -27,6 +35,12 @@ export class AdminProfilesService {
       { params: { select: '*', order: 'created_at.desc' },
       headers: this.getHeaders() 
     });
+  }
+
+  getAllUsers() {
+    return this.http.get<AdminUserProfile[]>(`${this.base}/functions/v1/admin-list-users`,
+      { headers: this.getHeaders() }
+    );
   }
 
   updateAnyProfile(userId: string, data: Partial<UserProfile>) {

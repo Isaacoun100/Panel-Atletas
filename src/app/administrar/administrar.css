@@ -7,7 +7,26 @@
   border: 2px solid var(--border);
 }
 
+.adm-avatar--fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
 /* ── Discipline toggle switch ────────────────────────── */
+.adm-loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 220px;
+  padding: 2.5rem 1rem;
+}
+
 .adm-switch {
   cursor: pointer;
 }
@@ -82,20 +101,6 @@
 .adm-tipo-btn--active { background: var(--primary-soft); color: var(--primary); font-weight: 600; }
 
 /* ── Role selector ───────────────────────────────────── */
-.adm-rol-select {
-  padding: 0.25rem 0.5rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface-2);
-  color: var(--text-2);
-  font-size: 0.8rem;
-  outline: none;
-  cursor: pointer;
-  transition: border-color 0.12s;
-}
-
-.adm-rol-select:focus { border-color: var(--primary); }
-
 /* ── Toast notification ───────────────────────────────────────────── */
 .adm-toast {
   position: fixed;
