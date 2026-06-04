@@ -1,8 +1,8 @@
 import { HttpClient } from "@angular/common/http";
 import { inject, Injectable,  } from "@angular/core";
 import { environment } from "../../environments/environment";
-import { AdminRegisterAthleteRequest, AdminRegisterAthleteResponse, AdminRegisterUserRequest, AdminRegisterUserResponse, SignInResponse, SignUpResponse } from "../models/auth.model";
-import { SignInResponse, UpdateUserResponse } from "../models/auth.model";
+import { AdminRegisterAthleteRequest, AdminRegisterAthleteResponse, AdminRegisterUserRequest, AdminRegisterUserResponse, SignInResponse, SignUpResponse, UpdateUserResponse } from "../models/auth.model";
+
 
 
 @Injectable({ providedIn: 'root' })

@@ -8,7 +8,7 @@ import { ProfileService } from '../core/services/profile.service';
 import { DisciplinesService } from '../core/services/disciplines.service';
 import { MedalsService } from '../core/services/medals.service';
 import { StorageService } from '../core/services/storage.service';
-import { Athlete } from '../core/models/athlete.model';
+import { Athlete, FunctionalClassificationCategory } from '../core/models/athlete.model';
 import { UserProfile } from '../core/models/profile.model';
 import { Discipline, UserDiscipline } from '../core/models/discipline.model';
 import { Medal } from '../core/models/medal.model';
@@ -781,7 +781,9 @@ export class InicioAtleta implements OnInit {
       disability_type: this.tieneDiscapacidad === 'si' ? this.mapDisabilityToModel(this.tipoDiscapacidad) as Athlete['disability_type'] : null,
       disability_description: this.tieneDiscapacidad === 'si' ? this.descripcionDiscapacidad : null,
       has_functional_classification: this.tieneDiscapacidad === 'si' ? this.formToBool(this.clasificacionFuncional) : false,
-      classification_category: (this.tieneDiscapacidad === 'si' && this.clasificacionFuncional === 'si') ? this.categoriaFuncionalSel : null,
+      classification_category: (this.tieneDiscapacidad === 'si' && this.clasificacionFuncional === 'si')
+        ? this.categoriaFuncionalSel.toLowerCase() as FunctionalClassificationCategory
+        : null,
     };
   }
 
