@@ -298,11 +298,11 @@
                 <label class="na-label" for="dist">Distrito de residencia</label>
                 <select id="dist" class="na-select" [(ngModel)]="distrito">
                   <option value="">Seleccionar...</option>
-                  <option value="san-pedro">San Pedro</option>
+                  <option value="san_pedro">San Pedro</option>
                   <option value="sabanilla">Sabanilla</option>
                   <option value="mercedes">Mercedes</option>
-                  <option value="san-rafael">San Rafael</option>
-                  <option value="otro">Otro</option>
+                  <option value="san_rafael">San Rafael</option>
+                  <option value="other">Otro</option>
                 </select>
               </div>
             </div>
@@ -341,6 +341,9 @@
             @if (recRecreativa || recDeportiva) {
               <div class="na-field-group">
                 <label class="na-label">Disciplinas</label>
+                @if (isLoadingDisciplines()) {
+                  <span class="na-field-hint">Cargando disciplinas activas...</span>
+                }
                 <div class="na-multiselect">
                   <button type="button" class="na-multiselect-btn" (click)="toggleDisciplineMenu($event)"
                     [class.na-multiselect-btn--active]="selectedDisciplines().length > 0">
@@ -524,10 +527,10 @@
             <div class="na-field-group">
               <label class="na-label">Nivel de satisfacción</label>
               <div class="na-toggle-group">
-                <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="nivelSatisfaccion === 'muy-satisfecho'"  (click)="nivelSatisfaccion = 'muy-satisfecho'">Muy satisfecho</button>
-                <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="nivelSatisfaccion === 'satisfecho'"       (click)="nivelSatisfaccion = 'satisfecho'">Satisfecho</button>
-                <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="nivelSatisfaccion === 'insatisfecho'"     (click)="nivelSatisfaccion = 'insatisfecho'">Insatisfecho</button>
-                <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="nivelSatisfaccion === 'muy-insatisfecho'" (click)="nivelSatisfaccion = 'muy-insatisfecho'">Muy insatisfecho</button>
+                <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="nivelSatisfaccion === 'very_satisfied'" (click)="nivelSatisfaccion = 'very_satisfied'">Muy satisfecho</button>
+                <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="nivelSatisfaccion === 'satisfied'"      (click)="nivelSatisfaccion = 'satisfied'">Satisfecho</button>
+                <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="nivelSatisfaccion === 'neutral'"        (click)="nivelSatisfaccion = 'neutral'">Neutral</button>
+                <button type="button" class="na-toggle-btn" [class.na-toggle-btn--active]="nivelSatisfaccion === 'dissatisfied'"   (click)="nivelSatisfaccion = 'dissatisfied'">Insatisfecho</button>
               </div>
             </div>
           </div>
@@ -658,8 +661,8 @@
                       </div>
                     </div>
                     <div class="na-field-group">
-                      <label class="na-label na-label--opt">Documento de clasificación</label>
-                      <input type="file" class="na-input na-input--file" accept=".pdf,.jpg,.jpeg,.png">
+                      <label class="na-label na-label--opt" for="classificationUrl">Documento de clasificación <span class="na-label-opt">(URL opcional)</span></label>
+                      <input id="classificationUrl" type="url" class="na-input" placeholder="https://..." [(ngModel)]="classificationDocumentUrl">
                     </div>
                   </div>
                 </div>
@@ -708,10 +711,16 @@
             </div>
 
             <div class="na-form-footer">
+              @if (manualError()) {
+                <span class="na-field-error me-auto">{{ manualError() }}</span>
+              }
+              @if (manualSuccess()) {
+                <span class="na-invite-success me-auto">{{ manualSuccess() }}</span>
+              }
               <button type="button" class="btn btn-outline-secondary px-4 me-2" routerLink="/atletas">Cancelar</button>
-              <button type="button" class="btn btn-primary px-4" [disabled]="!canSubmit">
+              <button type="button" class="btn btn-primary px-4" [disabled]="!canSubmit" (click)="registerAthlete()">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="me-2" viewBox="0 0 16 16"><path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4z"/></svg>
-                Registrar atleta
+                {{ isSubmitting() ? 'Registrando...' : 'Registrar atleta' }}
               </button>
             </div>
           </div>

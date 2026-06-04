@@ -11,7 +11,7 @@ import { MedalsService } from '../core/services/medals.service';
 import { StorageService } from '../core/services/storage.service';
 import { Discipline } from '../core/models/discipline.model';
 import { UserProfile } from '../core/models/profile.model';
-import { Athlete } from '../core/models/athlete.model';
+import { Athlete, FunctionalClassificationCategory } from '../core/models/athlete.model';
 
 interface Medalla { prueba: string; tipo: string; anio: string; }
 
@@ -390,7 +390,9 @@ export class RegistrarAtleta implements OnInit {
       disability_type: this.tieneDiscapacidad === 'si' ? this.mapDisability(this.tipoDiscapacidad) as Athlete['disability_type'] : null,
       disability_description: this.tieneDiscapacidad === 'si' ? this.descripcionDiscapacidad : null,
       has_functional_classification: this.tieneDiscapacidad === 'si' && this.clasificacionFuncional === 'si',
-      classification_category: (this.tieneDiscapacidad === 'si' && this.clasificacionFuncional === 'si') ? this.categoriaFuncionalSel : null,
+      classification_category: (this.tieneDiscapacidad === 'si' && this.clasificacionFuncional === 'si')
+        ? this.categoriaFuncionalSel.toLowerCase() as FunctionalClassificationCategory
+        : null,
       classification_document_url: null,
       accepts_data_usage: this.autorizaDatos === 'si',
       accepts_info_accuracy: this.aceptaVeracidad === 'si',

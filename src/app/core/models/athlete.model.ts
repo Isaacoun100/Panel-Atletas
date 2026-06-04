@@ -4,6 +4,7 @@ export type DistrictOfResidence = 'san_pedro' | 'sabanilla' | 'mercedes' | 'san_
 export type SatisfactionLevel = 'very_satisfied' | 'satisfied' | 'neutral' | 'dissatisfied';
 export type FacilitySatisfactionLevel = 'yes' | 'no' | 'partial';
 export type DisabilityType = 'physical' | 'cognitive';
+export type FunctionalClassificationCategory = 'a1' | 'a2' | 'b1' | 'b2' | 'c1' | 'c2';
 
 export interface Athlete {
   id_user: string;
@@ -26,7 +27,7 @@ export interface Athlete {
   disability_type: DisabilityType | null;
   disability_description: string | null;
   has_functional_classification: boolean;
-  classification_category: string | null;
+  classification_category: FunctionalClassificationCategory | null;
   classification_document_url: string | null;
   accepts_data_usage: boolean;
   accepts_info_accuracy: boolean;

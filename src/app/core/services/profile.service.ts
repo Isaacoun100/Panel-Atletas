@@ -11,12 +11,11 @@ export class ProfileService {
 
   private getHeaders() {
     const token = localStorage.getItem('access_token');
-    const headers: Record<string, string> = {
-      'apikey': this.apiKey,
+    return {
+      apikey: this.apiKey,
       'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {})
     };
-    if (token) headers['Authorization'] = `Bearer ${token}`;
-    return headers;
   }
 
   createProfile(data: Partial<UserProfile>) {
@@ -32,6 +31,12 @@ export class ProfileService {
   getProfileByUserId(userId: string) {
     return this.http.get<UserProfile[]>(`${this.base}/rest/v1/users_profiles`,
       { params: { select: '*', id_user: `eq.${userId}`, limit: '1' }, headers: this.getHeaders() }
+  getProfileByDni(dni: string) {
+    return this.http.get<UserProfile[]>(`${this.base}/rest/v1/users_profiles`,
+      {
+        params: { select: '*', dni: `eq.${dni}`, limit: '1' },
+        headers: this.getHeaders()
+      }
     );
   }
 
