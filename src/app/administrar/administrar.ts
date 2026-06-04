@@ -245,7 +245,7 @@ export class Administrar implements OnInit {
     this.isLoadingUsers.set(true);
     this.adminProfilesService.getAllUsers().subscribe({
       next: (profiles) => {
-        const usuarios = profiles.map((profile) => this.mapUserProfile(profile));
+        const usuarios = profiles.filter(p => this.isAdminRole(p.role)).map((profile) => this.mapUserProfile(profile));
         this.usuarios.set(usuarios);
         this.cargarAvataresUsuarios(usuarios);
         this.isLoadingUsers.set(false);
@@ -294,7 +294,7 @@ export class Administrar implements OnInit {
 
     return {
       id_user: profile.id_user,
-      foto: profile.profile_image_url ?? null,
+      foto: null,
       iniciales: this.getInitials(profile.name, profile.first_last_name),
       nombre,
       cedula: profile.dni || '-',
@@ -307,7 +307,6 @@ export class Administrar implements OnInit {
 
   private cargarAvataresUsuarios(usuarios: AdminUser[]) {
     usuarios.forEach((usuario) => {
-      if (usuario.foto) return;
       this.storageService.getAvatarAsBlob(usuario.id_user).subscribe({
         next: (blob) => {
           const url = URL.createObjectURL(blob);
